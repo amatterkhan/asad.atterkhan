@@ -1,0 +1,98 @@
+import Link from "next/link";
+import { renderArticle, type Article as ArticleData } from "@/lib/content";
+import { date, site } from "@/lib/site";
+import { ArticleControls } from "./ArticleControls";
+export async function Article({
+  article,
+  draft = false,
+}: {
+  article: ArticleData;
+  draft?: boolean;
+}) {
+  const { html, toc } = await renderArticle(article.body);
+  const tocLinks = toc.map((h) => (
+    <a
+      key={h.id}
+      href={`#${h.id}`}
+      className={h.depth === 3 ? "subheading" : undefined}
+    >
+      {h.title}
+    </a>
+  ));
+  return (
+    <>
+      <div className="path">
+        <Link href="/lab">The Lab</Link> · {article.category || "notes"}
+      </div>
+      {draft && (
+        <aside className="callout draft">
+          <strong>LOCAL DRAFT PREVIEW</strong>
+          <br />
+          Illustrative reading fixture. Not published, indexed, or included in
+          RSS.
+        </aside>
+      )}
+      <h1 className="article-title">{article.title}</h1>
+      <div className="article-meta">
+        {article.publishedAt ? (
+          <time dateTime={article.publishedAt}>
+            Published {date(article.publishedAt)}
+          </time>
+        ) : (
+          <span>Unpublished draft</span>
+        )}
+        {article.updatedAt && (
+          <time dateTime={article.updatedAt}>
+            Updated {date(article.updatedAt)}
+          </time>
+        )}
+        <span>{article.readingMinutes} min read</span>
+      </div>
+      <div className="tag-list article-tags">
+        {article.tags.map((tag) => (
+          <span key={tag}>{tag}</span>
+        ))}
+      </div>
+      <p className="article-lead">{article.description}</p>
+      {toc.length > 0 && (
+        <details className="mobile-toc">
+          <summary>On this page</summary>
+          {tocLinks}
+        </details>
+      )}
+      <div className="article-grid">
+        <article className="prose" data-article>
+          <div dangerouslySetInnerHTML={{ __html: html }} />
+          <ArticleControls />
+          <footer className="article-end">
+            <span className="tags">{article.tags.join(" / ")}</span>
+            <Link href="/lab">← Back to The Lab</Link>
+          </footer>
+        </article>
+        {toc.length > 0 && (
+          <aside className="toc" aria-label="On this page">
+            <span>ON THIS PAGE</span>
+            {tocLinks}
+          </aside>
+        )}
+      </div>
+      {!draft && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "BlogPosting",
+              headline: article.title,
+              description: article.description,
+              datePublished: article.publishedAt,
+              dateModified: article.updatedAt || article.publishedAt,
+              author: { "@type": "Person", name: site.name, url: site.url },
+              mainEntityOfPage: `${site.url}/lab/${article.slug}`,
+            }).replace(/</g, "\\u003c"),
+          }}
+        />
+      )}
+    </>
+  );
+}
