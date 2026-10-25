@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getArticles, getProjects } from "@/lib/content";
-import { SpriteScene } from "@/components/Sprites";
+import { Room } from "@/components/Room";
 import { site, date } from "@/lib/site";
 import work from "../../content/workExpData.json";
 import { selectFeatured, defaultFeatured } from "@/lib/achievements";
@@ -16,30 +16,38 @@ export default async function Home() {
   return (
     <>
       <section className="hero">
-        <div className="hero-copy">
+        <div>
           <p className="eyebrow">Security analyst &amp; engineer · Mauritius</p>
           <h1>
             Hey, I&apos;m <em>Asad.</em>
           </h1>
+        </div>
+        <div>
           <p className="lede">
             I build things, break things, and try to understand how they work.
           </p>
           <p className="hero-sub">
-            Most days that means security operations, cloud and infrastructure,
-            and a lot of small tools. I write down what I learn in{" "}
-            <Link href="/lab">The Lab</Link> and keep what I make on the{" "}
-            <Link href="/workbench">Workbench</Link>.
+            Security operations, cloud and a lot of small tools. {current?.title}{" "}
+            at {current?.company}, studying CS at Georgia Tech.
           </p>
         </div>
-        <SpriteScene />
       </section>
 
-      <p className="now">
-        <span className="now-dot" aria-hidden="true" />
-        Right now: {current?.title} at {current?.company}, a Master&apos;s in
-        Computer Science at Georgia Tech, and Storm supervising from the
-        windowsill.
-      </p>
+      <Room />
+
+      <ul className="room-index" aria-label="Site sections">
+        {[
+          ["/lab", "The Lab"],
+          ["/workbench", "Workbench"],
+          ["/experience", "Experience"],
+          ["/achievements", "Achievements"],
+          ["/about", "About"],
+        ].map(([h, l]) => (
+          <li key={h}>
+            <Link href={h}>{l}</Link>
+          </li>
+        ))}
+      </ul>
 
       <section className="block">
         <header className="block-head">
