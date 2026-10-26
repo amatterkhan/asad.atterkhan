@@ -36,9 +36,11 @@ type SiteCopy = {
 };
 ```
 
-- `GET /api/admin/site` → `SiteCopy`
+- `GET /api/admin/site` → `SiteCopy` (stored fields over `content/site.json`; no `updatedAt` until
+  the first save, so the editor always starts from what the site shows)
 - `PUT /api/admin/site` body `SiteCopy` (validated with zod, each string ≤ 600 chars, aboutBody
-  ≤ 8000) → `SiteCopy`; then revalidates `/`, `/lab`, `/workbench`, `/experience`,
+  ≤ 8000, same lengths as `SiteCopySchema`; unknown keys or control characters → 400; a sent
+  `updatedAt` is ignored) → `SiteCopy`; then revalidates `/`, `/lab`, `/workbench`, `/experience`,
   `/achievements`, `/about`.
 - Public read (server only): `getSiteCopy()` in `src/lib/content.ts` reads the same document when
   `CONTENT_SOURCE=firestore`, else `content/site.json`.
@@ -56,20 +58,29 @@ type ArticleDraft = {
   status: "draft" | "published";
   publishedAt?: string; updatedAt?: string;   // YYYY-MM-DD
   version: number;              // optimistic concurrency, incremented by the server
+  modifiedAt: string;           // ISO time of the last change (list sort key; not public)
+  publishedVersion?: number;    // version the public copy was made from, while published
 };
 ```
 
 - `GET /api/admin/articles` → `{ articles: (ArticleDraft without body)[] }` newest first
-- `POST /api/admin/articles` body `{ slug, title, description }` → `ArticleDraft` (409 if slug exists)
+- `POST /api/admin/articles` body `{ slug, title, description }` → 201 `ArticleDraft` with an empty
+  body, version 1 (409 if the slug exists as a draft or a public copy)
 - `GET /api/admin/articles/{slug}` → `ArticleDraft`
 - `PUT /api/admin/articles/{slug}` body `ArticleDraft` (must carry the current `version`, else 409)
-  → `ArticleDraft`
+  → `ArticleDraft`. `status`, `publishedAt`, `updatedAt`, `modifiedAt`, `publishedVersion` may be
+  sent back and are ignored; a different `slug`, duplicate tags or unknown keys → 400; body ≤ 200,000
+  characters. Saving never touches the public copy: `publishedVersion < version` means unpublished
+  edits.
 - `POST /api/admin/articles/{slug}/publish` (`recent`) → `ArticleDraft`; writes `publicArticles`,
   sets `publishedAt` (first time) / `updatedAt`, revalidates `/`, `/lab`, `/lab/{slug}`,
-  `/rss.xml`, `/sitemap.xml`, `/search.json`
-- `POST /api/admin/articles/{slug}/unpublish` (`recent`) → removes the public copy, revalidates
-- `DELETE /api/admin/articles/{slug}` (`recent`, drafts only) → `{ ok: true }`
-- `POST /api/admin/preview` body `{ body: string }` → `{ html, toc }` rendered with the same
+  `/rss.xml`, `/sitemap.xml`, `/search.json`. An empty body → 400; the snapshot must pass
+  `ArticleSchema`. Republishing keeps the first `publishedAt` and sets `updatedAt` to today (UTC).
+- `POST /api/admin/articles/{slug}/unpublish` (`recent`) → `ArticleDraft` (status `draft`,
+  `publishedAt` kept); removes the public copy, revalidates the same paths; 409 if not published
+- `DELETE /api/admin/articles/{slug}` (`recent`, drafts only) → `{ ok: true }`; 409 while published
+- Every write (save, publish, unpublish) increments `version`: keep the returned draft.
+- `POST /api/admin/preview` body `{ body: string }` (≤ 200,000 characters) → `{ html, toc }` rendered with the same
   `renderArticle()` the site uses (so the editor preview matches the page exactly)
 
 Images in articles reuse the existing documents flow (`/api/admin/documents`, published images

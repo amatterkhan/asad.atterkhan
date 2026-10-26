@@ -123,3 +123,32 @@ test("achievement settings cannot be read or changed directly from a browser", a
     );
   }
 });
+
+test("content collections are Admin SDK only: no browser reads or writes", async () => {
+  const paths = [
+    "articles/hello-world",
+    "publicArticles/hello-world",
+    "siteSettings/public",
+  ];
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    for (const path of paths)
+      await setDoc(doc(ctx.firestore(), path), {
+        ownerUid: "owner",
+        title: "Hello",
+      });
+  });
+  for (const context of [
+    env.unauthenticatedContext(),
+    env.authenticatedContext("other", { admin: true }),
+    env.authenticatedContext("owner", ownerMfaClaims),
+  ])
+    for (const path of paths) {
+      await assertFails(getDoc(doc(context.firestore(), path)));
+      await assertFails(
+        setDoc(doc(context.firestore(), path), {
+          ownerUid: "owner",
+          title: "Changed",
+        }),
+      );
+    }
+});
