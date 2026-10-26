@@ -6,7 +6,7 @@
 > results and limitations. Real Firebase/TOTP sign-in, GitHub dispatch, Docker image execution
 > and Cloud Run/Hosting deployment still need external verification. Nothing was deployed.
 
-Repo: `/Volumes/Vault/Workspace/Projects/amatterkhan.github.io`, branch `frontend-redesign` (stay on it).
+Repo: `/Volumes/Vault/Workspace/Projects/asad.atterkhan`, branch `frontend-redesign` (stay on it).
 
 ## Rules
 - `platform/` (Next.js 16) is the **read-only reference**. Never edit, move or delete anything in it. Another session works there.
