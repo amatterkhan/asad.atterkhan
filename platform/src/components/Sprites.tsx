@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import manifest from "../../public/sprites/manifest.json";
 type Shared = {
-  size?: 64 | 128 | 256 | 384;
+  size?: 64 | 96 | 128 | 192 | 256 | 384;
   description?: string;
   paused?: boolean;
 };
@@ -85,7 +85,7 @@ export function SpriteScene({ large = false }: { large?: boolean }) {
             : "Pixel-art Asad working on his laptop with Storm sitting beside him"
         }
       >
-        <AsadSprite animation={large ? "coffee" : "typing"} size={256} />
+        <AsadSprite animation={large ? "coffee" : "typing"} size={192} />
         <button
           type="button"
           className="storm-btn"

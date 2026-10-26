@@ -419,14 +419,14 @@ html[data-motion="paused"] *::after {
 .spot.below::after { bottom: auto; top: calc(100% + 8px); }
 
 .actor { position: absolute; pointer-events: none; }
-.actor.asad { left: calc(var(--u) * 58); top: calc(var(--u) * 76); }
-.actor.asad .sprite { --sprite-size: calc(var(--u) * 128) !important; }
-.actor.storm { --x: 230; --flip: 1; left: 0; top: calc(var(--u) * 142); translate: calc(var(--u) * (var(--x) - 32)) 0; z-index: 2; }
+.actor.asad { left: calc(var(--u) * 82); top: calc(var(--u) * 108); }
+.actor.asad .sprite { --sprite-size: calc(var(--u) * 96) !important; }
+.actor.storm { --x: 230; --flip: 1; left: 0; top: calc(var(--u) * 146); translate: calc(var(--u) * (var(--x) - 32)) 0; z-index: 2; }
 .actor.storm .sprite { --sprite-size: calc(var(--u) * 64) !important; display: block; }
-.actor.storm[data-mode="standing"] .sprite, .actor.storm[data-mode="stretch"] .sprite { transform: scaleX(var(--flip)); }
+.actor.storm .sprite { transform: scaleX(var(--flip)); }
 .actor.storm button { pointer-events: auto; position: relative; display: block; cursor: pointer; }
 .storm-shadow {
-  position: absolute; left: calc(var(--u) * 12); top: calc(var(--u) * 57); width: calc(var(--u) * 40); height: calc(var(--u) * 5);
+  position: absolute; left: calc(var(--u) * 12); top: calc(var(--u) * 55); width: calc(var(--u) * 40); height: calc(var(--u) * 4);
   background: rgba(20, 12, 30, .35);
   clip-path: polygon(15% 0, 85% 0, 100% 40%, 100% 60%, 85% 100%, 15% 100%, 0 60%, 0 40%);
 }

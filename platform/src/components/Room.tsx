@@ -11,6 +11,8 @@ const H = 216;
 const STRETCH_MS =
   manifest.states["storm-stretch"].frames * manifest.states["storm-stretch"].frameMs;
 const SIP_MS = manifest.states["asad-coffee"].frames * manifest.states["asad-coffee"].frameMs;
+// Storm's planted paws travel one stride per walk cycle, so he moves at exactly that speed.
+const WALK_SPEED = manifest.strideRoomPx / manifest.walkCycleMs;
 
 const mauritiusTime = () =>
   new Intl.DateTimeFormat("en-GB", {
@@ -126,7 +128,7 @@ export function Room() {
       }
       const dx = target.current - x;
       if (Math.abs(dx) > 1) {
-        x += reduce ? dx : Math.sign(dx) * Math.min(Math.abs(dx), dt * 0.05);
+        x += reduce ? dx : Math.sign(dx) * Math.min(Math.abs(dx), dt * WALK_SPEED);
         set("standing");
         storm.current?.style.setProperty("--flip", dx > 0 ? "-1" : "1");
       } else if (current === "standing" && idle > 6000 && Math.random() < 0.35) {
@@ -184,7 +186,7 @@ export function Room() {
         {["sky-night", "stars-a", "stars-b", "sky-day", "clouds", "room", "sunbeam"].map(layer)}
 
         <div className="actor asad">
-          <AsadSprite animation={asad} size={128} />
+          <AsadSprite animation={asad} size={96} />
         </div>
         <div className="actor storm" ref={storm} data-mode={mode}>
           <span className="storm-shadow" aria-hidden="true" />
@@ -206,7 +208,7 @@ export function Room() {
                 z Z
               </span>
             )}
-            <StormSprite animation={mode} size={128} />
+            <StormSprite animation={mode} size={64} />
           </button>
         </div>
 
