@@ -189,7 +189,7 @@ export function Room() {
         {["sky-night", "stars-a", "stars-b", "sky-day", "clouds", "room", "sunbeam"].map(layer)}
 
         <div className="actor asad">
-          <AsadSprite animation={happy ? "happy" : asad} size={48} />
+          <AsadSprite animation={happy ? "happy" : asad} size={96} />
         </div>
         <div className="actor storm" ref={storm} data-mode={mode}>
           <span className="storm-shadow" aria-hidden="true" />

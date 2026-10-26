@@ -1,22 +1,37 @@
 #!/bin/sh
-# Exports art/ase/*.ase (edited in LibreSprite) to public/sprites/<state>.png horizontal sheets,
-# updates frame counts in manifest.json, and bumps the cache-buster version.
+# Exports every sprite document in art/ase/ (*.ase or *.aseprite, e.g. from Aseprite/PixelLab or
+# LibreSprite) to public/sprites/<name>.png as a horizontal sheet, and syncs public/sprites/manifest.json
+# (frame count, frame size, per-frame durations) from the document itself. The file name is the
+# animation name: asad-typing.aseprite -> state "asad-typing". room.ase is handled by export_room.sh.
 set -e
 cd "$(dirname "$0")/.."
-LS=/Applications/libresprite.app/Contents/MacOS/libresprite
-for f in art/ase/*.ase; do
-  [ "$(basename "$f")" = room.ase ] && continue
-  n=$(basename "$f" .ase)
-  "$LS" -b "$f" --sheet "public/sprites/$n.png" --sheet-type horizontal >/dev/null 2>&1
+if [ -x /Applications/Aseprite.app/Contents/MacOS/aseprite ]; then
+  TOOL=/Applications/Aseprite.app/Contents/MacOS/aseprite
+else
+  TOOL=/Applications/libresprite.app/Contents/MacOS/libresprite
+fi
+mkdir -p .sprite-data
+for f in art/ase/*.ase art/ase/*.aseprite; do
+  [ -e "$f" ] || continue
+  n=$(basename "$f"); n=${n%.*}
+  [ "$n" = room ] && continue
+  "$TOOL" -b "$f" --sheet "public/sprites/$n.png" --sheet-type horizontal \
+    --data ".sprite-data/$n.json" --format json-array >/dev/null 2>&1
 done
 python3 - <<'PY'
 import json
 from pathlib import Path
-from PIL import Image
 p = Path("public/sprites/manifest.json"); m = json.loads(p.read_text())
-for n, s in m["states"].items():
-    s["frames"] = Image.open(f"public/sprites/{n}.png").width // s["frameWidth"]
-    s["durationsMs"] = [s["frameMs"]] * s["frames"]
+for d in sorted(Path(".sprite-data").glob("*.json")):
+    n = d.stem
+    frames = json.loads(d.read_text())["frames"]
+    w, h = frames[0]["frame"]["w"], frames[0]["frame"]["h"]
+    durs = [f.get("duration", 100) for f in frames]
+    s = m["states"].setdefault(n, {"sheet": f"/sprites/{n}.png", "still": f"/sprites/{n}-still.png"})
+    s.update(frames=len(frames), frameWidth=w, frameHeight=h, durationsMs=durs,
+             frameMs=round(sum(durs) / len(durs)))
+    s.setdefault("anchor", [w // 2, h - 4])
 m["version"] += 1
 p.write_text(json.dumps(m, indent=2) + "\n")
 PY
+rm -rf .sprite-data

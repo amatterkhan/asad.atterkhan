@@ -419,7 +419,7 @@ html[data-motion="paused"] *::after {
 .spot.below::after { bottom: auto; top: calc(100% + 8px); }
 
 .actor { position: absolute; pointer-events: none; }
-.actor.asad { left: calc(var(--u) * 82); top: calc(var(--u) * 110); }  /* 48px art at 2x */
+.actor.asad { left: calc(var(--u) * 82); top: calc(var(--u) * 108); }
 .actor.asad .sprite { --sprite-size: calc(var(--u) * 96) !important; }
 .actor.storm { --x: 230; --flip: 1; left: 0; top: calc(var(--u) * 146); translate: calc(var(--u) * (var(--x) - 32)) 0; z-index: 2; }
 .actor.storm .sprite { --sprite-size: calc(var(--u) * 64) !important; display: block; }

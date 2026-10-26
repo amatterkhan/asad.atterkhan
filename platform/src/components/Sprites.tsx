@@ -9,6 +9,9 @@ type Shared = {
 type State =
   | "asad-idle"
   | "asad-happy"
+  | "asad-stand"
+  | "asad-phone"
+  | "asad-walk"
   | "asad-typing"
   | "storm-idle"
   | "storm-sleeping"
@@ -62,7 +65,7 @@ function Sprite({
 export function AsadSprite({
   animation = "idle",
   ...props
-}: Shared & { animation?: "idle" | "typing" | "coffee" | "happy" }) {
+}: Shared & { animation?: "idle" | "typing" | "coffee" | "happy" | "stand" | "phone" | "walk" }) {
   return <Sprite state={`asad-${animation}`} {...props} />;
 }
 export function StormSprite({
