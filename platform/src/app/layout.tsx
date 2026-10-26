@@ -1,6 +1,7 @@
 import { ViewportProbe } from "@/components/ViewportProbe";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Cursor } from "@/components/Cursor";
 import { MotionControl } from "@/components/MotionControl";
 import { Nav, Brand } from "@/components/Nav";
 import { site } from "@/lib/site";
@@ -44,6 +45,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {process.env.NODE_ENV === "development" && <ViewportProbe />}
+        <Cursor />
         <a href="#main" className="skip">
           Skip to content
         </a>
