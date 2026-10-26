@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { apiResponseError, userErrorMessage } from "@/lib/user-errors";
 import type { User } from "firebase/auth";
 import type { Achievement } from "@/lib/achievements";
 export function AchievementManager({ user }: { user: User }) {
@@ -24,7 +25,7 @@ export function AchievementManager({ user }: { user: User }) {
       });
       const result = await response.json();
       if (!response.ok)
-        throw new Error(result.error || "Could not save the selection");
+        throw apiResponseError(response.status, result);
       if (method === "GET") {
         setRecords(result.achievements);
         setLoaded(true);
@@ -34,11 +35,7 @@ export function AchievementManager({ user }: { user: User }) {
         method === "GET" ? "Selection loaded." : "Experience selection saved.",
       );
     } catch (error) {
-      setStatus(
-        error instanceof Error
-          ? error.message
-          : "Could not update achievements",
-      );
+      setStatus(userErrorMessage(error));
     } finally {
       setBusy(false);
     }

@@ -1,5 +1,6 @@
 "use client";
 import { OwnerSignIn } from "./OwnerSignIn";
+import { apiResponseError, UserFacingError, userErrorMessage } from "@/lib/user-errors";
 import { AchievementManager } from "./AchievementManager";
 import { useState } from "react";
 import type { User } from "firebase/auth";
@@ -13,7 +14,7 @@ export function DocumentManager() {
   const [tags, setTags] = useState("");
   const [file, setFile] = useState<File | null>(null);
   async function request(url: string, init: RequestInit = {}) {
-    if (!user) throw new Error("Sign in first");
+    if (!user) throw new UserFacingError("sign_in_required");
     const token = await user.getIdToken();
     const res = await fetch(url, {
       ...init,
@@ -21,7 +22,7 @@ export function DocumentManager() {
     });
     if (!res.ok) {
       const body = await res.json();
-      throw new Error(body.error || "Request failed");
+      throw apiResponseError(res.status, body);
     }
     return res;
   }
@@ -34,7 +35,7 @@ export function DocumentManager() {
     try {
       await fn();
     } catch (e) {
-      setStatus(e instanceof Error ? e.message : "Operation failed");
+      setStatus(userErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -79,7 +80,7 @@ export function DocumentManager() {
           onSubmit={(e) => {
             e.preventDefault();
             run(async () => {
-              if (!file) throw new Error("Choose a file");
+              if (!file) throw new UserFacingError("missing_file");
               const form = new FormData();
               form.set("file", file);
               form.set("title", title);

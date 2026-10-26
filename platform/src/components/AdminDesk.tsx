@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { User } from "firebase/auth";
 import { OwnerSignIn } from "./OwnerSignIn";
+import { apiResponseError, UserFacingError, userErrorMessage } from "@/lib/user-errors";
 
 // Owner-only writing desk. Talks to /api/admin/* (docs/admin-contract.md) with the Firebase ID token.
 
@@ -28,31 +29,63 @@ const slugify = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0
 
 export function AdminDesk() {
   const [user, setUser] = useState<User | null>(null);
+  const [authorized, setAuthorized] = useState(false);
+  const [sessionVersion, setSessionVersion] = useState(0);
   const [status, setStatus] = useState("");
   const [tab, setTab] = useState<"copy" | "writing" | "wardrobe">("writing");
 
+  const onUser = useCallback((nextUser: User | null) => {
+    setAuthorized(false);
+    setUser(nextUser);
+    setSessionVersion((version) => version + 1);
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    async function verifyOwner() {
+      try {
+        const token = await user!.getIdToken(true);
+        const response = await fetch("/api/admin/session", {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        });
+        const body = await response.json();
+        if (!response.ok) throw apiResponseError(response.status, body);
+        if (active) {
+          setAuthorized(true);
+          setStatus("");
+        }
+      } catch (error) {
+        if (active) setStatus(userErrorMessage(error, "sign_in_failed"));
+      }
+    }
+    void verifyOwner();
+    return () => { active = false; };
+  }, [user, sessionVersion]);
+
   const api = useCallback(
     async <T,>(path: string, init: RequestInit = {}): Promise<T> => {
-      if (!user) throw new Error("Sign in first");
+      if (!user) throw new UserFacingError("sign_in_required");
       const res = await fetch(path, {
         ...init,
         headers: { ...init.headers, "Content-Type": "application/json", Authorization: `Bearer ${await user.getIdToken()}` },
         cache: "no-store",
       });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
+      if (!res.ok) throw apiResponseError(res.status, body);
       return body as T;
     },
     [user],
   );
 
-  if (!user)
+  if (!user || !authorized)
     return (
       <section className="admin-locked">
         <p className="eyebrow">Owner only</p>
-        <h2>Sign in to write.</h2>
-        <p>Google sign-in with the owner account, then your authenticator code.</p>
-        <OwnerSignIn user={user} onUser={setUser} onStatus={setStatus} />
+        <h2>{user ? "Secure your sign-in." : "Sign in to write."}</h2>
+        <p>{user ? "Finish your authenticator step to open the writing desk." : "Continue with your Google account, then verify with your authenticator."}</p>
+        <OwnerSignIn user={user} onUser={onUser} onStatus={setStatus} />
         {status && <p className="admin-status" role="status">{status}</p>}
       </section>
     );
@@ -66,6 +99,13 @@ export function AdminDesk() {
           </button>
         ))}
         <span className="admin-who">{user.email}</span>
+        <button onClick={async () => {
+          try {
+            const { getAuth, signOut } = await import("firebase/auth");
+            await signOut(getAuth());
+            onUser(null);
+          } catch (error) { setStatus(userErrorMessage(error)); }
+        }}>Sign out</button>
       </div>
       {tab === "copy" ? <CopyEditor api={api} /> : tab === "wardrobe" ? <Wardrobe api={api} /> : <Writing api={api} />}
     </section>
@@ -78,7 +118,7 @@ function CopyEditor({ api }: { api: Api }) {
   const [copy, setCopy] = useState<SiteCopy | null>(null);
   const [note, setNote] = useState("");
   useEffect(() => {
-    api<SiteCopy>("/api/admin/site").then(setCopy, (e) => setNote(e.message));
+    api<SiteCopy>("/api/admin/site").then(setCopy, (e) => setNote(userErrorMessage(e)));
   }, [api]);
   if (!copy) return <p className="admin-status">{note || "Loading site copy…"}</p>;
   const save = async () => {
@@ -88,7 +128,7 @@ function CopyEditor({ api }: { api: Api }) {
       setCopy(saved);
       setNote("Saved. Pages refresh within a few seconds.");
     } catch (e) {
-      setNote((e as Error).message);
+      setNote(userErrorMessage(e));
     }
   };
   return (
@@ -133,10 +173,11 @@ function Wardrobe({ api }: { api: Api }) {
   useEffect(() => {
     api<WardrobeState>("/api/admin/wardrobe").then(
       (w) => (setState(w), setPicked(w.activeOutfit)),
-      (e) => setNote(e.message),
+      (e) => setNote(userErrorMessage(e)),
     );
   }, [api]);
-  if (!state) return <p className="admin-status">{note || "Loading the wardrobe…"}</p>;
+  if (!state) return <p className="admin-status" role="status">{note || "Loading the wardrobe…"}</p>;
+  if (!state.outfits.length) return <p className="admin-status" role="status">No outfits found in public/art/outfits.</p>;
   const save = async () => {
     setNote("Saving…");
     try {
@@ -147,7 +188,7 @@ function Wardrobe({ api }: { api: Api }) {
       setState({ ...state, ...saved });
       setNote("Saved. The room changes within a few seconds.");
     } catch (e) {
-      setNote((e as Error).message);
+      setNote(userErrorMessage(e));
     }
   };
   return (
@@ -185,7 +226,7 @@ function Writing({ api }: { api: Api }) {
   const [note, setNote] = useState("");
   const [creating, setCreating] = useState({ title: "", description: "" });
 
-  const refresh = useCallback(() => api<{ articles: Summary[] }>("/api/admin/articles").then((r) => setList(r.articles), (e) => setNote(e.message)), [api]);
+  const refresh = useCallback(() => api<{ articles: Summary[] }>("/api/admin/articles").then((r) => setList(r.articles), (e) => setNote(userErrorMessage(e))), [api]);
   useEffect(() => {
     refresh();
   }, [refresh]);
@@ -195,7 +236,7 @@ function Writing({ api }: { api: Api }) {
     try {
       await fn();
     } catch (e) {
-      setNote((e as Error).message);
+      setNote(userErrorMessage(e));
     }
   };
   const open = (slug: string) => run("Opening…", async () => {

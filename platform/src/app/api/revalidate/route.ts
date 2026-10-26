@@ -1,5 +1,6 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { apiError, HttpError } from "@/lib/admin";
 
 // Backend → frontend hook: after content changes (Firestore write, Git deploy, document publish),
 // the backend POSTs the public paths that changed and the pages are regenerated in the background.
@@ -14,25 +15,29 @@ const PUBLIC_PATH =
 const digest = (s: string) => createHash("sha256").update(s).digest();
 
 export async function POST(request: Request) {
-  const secret = process.env.REVALIDATE_SECRET;
-  if (!secret || secret.length < 32)
-    return Response.json({ error: "Revalidation is not enabled" }, { status: 503 });
-  const given = request.headers.get("authorization")?.replace(/^Bearer /, "") ?? "";
-  if (!timingSafeEqual(digest(given), digest(secret)))
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-
-  let body: unknown;
   try {
-    body = await request.json();
-  } catch {
-    return Response.json({ error: "Expected JSON" }, { status: 400 });
-  }
-  const paths = (body as { paths?: unknown })?.paths;
-  if (!Array.isArray(paths) || !paths.length || paths.length > 50)
-    return Response.json({ error: "Send 1–50 paths" }, { status: 400 });
-  const bad = paths.filter((p) => typeof p !== "string" || !PUBLIC_PATH.test(p));
-  if (bad.length) return Response.json({ error: "Not a public path", bad }, { status: 400 });
+    const secret = process.env.REVALIDATE_SECRET;
+    if (!secret || secret.length < 32)
+      throw new HttpError(503, "Revalidation is not enabled");
+    const given = request.headers.get("authorization")?.replace(/^Bearer /, "") ?? "";
+    if (!timingSafeEqual(digest(given), digest(secret)))
+      throw new HttpError(401, "Unauthorized");
 
-  for (const p of paths as string[]) revalidatePath(p);
-  return Response.json({ revalidated: paths, at: new Date().toISOString() });
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      throw new HttpError(400, "Expected JSON");
+    }
+    const paths = (body as { paths?: unknown })?.paths;
+    if (!Array.isArray(paths) || !paths.length || paths.length > 50)
+      throw new HttpError(400, "Send 1–50 paths");
+    const bad = paths.filter((p) => typeof p !== "string" || !PUBLIC_PATH.test(p));
+    if (bad.length) throw new HttpError(400, "Not a public path");
+
+    for (const p of paths as string[]) revalidatePath(p);
+    return Response.json({ revalidated: paths, at: new Date().toISOString() }, { headers: { "Cache-Control": "no-store" } });
+  } catch (error) {
+    return apiError(error);
+  }
 }

@@ -11,8 +11,10 @@ Every `/api/admin/*` route calls `requireOwner(request, { service })` from `src/
 sends `Authorization: Bearer <Firebase ID token>`. Services: `content` (new, flag
 `ENABLE_CONTENT_ADMIN`), plus the existing `documents`, `achievements`, `calendar`.
 
-Errors are JSON `{ "error": string }` with the status from `HttpError` (401, 403, 404, 409, 413,
-429, 503). Responses carry `Cache-Control: no-store`.
+Errors are JSON `{ "error": string, "code": string }` with the status from `HttpError` (401, 403, 404, 409, 413,
+429, 503). Messages and codes come from the shared public catalog in `src/lib/user-errors.ts`; clients never display arbitrary response text or SDK exception messages. Account-related sign-in failures use the same message regardless of whether an account exists, is disabled, or has invalid credentials. Invalid authenticator codes give retry guidance only after the first sign-in factor. Responses carry `Cache-Control: no-store`. Unexpected failures return a generic message and a `requestId` correlated with a structured server event; exception text, stack traces, tokens and credentials are not included.
+
+`GET /api/admin/session` verifies the same owner identity independently of service feature flags and returns `{ uid }` only after successful authorization. `/admin` shows the editor only after this server check; its Google sign-in and TOTP enrollment controls remain available while onboarding. Real sessions require a verified Google identity. The emulator exemption applies only to the explicitly configured demo-project environment.
 
 ## 1. Site copy: `siteSettings/public` (one document)
 

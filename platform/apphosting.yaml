@@ -1,0 +1,17 @@
+# Deployment template only. No project or billing account has been created.
+runConfig:
+  minInstances: 0
+  maxInstances: 2
+  concurrency: 8
+  cpu: 1
+  memoryMiB: 512
+env:
+  - variable: INDEX_SITE
+    value: "false"
+  - variable: ENABLE_DOCUMENT_ADMIN
+    value: "false"
+  - variable: ENABLE_ACHIEVEMENT_ADMIN
+    value: "false"
+  - variable: ENABLE_PUBLIC_FILES
+    value: "false"
+# Add project-specific values only after project/billing approval. See docs/firebase.md.

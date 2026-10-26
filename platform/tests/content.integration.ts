@@ -139,6 +139,7 @@ test(
 
       // Every route: 401 without a token, 403 for a signed-in non-owner.
       const routes: [string, string][] = [
+        ["GET", "/api/admin/session"],
         ["GET", "/api/admin/site"],
         ["PUT", "/api/admin/site"],
         ["GET", "/api/admin/wardrobe"],
@@ -156,9 +157,20 @@ test(
         const anon = await fetch(base + path, { method, body: method === "GET" ? undefined : "{}" });
         assert.equal(anon.status, 401, `${method} ${path} anonymous`);
         assert.equal(anon.headers.get("cache-control"), "no-store");
+        const anonymousError = await anon.json();
+        assert.equal(anonymousError.code, "sign_in_required");
+        assert.equal(anonymousError.error, "Sign in to continue.");
         const denied = await call(path, { method, json: method === "GET" ? undefined : {} }, other.idToken);
         assert.equal(denied.status, 403, `${method} ${path} other user`);
+        const deniedError = await denied.json();
+        assert.equal(deniedError.code, "access_denied");
+        assert.equal(deniedError.error, "You don’t have access to this page.");
       }
+
+      const session = await call("/api/admin/session");
+      assert.equal(session.status, 200);
+      assert.equal(session.headers.get("cache-control"), "no-store");
+      assert.deepEqual(await session.json(), { uid: owner.localId });
 
       // Site copy: starts from content/site.json, validates, saves, revalidates, shows publicly.
       const initial = await (await call("/api/admin/site")).json();

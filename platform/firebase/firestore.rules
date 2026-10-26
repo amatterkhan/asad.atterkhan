@@ -1,0 +1,14 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owner() { return request.auth != null && request.auth.token.admin == true && request.auth.token.firebase.sign_in_second_factor == "totp" && request.auth.uid == resource.data.ownerUid; }
+    match /documents/{documentId} {
+      allow get, list: if owner();
+      // All mutations go through the token-verified, validated backend.
+      allow create, update, delete: if false;
+    }
+    // Everything else, including articles, publicArticles, publicProjects and siteSettings, is
+    // read and written only by the Admin SDK (owner-checked /api/admin routes and server pages).
+    match /{document=**} { allow read, write: if false; }
+  }
+}

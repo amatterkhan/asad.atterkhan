@@ -1,0 +1,160 @@
+{
+  "httpChecks": [
+    {
+      "path": "/",
+      "status": 200,
+      "bytes": 17020,
+      "localResponseMs": 32.7
+    },
+    {
+      "path": "/lab",
+      "status": 200,
+      "bytes": 12098,
+      "localResponseMs": 7.0
+    },
+    {
+      "path": "/projects",
+      "status": 200,
+      "bytes": 14574,
+      "localResponseMs": 6.3
+    },
+    {
+      "path": "/projects/textile-sewing-services",
+      "status": 200,
+      "bytes": 15374,
+      "localResponseMs": 5.8
+    },
+    {
+      "path": "/experience",
+      "status": 200,
+      "bytes": 25380,
+      "localResponseMs": 5.1
+    },
+    {
+      "path": "/about",
+      "status": 200,
+      "bytes": 13602,
+      "localResponseMs": 4.4
+    },
+    {
+      "path": "/rss.xml",
+      "status": 200,
+      "bytes": 452,
+      "localResponseMs": 7.8
+    },
+    {
+      "path": "/sitemap.xml",
+      "status": 200,
+      "bytes": 689,
+      "localResponseMs": 4.2
+    },
+    {
+      "path": "/search.json",
+      "status": 200,
+      "bytes": 2,
+      "localResponseMs": 3.2
+    },
+    {
+      "path": "/opengraph-image",
+      "status": 200,
+      "bytes": 41837,
+      "localResponseMs": 3.8
+    },
+    {
+      "path": "/preview/reading-layout",
+      "status": 404,
+      "bytes": 10385,
+      "localResponseMs": 99.3
+    },
+    {
+      "path": "/lab/reading-layout",
+      "status": 404,
+      "bytes": 11997,
+      "localResponseMs": 10.1
+    },
+    {
+      "path": "/review",
+      "status": 404,
+      "bytes": 9791,
+      "localResponseMs": 6.3
+    },
+    {
+      "path": "/manage",
+      "status": 404,
+      "bytes": 9788,
+      "localResponseMs": 5.6
+    },
+    {
+      "path": "/api/dev/axe",
+      "status": 404,
+      "bytes": 9,
+      "localResponseMs": 3.0
+    },
+    {
+      "path": "/api/admin/documents",
+      "status": 503,
+      "bytes": 46,
+      "localResponseMs": 298.6
+    },
+    {
+      "path": "/files/5fceaf3a-11c9-45a2-8d5b-51a373e2cd25",
+      "status": 404,
+      "bytes": 9,
+      "localResponseMs": 2.6
+    }
+  ],
+  "homeScripts": [
+    {
+      "path": "/_next/static/chunks/1-48ns42n4mkk.js",
+      "bytes": 28739,
+      "gzipBytes": 7611
+    },
+    {
+      "path": "/_next/static/chunks/0cz1d0mv5g_q7.js",
+      "bytes": 112594,
+      "gzipBytes": 39373
+    },
+    {
+      "path": "/_next/static/chunks/0amtwzluzsh1_.js",
+      "bytes": 229820,
+      "gzipBytes": 71775
+    },
+    {
+      "path": "/_next/static/chunks/turbopack-2c3mg3r-05n1w.js",
+      "bytes": 11255,
+      "gzipBytes": 4396
+    },
+    {
+      "path": "/_next/static/chunks/0umf92h1sb77c.js",
+      "bytes": 13822,
+      "gzipBytes": 3530
+    },
+    {
+      "path": "/_next/static/chunks/1x6obpmlu1_c2.js",
+      "bytes": 5361,
+      "gzipBytes": 1961
+    },
+    {
+      "path": "/_next/static/chunks/2e268anpfvdoc.js",
+      "bytes": 168355,
+      "gzipBytes": 46178
+    },
+    {
+      "path": "/_next/static/chunks/33lwkfuzlau0a.js",
+      "bytes": 3479,
+      "gzipBytes": 1705
+    },
+    {
+      "path": "/_next/static/chunks/359to1g86k4vg.js",
+      "bytes": 439,
+      "gzipBytes": 310
+    },
+    {
+      "path": "/_next/static/chunks/03vjpcx4jmm31.js",
+      "bytes": 9230,
+      "gzipBytes": 3927
+    }
+  ],
+  "homeTotalScriptGzipBytes": 180766,
+  "notes": "Local HTTP response times and gzip estimates, not field Core Web Vitals or a hosted Lighthouse score."
+}

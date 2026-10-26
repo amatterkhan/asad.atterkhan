@@ -1,0 +1,35 @@
+"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+const links = [
+  ["/", "Home"],
+  ["/lab", "The Lab"],
+  ["/projects", "Projects"],
+  ["/experience", "Experience"],
+  ["/about", "About"],
+];
+export function Nav() {
+  const path = usePathname();
+  return (
+    <nav aria-label="Main navigation">
+      {links.map(([href, label]) => (
+        <Link
+          key={href}
+          href={href}
+          aria-current={
+            (
+              href === "/"
+                ? path === "/"
+                : path.startsWith(href) ||
+                  (href === "/lab" && path.startsWith("/preview/"))
+            )
+              ? "page"
+              : undefined
+          }
+        >
+          {label}
+        </Link>
+      ))}
+    </nav>
+  );
+}

@@ -1,0 +1,42 @@
+name: ASAD.EXE checks
+on:
+  pull_request:
+    paths: ['platform/**', '.github/workflows/platform-ci.yml']
+  push:
+    branches: ['codex/**']
+    paths: ['platform/**', '.github/workflows/platform-ci.yml']
+permissions:
+  contents: read
+concurrency:
+  group: asad-checks-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: platform
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      NEXT_DIST_DIR: .next-production
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: platform/package-lock.json
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm audit --audit-level=moderate
+      - run: npm test
+      - run: npm run build
+      - run: npm run test:rules
+      - run: npm run test:documents
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - run: npm run test:e2e

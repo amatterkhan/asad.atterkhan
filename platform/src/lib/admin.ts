@@ -1,6 +1,8 @@
 import "server-only";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { firebaseAdmin } from "./firebase-admin";
+import { ownerAccessError } from "./owner-policy";
+import { httpErrorCode, USER_ERRORS } from "./user-errors";
 export class HttpError extends Error {
   constructor(
     public status: number,
@@ -27,9 +29,14 @@ export async function requireOwner(
   }[service];
   if (enabled !== "true")
     throw new HttpError(503, "Content management is not enabled");
+  return requireOwnerIdentity(request, recent);
+}
+export async function requireOwnerIdentity(request: Request, recent = false) {
   const bearer = request.headers.get("authorization");
   if (!bearer?.startsWith("Bearer ") || bearer.length > 9000)
     throw new HttpError(401, "Sign in required");
+  if (!process.env.FIREBASE_OWNER_UID)
+    throw new HttpError(503, "Owner setup is not complete yet");
   const services = firebaseAdmin();
   let token;
   try {
@@ -37,15 +44,14 @@ export async function requireOwner(
   } catch {
     throw new HttpError(401, "Your session has expired. Sign in again.");
   }
-  if (token.uid !== process.env.FIREBASE_OWNER_UID || token.admin !== true)
-    throw new HttpError(403, "Owner access required");
+  const accessError = ownerAccessError(
+    token,
+    process.env.FIREBASE_OWNER_UID,
+    Boolean(process.env.FIREBASE_AUTH_EMULATOR_HOST),
+  );
+  if (accessError) throw new HttpError(403, accessError);
   if (recent && Date.now() / 1000 - token.auth_time > 300)
     throw new HttpError(401, "Sign in again before publishing or archiving");
-  if (
-    !process.env.FIREBASE_AUTH_EMULATOR_HOST &&
-    token.firebase?.sign_in_second_factor !== "totp"
-  )
-    throw new HttpError(403, "A second authentication factor is required");
   return { ...services, uid: token.uid };
 }
 export async function consumeQuota(
@@ -88,28 +94,33 @@ export async function limitedBody(req: Request, max: number) {
   return Buffer.concat(chunks);
 }
 export function apiError(error: unknown) {
-  if (error instanceof HttpError)
+  if (error instanceof HttpError) {
+    const code = httpErrorCode(error.status, error.message);
     return Response.json(
-      { error: error.message },
+      { error: USER_ERRORS[code], code },
       { status: error.status, headers: { "Cache-Control": "no-store" } },
     );
+  }
   if (
     error instanceof Error &&
     (error.name === "ZodError" || error instanceof SyntaxError)
   )
     return Response.json(
-      { error: "Invalid input" },
+      { error: USER_ERRORS.invalid_input, code: "invalid_input" },
       { status: 400, headers: { "Cache-Control": "no-store" } },
     );
+  const requestId = randomUUID();
   console.error(
     JSON.stringify({
       event: "content_operation_failed",
+      requestId,
       time: new Date().toISOString(),
-      kind: error instanceof Error ? error.name : "UnknownError",
+      kind: error instanceof Error && ["Error", "TypeError", "RangeError", "FirebaseError"].includes(error.name)
+        ? error.name : "UnknownError",
     }),
   );
   return Response.json(
-    { error: "The operation could not be completed" },
+    { error: USER_ERRORS.operation_failed, code: "operation_failed", requestId },
     { status: 500, headers: { "Cache-Control": "no-store" } },
   );
 }

@@ -396,6 +396,18 @@ p { margin: 0 0 1em; }
 .owner-form, .owner-auth, .achievement-manager, .document-record { display: grid; gap: 12px; margin: 20px 0; }
 .owner-form input, .owner-form select, .owner-form textarea { background: var(--bg-2); border: 1px solid var(--faint); border-radius: 0; padding: 10px 14px; }
 .owner-form button, .owner-auth button { background: var(--accent); color: var(--bg); padding: 10px 20px; border-radius: 0; min-height: 44px; }
+.owner-auth .owner-form { margin: 0; }
+.owner-account { margin: 0; color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
+.owner-error { margin: 0; color: var(--ink-strong); border-left: 3px solid var(--accent); padding: 8px 12px; font-size: 14px; line-height: 1.6; }
+.owner-auth button.owner-secondary { background: transparent; color: var(--muted); border: 0; padding: 4px 0; min-height: 36px; text-decoration: underline; text-underline-offset: 4px; }
+.owner-alternate { text-align: center; }
+.owner-qr { width: fit-content; max-width: 100%; background: #fff; border: 1px solid var(--faint); }
+.owner-qr img { display: block; max-width: 100%; height: auto; image-rendering: pixelated; }
+.owner-manual-key { color: var(--muted); font-size: 13px; }
+.owner-manual-key summary { cursor: pointer; padding: 8px 0; }
+.setup-key { display: block; padding: 12px; overflow-wrap: anywhere; user-select: all; background: var(--bg-2); color: var(--ink-strong); font: 13px/1.6 var(--mono); }
+.owner-auth button:disabled { opacity: .6; cursor: not-allowed; }
+.owner-auth[aria-busy="true"] button:disabled { cursor: wait; }
 
 /* ---------- responsive ---------- */
 @media (max-width: 860px) {

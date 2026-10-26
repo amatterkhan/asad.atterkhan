@@ -1,0 +1,98 @@
+import Link from "next/link";
+import { getArticles, getProjects } from "@/lib/content";
+import { SpriteScene } from "@/components/Sprites";
+import { Terminal } from "@/components/Terminal";
+import { site, date } from "@/lib/site";
+import type { Metadata } from "next";
+export const metadata: Metadata = { alternates: { canonical: "/" } };
+export default async function Home() {
+  const articles = (await getArticles()).slice(0, 2);
+  const projects = (await getProjects())
+    .filter((p) => p.featured)
+    .sort((a, b) => b.date.localeCompare(a.date));
+  return (
+    <>
+      <section className="home-intro">
+        <div>
+          <div className="path">~/home</div>
+          <h1>Hey, I&apos;m Asad.</h1>
+          <p className="opening">
+            I build things, break things, and try to understand how they work.
+          </p>
+          <p>
+            I&apos;m a security analyst and engineer interested in
+            cybersecurity, cloud, software, and infrastructure. I like making
+            useful tools, automating the repetitive bits, and following a
+            question until it makes sense.
+          </p>
+          <div className="text-links">
+            <Link href="/lab">Read The Lab →</Link>
+            <a href={`mailto:${site.email}`}>Say hello ↗</a>
+          </div>
+        </div>
+        <div className="home-companions">
+          <SpriteScene />
+          <p className="sprite-caption">A laptop, a question, and Storm.</p>
+        </div>
+      </section>
+      <div className="home-content">
+        <section className="section">
+          <div className="section-head">
+            <h2>A few things I&apos;ve built</h2>
+            <Link href="/projects">All projects →</Link>
+          </div>
+          {projects.map((p) => (
+            <article className="entry" key={p.slug}>
+              <div className="meta">{p.categories[0]}</div>
+              <div>
+                <h3>
+                  <Link href={`/projects/${p.slug}`}>{p.title}</Link>
+                </h3>
+                <p>{p.description}</p>
+                <div className="tags">{p.tags.join(" / ")}</div>
+              </div>
+            </article>
+          ))}
+        </section>
+        <section className="section">
+          <div className="section-head">
+            <h2>From The Lab</h2>
+            <Link href="/lab">All writing →</Link>
+          </div>
+          {articles.length ? (
+            articles.map((a) => (
+              <article className="entry" key={a.slug}>
+                <time className="meta" dateTime={a.publishedAt}>
+                  {date(a.publishedAt!)}
+                </time>
+                <div>
+                  <h3>
+                    <Link href={`/lab/${a.slug}`}>{a.title}</Link>
+                  </h3>
+                  <p>{a.description}</p>
+                </div>
+              </article>
+            ))
+          ) : (
+            <p className="quiet-note">
+              The notebook is open. First notes are on the way.
+            </p>
+          )}
+        </section>
+        <Terminal />
+      </div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Person",
+            name: site.name,
+            url: site.url,
+            sameAs: [site.github, site.linkedin],
+          }).replace(/</g, "\\u003c"),
+        }}
+      />
+    </>
+  );
+}

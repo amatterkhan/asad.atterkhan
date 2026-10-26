@@ -1,0 +1,12 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /private/{ownerUid}/{documentId}/{fileName} {
+      allow read: if request.auth != null && request.auth.uid == ownerUid && request.auth.token.admin == true && request.auth.token.firebase.sign_in_second_factor == "totp";
+      allow write: if false;
+    }
+    // Public downloads also pass through the publication-aware backend.
+    // No token URLs, anonymous bucket reads, or browser uploads.
+    match /{path=**} { allow read, write: if false; }
+  }
+}

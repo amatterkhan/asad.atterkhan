@@ -1,0 +1,82 @@
+import { PrintButton } from "@/components/PrintButton";
+import work from "../../../content/workExpData.json";
+import education from "../../../content/educationData.json";
+import certs from "../../../content/certsData.json";
+import skills from "../../../content/commandsData.json";
+export const metadata = {
+  title: "Experience",
+  description: "Career, education, and certifications — Asad Atterkhan.",
+  alternates: { canonical: "/experience" },
+};
+export default function Experience() {
+  return (
+    <>
+      <div className="path">~/experience</div>
+      <div className="section-head">
+        <h1>Experience.</h1>
+        <PrintButton />
+      </div>
+      <p className="page-intro">
+        Security operations, hands-on engineering, and the systems between them.
+      </p>
+      <section className="resume-section">
+        <h2>Work</h2>
+        {[...work].reverse().map((job) => (
+          <article className="resume-entry" key={job.id}>
+            <div className="meta">{job.dateRange}</div>
+            <div>
+              <h3>{job.title}</h3>
+              <p className="company">{job.company}</p>
+              <ul>
+                {job.responsibilities.map((r) => (
+                  <li key={r}>{r}</li>
+                ))}
+              </ul>
+            </div>
+          </article>
+        ))}
+      </section>
+      <section className="resume-section">
+        <h2>Education</h2>
+        {education.map((e) => (
+          <article className="resume-entry" key={e.degree}>
+            <div className="meta">
+              {e.isGraduated ? e.graduationDate : "In progress"}
+            </div>
+            <div>
+              <h3>
+                {e.degree} · {e.field}
+              </h3>
+              <p>
+                <a href={e.degreeLink}>{e.university} ↗</a>
+              </p>
+              <p>{e.classification}</p>
+            </div>
+          </article>
+        ))}
+      </section>
+      <section className="resume-section">
+        <h2>Certifications</h2>
+        <ul className="certifications">
+          {certs.map((c) => (
+            <li key={c.id}>
+              <a href={c.link}>{c.title} ↗</a>
+              <span>{c.issuer}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section className="resume-section">
+        <h2>Technical experience</h2>
+        <dl className="skills">
+          {skills.skills.map((s) => (
+            <div key={s.category}>
+              <dt>{s.category}</dt>
+              <dd>{s.items}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+    </>
+  );
+}

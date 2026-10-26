@@ -1,0 +1,65 @@
+[
+  {
+    "path": "/",
+    "status": 200
+  },
+  {
+    "path": "/lab",
+    "status": 200
+  },
+  {
+    "path": "/workbench",
+    "status": 200
+  },
+  {
+    "path": "/workbench/qrover",
+    "status": 200
+  },
+  {
+    "path": "/experience",
+    "status": 200
+  },
+  {
+    "path": "/achievements",
+    "status": 200
+  },
+  {
+    "path": "/calendar",
+    "status": 200
+  },
+  {
+    "path": "/about",
+    "status": 200
+  },
+  {
+    "path": "/preview/reading-layout",
+    "status": 404
+  },
+  {
+    "path": "/manage",
+    "status": 404
+  },
+  {
+    "path": "/api/admin/achievements",
+    "status": 503
+  },
+  {
+    "path": "/sitemap.xml",
+    "status": 200
+  },
+  {
+    "path": "/projects",
+    "status": 308,
+    "location": "/workbench"
+  },
+  {
+    "path": "/projects/qrover",
+    "status": 308,
+    "location": "/workbench/qrover"
+  },
+  {
+    "path": "/project/1",
+    "status": 308,
+    "location": "/workbench/textile-sewing-services"
+  }
+]

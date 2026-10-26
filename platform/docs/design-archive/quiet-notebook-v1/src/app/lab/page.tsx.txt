@@ -1,0 +1,45 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { getArticles, articleSummary } from "@/lib/content";
+import { LabSearch } from "@/components/LabSearch";
+import { StormSprite } from "@/components/Sprites";
+export const metadata: Metadata = {
+  title: "The Lab",
+  description: "Experiments, technical notes, and things Asad is figuring out.",
+  alternates: { canonical: "/lab" },
+};
+export default async function Lab() {
+  const articles = await getArticles();
+  return (
+    <>
+      <div className="lab-heading">
+        <div>
+          <div className="path">~/lab</div>
+          <h1>
+            The Lab<span className="accent">.</span>
+          </h1>
+          <p>
+            Experiments, useful notes, and things I&apos;m figuring out.
+            <br />A technical journal, with room for the unfinished questions.
+          </p>
+          <Link className="small-link" href="/rss.xml">
+            Subscribe with RSS ↗
+          </Link>
+        </div>
+        <StormSprite animation="sleeping" />
+      </div>
+      <LabSearch articles={articles.map(articleSummary)} />
+      {process.env.NODE_ENV === "development" && (
+        <aside className="dev-note">
+          <Link href="/preview/reading-layout">
+            Local draft: reading-layout fixture →
+          </Link>
+          <span>
+            Only visible in development. This sample is excluded from
+            publishing.
+          </span>
+        </aside>
+      )}
+    </>
+  );
+}

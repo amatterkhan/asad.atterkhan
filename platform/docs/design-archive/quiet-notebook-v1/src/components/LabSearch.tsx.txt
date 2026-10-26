@@ -1,0 +1,95 @@
+"use client";
+import Link from "next/link";
+import { useState } from "react";
+import { date } from "@/lib/site";
+type Entry = {
+  slug: string;
+  title: string;
+  description: string;
+  tags: string[];
+  category?: string;
+  publishedAt?: string;
+  readingMinutes: number;
+  searchText: string;
+};
+export function LabSearch({ articles }: { articles: Entry[] }) {
+  const [query, setQuery] = useState("");
+  const [tag, setTag] = useState("All");
+  const tags = [
+    "All",
+    ...new Set(
+      articles.flatMap((a) => [...a.tags, ...(a.category ? [a.category] : [])]),
+    ),
+  ];
+  const found = articles.filter(
+    (a) =>
+      (tag === "All" || a.tags.includes(tag) || a.category === tag) &&
+      `${a.title} ${a.description} ${a.tags} ${a.searchText}`
+        .toLowerCase()
+        .includes(query.toLowerCase()),
+  );
+  return (
+    <>
+      <div className="search">
+        <label htmlFor="lab-search">Find a note</label>
+        <input
+          id="lab-search"
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search titles, topics, and notes…"
+        />
+      </div>
+      {tags.length > 1 && (
+        <div className="filters" role="group" aria-label="Writing topics">
+          {tags.map((t) => (
+            <button key={t} onClick={() => setTag(t)} aria-pressed={tag === t}>
+              {t}
+            </button>
+          ))}
+        </div>
+      )}
+      <p className="sr-only" role="status">
+        {found.length} articles
+      </p>
+      {found.map((a) => (
+        <article className="entry" key={a.slug}>
+          <div className="meta">
+            <time dateTime={a.publishedAt}>{date(a.publishedAt!)}</time>
+            <br />
+            {a.readingMinutes} min read
+          </div>
+          <div>
+            <h2>
+              <Link href={`/lab/${a.slug}`}>{a.title}</Link>
+            </h2>
+            <p>{a.description}</p>
+            <div className="tags">{a.tags.join(" / ")}</div>
+          </div>
+        </article>
+      ))}
+      {!found.length && (
+        <div className="empty">
+          <h2>
+            {articles.length ? "No matching notes." : "The notebook is open."}
+          </h2>
+          <p>
+            {articles.length
+              ? "Try a different search or topic."
+              : "This is where my experiments, technical notes, and longer write-ups will live. The first published notes are still on the way."}
+          </p>
+          {articles.length > 0 && (
+            <button
+              onClick={() => {
+                setQuery("");
+                setTag("All");
+              }}
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+      )}
+    </>
+  );
+}

@@ -1,0 +1,20 @@
+[
+    {
+        "degree": "Master of Science",
+        "field": "Computer Science",
+        "university": "Georgia Institute of Technology",
+        "classification": "In Progress",
+        "degreeLink": "https://www.cc.gatech.edu/degree-programs/master-science-computer-science/",
+        "graduationDate": "Present",
+        "isGraduated": false
+    },
+    {
+        "degree": "Bachelor of Science (Hons)",
+        "field": "Computer Science (Systems Engineering)",
+        "university": "Middlesex University",
+        "classification": "First Class Honours",
+        "degreeLink": "https://verify.mdx.ac.uk/?reference=13446879-01-JWYD",
+        "graduationDate": "July 2025",
+        "isGraduated": true
+    }
+]

@@ -1,0 +1,110 @@
+"use client";
+import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { site } from "@/lib/site";
+export function Terminal() {
+  const router = useRouter();
+  const [input, setInput] = useState("");
+  const [lines, setLines] = useState<string[]>([]);
+  const history = useRef<string[]>([]);
+  const index = useRef(0);
+  return (
+    <div className="footer-terminal" id="terminal">
+      {lines.length > 0 && (
+        <div className="terminal-output">
+          <div
+            className="terminal-log"
+            role="log"
+            aria-live="polite"
+            aria-label="Terminal output"
+          >
+            {lines.map((line, i) => (
+              <div key={i}>{line}</div>
+            ))}
+          </div>
+          <button
+            aria-label="Clear terminal output"
+            onClick={() => setLines([])}
+          >
+            ×
+          </button>
+        </div>
+      )}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const cmd = input.trim().toLowerCase();
+          if (!cmd) return;
+          history.current.push(input);
+          index.current = history.current.length;
+          setInput("");
+          if (cmd === "clear") {
+            setLines([]);
+            return;
+          }
+          const routes: Record<string, string> = {
+            home: "/",
+            about: "/about",
+            workbench: "/workbench",
+            projects: "/workbench",
+            lab: "/lab",
+            blog: "/lab",
+            experience: "/experience",
+            resume: "/experience",
+            achievements: "/achievements",
+            calendar: "/calendar",
+          };
+          const messages: Record<string, string> = {
+            help: "home · lab · workbench · experience · achievements · about · calendar · contact · whoami · history · clear",
+            whoami: "Asad Atterkhan",
+            contact: site.email,
+            history: history.current.join("\n"),
+          };
+          setLines((old) =>
+            [
+              ...old,
+              `> ${cmd}\n${messages[cmd] || (routes[cmd] ? "Opening " + cmd + "…" : "Unknown command. Try help.")}`,
+            ].slice(-30),
+          );
+          if (routes[cmd]) router.push(routes[cmd]);
+        }}
+      >
+        <label htmlFor="terminal-input" aria-hidden="true">
+          ~/asad <span>$</span>
+        </label>
+        <input
+          id="terminal-input"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+              e.preventDefault();
+              index.current = Math.max(
+                0,
+                Math.min(
+                  history.current.length,
+                  index.current + (e.key === "ArrowUp" ? -1 : 1),
+                ),
+              );
+              setInput(history.current[index.current] || "");
+            }
+          }}
+          autoComplete="off"
+          spellCheck={false}
+          autoCapitalize="none"
+          enterKeyHint="go"
+          maxLength={120}
+          placeholder="help"
+          aria-label="Terminal command"
+        />
+        <button
+          className="terminal-run"
+          type="submit"
+          aria-label="Run terminal command"
+        >
+          ↵
+        </button>
+      </form>
+    </div>
+  );
+}

@@ -1,4 +1,4 @@
-import { apiError, requireOwner } from "@/lib/admin";
+import { apiError, HttpError, requireOwner } from "@/lib/admin";
 import { calendarMonth, calendarToday, shiftForDate } from "@/lib/calendar";
 
 // Owner-only: the shift rotation never ships to the browser. Visitors get 401/403/503.
@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     const year = Number(url.searchParams.get("year") ?? today.year);
     const month = Number(url.searchParams.get("month") ?? today.month);
     if (!Number.isInteger(year) || year < 2020 || year > 2100 || !Number.isInteger(month) || month < 0 || month > 11)
-      return Response.json({ error: "Invalid month" }, { status: 400, headers: { "Cache-Control": "no-store" } });
+      throw new HttpError(400, "Invalid month");
     const upcoming = Array.from({ length: 14 }, (_, i) => {
       const d = new Date(Date.UTC(today.year, today.month, today.day + i));
       const [y, m, day] = [d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()];

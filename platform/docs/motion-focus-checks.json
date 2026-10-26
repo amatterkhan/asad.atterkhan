@@ -1,0 +1,26 @@
+[
+  {
+    "border": "rgb(194, 160, 245)",
+    "id": "lab-search",
+    "outline": "none",
+    "radius": "0px",
+    "selection": "rgb(194, 160, 245)",
+    "shadow": "rgb(194, 160, 245) 0px 0px 0px 1px inset"
+  },
+  {
+    "border": "rgb(194, 160, 245)",
+    "id": "workbench-search",
+    "outline": "none",
+    "radius": "0px",
+    "selection": "rgb(194, 160, 245)",
+    "shadow": "rgb(194, 160, 245) 0px 0px 0px 1px inset"
+  },
+  {
+    "border": "rgb(194, 160, 245)",
+    "id": "achievement-search",
+    "outline": "none",
+    "radius": "0px",
+    "selection": "rgb(194, 160, 245)",
+    "shadow": "rgb(194, 160, 245) 0px 0px 0px 1px inset"
+  }
+]

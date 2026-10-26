@@ -1,0 +1,73 @@
+"use client";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+type Shared = {
+  size?: 128 | 256 | 384;
+  description?: string;
+  paused?: boolean;
+};
+type State = "asad-idle" | "asad-typing" | "storm-idle" | "storm-sleeping";
+function Sprite({
+  state,
+  size = 128,
+  description,
+  paused = false,
+}: Shared & { state: State }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let onScreen = false;
+    const update = () => setVisible(onScreen && !document.hidden);
+    const io = new IntersectionObserver(([entry]) => {
+      onScreen = entry.isIntersecting;
+      update();
+    });
+    io.observe(el);
+    document.addEventListener("visibilitychange", update);
+    return () => {
+      io.disconnect();
+      document.removeEventListener("visibilitychange", update);
+    };
+  }, []);
+  return (
+    <span
+      ref={ref}
+      role={description ? "img" : undefined}
+      aria-label={description}
+      aria-hidden={!description ? true : undefined}
+      className={`sprite ${state}`}
+      style={
+        {
+          "--sprite-size": `${size}px`,
+          "--sprite-sheet": `url(/sprites/${state}.png)`,
+          animationPlayState: visible && !paused ? "running" : "paused",
+        } as CSSProperties
+      }
+    />
+  );
+}
+export function AsadSprite({
+  animation = "idle",
+  ...props
+}: Shared & { animation?: "idle" | "typing" }) {
+  return <Sprite state={`asad-${animation}`} {...props} />;
+}
+export function StormSprite({
+  animation = "idle",
+  ...props
+}: Shared & { animation?: "idle" | "sleeping" }) {
+  return <Sprite state={`storm-${animation}`} {...props} />;
+}
+export function SpriteScene({ large = false }: { large?: boolean }) {
+  return (
+    <div
+      className={`sprite-scene${large ? " large" : ""}`}
+      role="img"
+      aria-label="Pixel-art Asad working on his laptop, with Storm sleeping beside him"
+    >
+      <AsadSprite animation="typing" size={large ? 256 : 128} />
+      <StormSprite animation="sleeping" size={large ? 256 : 128} />
+    </div>
+  );
+}

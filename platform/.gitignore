@@ -1,0 +1,14 @@
+node_modules/
+.next/
+.env*
+!.env.example
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+storage-debug.log
+playwright-report/
+test-results/
+coverage/
+.private-content/
+
+.next-production/

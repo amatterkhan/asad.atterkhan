@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { User } from "firebase/auth";
 import { OwnerSignIn } from "./OwnerSignIn";
+import { apiResponseError, userErrorMessage } from "@/lib/user-errors";
 
 type Shift = "day" | "night" | "off";
 type Cell = { day: number; shift: Shift; iso: string } | null;
@@ -28,16 +29,18 @@ export function ShiftCalendar({ open }: { open: boolean }) {
 
   const load = useCallback(
     async (target?: { year: number; month: number }) => {
-      const q = target ? `?year=${target.year}&month=${target.month}` : "";
-      const headers: HeadersInit = user ? { Authorization: `Bearer ${await user.getIdToken()}` } : {};
-      const res = await fetch(`/api/owner/calendar${q}`, { headers, cache: "no-store" });
-      const body = await res.json();
-      if (!res.ok) {
-        setStatus(body.error || "The calendar could not be loaded");
-        return;
+      try {
+        const q = target ? `?year=${target.year}&month=${target.month}` : "";
+        const headers: HeadersInit = user ? { Authorization: `Bearer ${await user.getIdToken()}` } : {};
+        const res = await fetch(`/api/owner/calendar${q}`, { headers, cache: "no-store" });
+        const body = await res.json();
+        if (!res.ok) throw apiResponseError(res.status, body);
+        setStatus("");
+        setData(body);
+      } catch (error) {
+        setData(null);
+        setStatus(userErrorMessage(error));
       }
-      setStatus("");
-      setData(body);
     },
     [user],
   );
@@ -58,7 +61,12 @@ export function ShiftCalendar({ open }: { open: boolean }) {
         {status && <p className="calendar-status" role="status">{status}</p>}
       </section>
     );
-  if (!data) return <p className="calendar-status" role="status">{status || "Loading the rotation…"}</p>;
+  if (!data) return (
+    <section aria-label="Calendar status">
+      <p className="calendar-status" role={status ? "alert" : "status"}>{status || "Loading the rotation…"}</p>
+      {status && <button onClick={() => void load(view ?? undefined)}>Try again</button>}
+    </section>
+  );
 
   const { year, month, today, cells, upcoming } = data;
   const monthName = new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric", timeZone: "UTC" }).format(

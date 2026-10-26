@@ -1,0 +1,66 @@
+import { ViewportProbe } from "@/components/ViewportProbe";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { Nav } from "@/components/Nav";
+import { site } from "@/lib/site";
+import "./globals.css";
+export const metadata: Metadata = {
+  metadataBase: new URL(site.url),
+  icons: { icon: "/icon.svg" },
+  title: {
+    default: "Asad Atterkhan — ASAD.EXE",
+    template: "%s · Asad Atterkhan",
+  },
+  description: site.description,
+  alternates: { types: { "application/rss+xml": "/rss.xml" } },
+  openGraph: {
+    type: "website",
+    locale: "en_GB",
+    siteName: site.title,
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+  },
+  twitter: { card: "summary_large_image" },
+  robots:
+    process.env.INDEX_SITE === "true"
+      ? { index: true, follow: true }
+      : { index: false, follow: false },
+};
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <head>
+        <link
+          rel="preload"
+          href="/fonts/DepartureMono-Regular.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+      </head>
+      <body>
+        {process.env.NODE_ENV === "development" && <ViewportProbe />}
+        <a href="#main" className="skip">
+          Skip to content
+        </a>
+        <div className="wrap">
+          <header className="site-header">
+            <Link href="/" className="brand">
+              <span>asad</span>@atterkhan <i>~</i>
+            </Link>
+            <Nav />
+          </header>
+          <main id="main">{children}</main>
+          <footer className="site-footer">
+            <span>© {new Date().getUTCFullYear()} Asad Atterkhan</span>
+            <div>
+              <a href={`mailto:${site.email}`}>Email</a>
+              <a href={site.github}>GitHub ↗</a>
+              <a href={site.linkedin}>LinkedIn ↗</a>
+              <Link href="/rss.xml">RSS</Link>
+            </div>
+          </footer>
+        </div>
+      </body>
+    </html>
+  );
+}

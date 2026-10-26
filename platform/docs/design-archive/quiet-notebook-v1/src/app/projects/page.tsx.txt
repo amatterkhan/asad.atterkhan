@@ -1,0 +1,38 @@
+import Link from "next/link";
+import { getProjects } from "@/lib/content";
+export const metadata = {
+  title: "Projects",
+  alternates: { canonical: "/projects" },
+};
+export default async function Projects() {
+  const projects = (await getProjects()).sort((a, b) =>
+    b.date.localeCompare(a.date),
+  );
+  return (
+    <>
+      <div className="path">~/projects</div>
+      <h1>Things I&apos;ve built.</h1>
+      <p className="page-intro">
+        Websites, tools, and the occasional piece of hardware.
+        <br />
+        Some are small experiments. Others have a life beyond my desk.
+      </p>
+      {projects.map((p) => (
+        <article className="entry project-entry" key={p.slug}>
+          <div className="meta">
+            {p.date.slice(0, 4)}
+            <br />
+            {p.categories[0]}
+          </div>
+          <div>
+            <h2>
+              <Link href={`/projects/${p.slug}`}>{p.title}</Link>
+            </h2>
+            <p>{p.description}</p>
+            <div className="tags">{p.tags.join(" / ")}</div>
+          </div>
+        </article>
+      ))}
+    </>
+  );
+}

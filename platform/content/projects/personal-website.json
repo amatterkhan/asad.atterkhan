@@ -1,0 +1,28 @@
+{
+  "id": 2,
+  "title": "Portfolio Website",
+  "description": "A responsive portfolio website built using Vue.js and Tailwind CSS.",
+  "date": "2024-06-01",
+  "categories": [
+    "Web Development",
+    "Vue.js"
+  ],
+  "tags": [
+    "vue",
+    "tailwind",
+    "portfolio"
+  ],
+  "featured": false,
+  "hasWriteup": false,
+  "links": [
+    {
+      "type": "Live",
+      "url": "https://asad.atterkhan.com"
+    },
+    {
+      "type": "Code",
+      "url": "https://github.com/amatterkhan/amatterkhan.github.io"
+    }
+  ],
+  "slug": "personal-website"
+}
