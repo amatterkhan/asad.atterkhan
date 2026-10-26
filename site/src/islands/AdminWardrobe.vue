@@ -9,7 +9,7 @@ const picked = ref("");
 const note = ref("");
 onMounted(() =>
   api<WardrobeState>("/api/admin/wardrobe").then(
-    (w) => ((state.value = w), (picked.value = w.activeOutfit)),
+    (w) => (Array.isArray(w.outfits) ? ((state.value = w), (picked.value = w.activeOutfit)) : (note.value = "The wardrobe response was malformed.")),
     (e: Error) => (note.value = e.message),
   ),
 );
@@ -28,7 +28,8 @@ const save = async () => {
 };
 </script>
 <template>
-  <p v-if="!state" class="admin-status">{{ note || "Loading the wardrobe…" }}</p>
+  <p v-if="!state" class="admin-status" role="status">{{ note || "Loading the wardrobe…" }}</p>
+  <p v-else-if="!state.outfits.length" class="admin-status" role="status">No outfits found in public/art/outfits.</p>
   <form v-else class="admin-form" @submit.prevent="save">
     <fieldset>
       <legend>What Asad is wearing</legend>

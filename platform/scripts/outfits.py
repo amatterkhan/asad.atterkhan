@@ -22,7 +22,7 @@ OUTFITS = ROOT / "public/art/outfits"
 SITE_OUTFITS = ROOT.parent / "site/public/art/outfits"
 API_INDEX = ROOT.parent / "api/internal/content/data/outfits.json"
 STATES = ["asad-idle", "asad-typing", "asad-coffee", "asad-happy"]
-DEFAULT = "forest"
+DEFAULT = "charcoal"
 
 # Where the hoodie is, per animation, in 128px frame coordinates: polygons around the torso and
 # sleeves that stop above the shoulders (long hair) and short of the laptop, mug and jeans. Frames

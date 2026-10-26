@@ -20,8 +20,9 @@ const api: Api = async <T,>(path: string, init: RequestInit = {}): Promise<T> =>
     headers: { ...init.headers, "Content-Type": "application/json", Authorization: `Bearer ${await user.value.getIdToken()}` },
     cache: "no-store",
   });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
+  const body = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(body?.error || `Request failed (${res.status})`);
+  if (body === null) throw new Error(`The admin API did not answer (${path} returned something that is not JSON). Is the Go API running and proxied?`);
   return body as T;
 };
 </script>
