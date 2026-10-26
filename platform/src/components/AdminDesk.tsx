@@ -29,7 +29,7 @@ const slugify = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0
 export function AdminDesk() {
   const [user, setUser] = useState<User | null>(null);
   const [status, setStatus] = useState("");
-  const [tab, setTab] = useState<"copy" | "writing">("writing");
+  const [tab, setTab] = useState<"copy" | "writing" | "wardrobe">("writing");
 
   const api = useCallback(
     async <T,>(path: string, init: RequestInit = {}): Promise<T> => {
@@ -60,14 +60,14 @@ export function AdminDesk() {
   return (
     <section className="admin-desk">
       <div className="admin-tabs" role="tablist" aria-label="Admin sections">
-        {(["writing", "copy"] as const).map((t) => (
+        {(["writing", "copy", "wardrobe"] as const).map((t) => (
           <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)}>
-            {t === "writing" ? "Writing" : "Site copy"}
+            {{ writing: "Writing", copy: "Site copy", wardrobe: "Wardrobe" }[t]}
           </button>
         ))}
         <span className="admin-who">{user.email}</span>
       </div>
-      {tab === "copy" ? <CopyEditor api={api} /> : <Writing api={api} />}
+      {tab === "copy" ? <CopyEditor api={api} /> : tab === "wardrobe" ? <Wardrobe api={api} /> : <Writing api={api} />}
     </section>
   );
 }
@@ -116,6 +116,63 @@ function CopyEditor({ api }: { api: Api }) {
       <div className="admin-actions">
         <button className="primary">Save site copy</button>
         <span className="admin-status" role="status">{note}{copy.updatedAt ? ` · last saved ${new Date(copy.updatedAt).toLocaleString()}` : ""}</span>
+      </div>
+    </form>
+  );
+}
+
+type Outfit = { id: string; name: string; description: string; createdAt: string; preview: string };
+type WardrobeState = { outfits: Outfit[]; defaultOutfit: string; activeOutfit: string; updatedAt?: string };
+
+// Asad's outfits live as files in public/art/outfits/ (scripts/outfits.py); this picks the one the
+// room and the About vignette show.
+function Wardrobe({ api }: { api: Api }) {
+  const [state, setState] = useState<WardrobeState | null>(null);
+  const [picked, setPicked] = useState("");
+  const [note, setNote] = useState("");
+  useEffect(() => {
+    api<WardrobeState>("/api/admin/wardrobe").then(
+      (w) => (setState(w), setPicked(w.activeOutfit)),
+      (e) => setNote(e.message),
+    );
+  }, [api]);
+  if (!state) return <p className="admin-status">{note || "Loading the wardrobe…"}</p>;
+  const save = async () => {
+    setNote("Saving…");
+    try {
+      const saved = await api<{ activeOutfit: string; updatedAt: string }>("/api/admin/wardrobe", {
+        method: "PUT",
+        body: JSON.stringify({ activeOutfit: picked }),
+      });
+      setState({ ...state, ...saved });
+      setNote("Saved. The room changes within a few seconds.");
+    } catch (e) {
+      setNote((e as Error).message);
+    }
+  };
+  return (
+    <form className="admin-form" onSubmit={(e) => (e.preventDefault(), save())}>
+      <fieldset>
+        <legend>What Asad is wearing</legend>
+        <div className="wardrobe" role="radiogroup" aria-label="Outfits">
+          {state.outfits.map((o) => (
+            <label key={o.id} className={`wardrobe-item${picked === o.id ? " is-picked" : ""}`}>
+              <input type="radio" name="outfit" value={o.id} checked={picked === o.id} onChange={() => setPicked(o.id)} />
+              {/* eslint-disable-next-line @next/next/no-img-element -- 64x76 pixel art, scaled with nearest-neighbour */}
+              <img src={o.preview} alt="" width={128} height={152} />
+              <strong>{o.name}</strong>
+              <small>{o.description}</small>
+              <small className="wardrobe-tags">
+                {o.id === state.activeOutfit && <span className="badge published">on the site</span>}
+                {o.id === state.defaultOutfit && <span className="badge draft">default</span>}
+              </small>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <div className="admin-actions">
+        <button className="primary" disabled={picked === state.activeOutfit}>Wear this outfit</button>
+        <span className="admin-status" role="status">{note}{state.updatedAt ? ` · last changed ${new Date(state.updatedAt).toLocaleString()}` : ""}</span>
       </div>
     </form>
   );

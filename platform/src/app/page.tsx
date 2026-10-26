@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getArticles, getProjects, getSiteCopy } from "@/lib/content";
+import { getActiveOutfit, getArticles, getProjects, getSiteCopy } from "@/lib/content";
 import { Room } from "@/components/Room";
 import { PixelIcon } from "@/components/PixelIcon";
 import { site, date } from "@/lib/site";
@@ -11,6 +11,7 @@ export default async function Home() {
     .filter((p) => p.featured)
     .sort((a, b) => b.date.localeCompare(a.date));
   const copy = await getSiteCopy();
+  const outfit = await getActiveOutfit();
   return (
     <>
       <section className="hero">
@@ -29,7 +30,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <Room hint={copy.roomHint} />
+      <Room hint={copy.roomHint} outfit={outfit} />
 
       <ul className="room-index" aria-label="Site sections">
         {[

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import manifest from "../../public/sprites/manifest.json";
+import { DEFAULT_OUTFIT, outfitSheet } from "@/lib/outfits";
 type Shared = {
   size?: 40 | 48 | 64 | 96 | 128 | 192 | 256 | 384;
   description?: string;
@@ -24,7 +25,8 @@ function Sprite({
   size = 128,
   description,
   paused = false,
-}: Shared & { state: State }) {
+  sheet = `/sprites/${state}.png?v=${manifest.version}`,
+}: Shared & { state: State; sheet?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
@@ -53,7 +55,7 @@ function Sprite({
       style={
         {
           "--sprite-size": `${size}px`,
-          "--sprite-sheet": `url(/sprites/${state}.png?v=${manifest.version})`,
+          "--sprite-sheet": `url(${sheet})`,
           "--n": manifest.states[state].frames,
           "--ms": `${manifest.states[state].frameMs}ms`,
           animationPlayState: visible && !paused ? "running" : "paused",
@@ -62,11 +64,14 @@ function Sprite({
     />
   );
 }
+/** Asad in one of his outfits (public/art/outfits/<id>/); the page passes the active outfit. */
 export function AsadSprite({
   animation = "idle",
+  outfit = DEFAULT_OUTFIT,
   ...props
-}: Shared & { animation?: "idle" | "typing" | "coffee" | "happy" }) {
-  return <Sprite state={`asad-${animation}`} {...props} />;
+}: Shared & { animation?: "idle" | "typing" | "coffee" | "happy"; outfit?: string }) {
+  const state = `asad-${animation}` as const;
+  return <Sprite state={state} sheet={outfitSheet(outfit, state)} {...props} />;
 }
 export function RobotSprite(props: Shared) {
   return <Sprite state="robot-idle" {...props} />;

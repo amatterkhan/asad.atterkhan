@@ -55,7 +55,7 @@ const clip = ([x, y, w, h]: Box) =>
 
 type StormMode = "idle" | "standing" | "sleeping" | "dream" | "stretch";
 
-export function Room({ hint }: { hint: string }) {
+export function Room({ hint, outfit }: { hint: string; outfit?: string }) {
   const root = useRef<HTMLDivElement>(null);
   const storm = useRef<HTMLDivElement>(null);
   const target = useRef(230);
@@ -209,7 +209,7 @@ export function Room({ hint }: { hint: string }) {
         {["sky-night", "stars-a", "stars-b", "sky-day", "clouds", "room", "sunbeam"].map(layer)}
 
         <div className="actor asad">
-          <AsadSprite animation={happy ? "happy" : asad} size={128} />
+          <AsadSprite animation={happy ? "happy" : asad} outfit={outfit} size={128} />
         </div>
         <div className="actor robot">
           <RobotSprite size={48} />

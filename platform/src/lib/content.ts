@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
 import { z } from "zod";
+import { DEFAULT_OUTFIT, resolveOutfit } from "./outfits";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
@@ -294,4 +295,12 @@ export async function getSiteCopy(): Promise<SiteCopy> {
   const read = mod.firestoreSiteCopy as (() => Promise<Partial<SiteCopy> | null>) | undefined;
   const stored = read ? await read() : null;
   return SiteCopySchema.parse({ ...fallback, ...(stored || {}) });
+}
+
+/** Asad's outfit on the public pages: siteSettings/wardrobe when CONTENT_SOURCE=firestore, else
+ *  (or when unset, removed or unknown) the wardrobe default from public/art/outfits/index.json. */
+export async function getActiveOutfit(): Promise<string> {
+  if (contentSource() !== "firestore") return DEFAULT_OUTFIT;
+  const { firestoreActiveOutfit } = await import("./content-firestore");
+  return resolveOutfit(await firestoreActiveOutfit());
 }

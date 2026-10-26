@@ -91,6 +91,30 @@ served from `/media/{id}`).
 `projects/{slug}` → `publicProjects/{slug}`, same endpoints under `/api/admin/projects`. Not needed
 for the first admin release.
 
+## 4. Wardrobe: `siteSettings/wardrobe` (one document)
+
+Asad's outfits are files, one folder each in `public/art/outfits/<id>/` (sheets with the same frames
+and timing as `public/sprites/manifest.json`, an `outfit.json`, a `preview.png`), listed in
+`public/art/outfits/index.json` and built by `scripts/outfits.py`. Firestore only stores which one
+he wears; adding an outfit is a commit, not an upload.
+
+```ts
+type Wardrobe = {
+  activeOutfit: string;    // an id from public/art/outfits/index.json
+  updatedAt?: string;      // ISO, set by the server
+  ownerUid?: string;       // stored, never returned
+};
+```
+
+- `GET /api/admin/wardrobe` (service `content`) → `{ outfits: Outfit[], defaultOutfit, activeOutfit,
+  updatedAt? }` where `Outfit = { id, name, description, createdAt, preview }`. A missing document
+  or an id no longer in the index reads as `defaultOutfit`.
+- `PUT /api/admin/wardrobe` body `{ activeOutfit }` (an `updatedAt` sent back is ignored; an unknown
+  id or unknown keys → 400) → `{ activeOutfit, updatedAt }`; then revalidates `/` and `/about`
+  (the pages that draw Asad).
+- Public read (server only): `getActiveOutfit()` in `src/lib/content.ts` reads the document when
+  `CONTENT_SOURCE=firestore` and falls back to the index default otherwise or when invalid.
+
 ## Done means
 
 - Rules: default deny; no client reads/writes of these collections (Admin SDK only).

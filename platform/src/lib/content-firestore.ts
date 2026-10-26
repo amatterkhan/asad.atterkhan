@@ -16,6 +16,7 @@ import {
 //   publicArticles/{slug}  ArticleSchema fields + body (Markdown string)
 //   publicProjects/{slug}  ProjectSchema fields (+ optional writeupBody Markdown)
 //   siteSettings/public    SiteCopySchema fields (+ updatedAt, ownerUid), written by /api/admin/site
+//   siteSettings/wardrobe  { activeOutfit, updatedAt, ownerUid }, written by /api/admin/wardrobe
 // Only server code imports this file; visitors never load the Firebase SDK.
 
 export async function firestoreArticles(): Promise<Article[]> {
@@ -44,4 +45,12 @@ export async function firestoreSiteCopy(): Promise<Partial<SiteCopy> | null> {
   const snap = await db.collection("siteSettings").doc("public").get();
   if (!snap.exists) return null;
   return SiteCopySchema.partial().parse(snap.data());
+}
+
+/** The stored active outfit id (siteSettings/wardrobe), or null when none is saved. Validation
+ *  against the outfit index happens in getActiveOutfit. */
+export async function firestoreActiveOutfit(): Promise<unknown> {
+  const { db } = firebaseAdmin();
+  const snap = await db.collection("siteSettings").doc("wardrobe").get();
+  return snap.exists ? snap.get("activeOutfit") : null;
 }

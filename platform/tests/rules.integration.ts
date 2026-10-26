@@ -129,6 +129,7 @@ test("content collections are Admin SDK only: no browser reads or writes", async
     "articles/hello-world",
     "publicArticles/hello-world",
     "siteSettings/public",
+    "siteSettings/wardrobe",
   ];
   await env.withSecurityRulesDisabled(async (ctx) => {
     for (const path of paths)

@@ -141,6 +141,8 @@ test(
       const routes: [string, string][] = [
         ["GET", "/api/admin/site"],
         ["PUT", "/api/admin/site"],
+        ["GET", "/api/admin/wardrobe"],
+        ["PUT", "/api/admin/wardrobe"],
         ["GET", "/api/admin/articles"],
         ["POST", "/api/admin/articles"],
         ["GET", "/api/admin/articles/hello-firestore"],
@@ -188,6 +190,22 @@ test(
         server.logs,
       );
       await eventually(async () => (await page("/")).text.includes(heroTitle), "hero title on /");
+
+      // Wardrobe: defaults until saved, rejects unknown outfits, switches the room's sheets.
+      const wardrobe = await (await call("/api/admin/wardrobe")).json();
+      assert.equal(wardrobe.activeOutfit, wardrobe.defaultOutfit);
+      assert.ok(wardrobe.outfits.some((o: { id: string }) => o.id === "classic"));
+      const wear = (json: unknown) => call("/api/admin/wardrobe", { method: "PUT", json });
+      assert.equal((await wear({ activeOutfit: "../sprites" })).status, 400);
+      assert.equal((await wear({ activeOutfit: "classic", extra: 1 })).status, 400);
+      const worn = await wear({ activeOutfit: "classic" });
+      assert.equal(worn.status, 200, await worn.clone().text());
+      assert.equal((await worn.json()).activeOutfit, "classic");
+      assert.equal((await db.doc("siteSettings/wardrobe").get()).get("ownerUid"), owner.localId);
+      assert.ok(revalidated(["/", "/about"]), server.logs);
+      await eventually(async () => (await page("/")).text.includes("/art/outfits/classic/asad-"), "classic outfit on /");
+      await db.doc("siteSettings/wardrobe").set({ activeOutfit: "retired-outfit" });
+      assert.equal((await (await call("/api/admin/wardrobe")).json()).activeOutfit, wardrobe.defaultOutfit);
 
       // Articles: create, validate, conflict on duplicate slug.
       const slug = `hello-firestore-${Date.now()}`;

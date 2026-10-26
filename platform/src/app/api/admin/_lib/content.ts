@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { audit, HttpError } from "@/lib/admin";
 import { ArticleSchema, SiteCopySchema } from "@/lib/content";
+import { isOutfit } from "@/lib/outfits";
 
 // Shared by the content admin routes (docs/admin-contract.md). `_lib` is a private folder, so
 // nothing here is routable.
@@ -36,6 +37,15 @@ export const SiteCopyInputSchema = SiteCopySchema.extend({ updatedAt: z.string()
     (copy) => Object.values(copy).every((v) => typeof v !== "string" || !CONTROL.test(v)),
     "Control characters are not allowed",
   );
+
+/** PUT /api/admin/wardrobe body: an outfit id from public/art/outfits/index.json. */
+export const WardrobeInputSchema = z
+  .object({
+    activeOutfit: z.string().max(60).refine(isOutfit, "Unknown outfit"),
+    updatedAt: z.string().optional(),
+  })
+  .strict();
+export const WARDROBE_PATHS = ["/", "/about"];
 
 export const SlugSchema = z
   .string()
