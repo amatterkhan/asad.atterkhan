@@ -4,10 +4,6 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { AsadSprite, StormSprite } from "./Sprites";
 import { site } from "@/lib/site";
 
-type Sky = "day" | "dusk" | "night";
-const skies: Sky[] = ["day", "dusk", "night"];
-const skyAt = (h: number): Sky =>
-  h >= 6 && h < 17 ? "day" : h >= 17 && h < 19 ? "dusk" : "night";
 const mauritiusTime = () =>
   new Intl.DateTimeFormat("en-GB", {
     hour: "2-digit",
@@ -62,19 +58,19 @@ export function Room() {
   const storm = useRef<HTMLDivElement>(null);
   const target = useRef(112);
   const lastInput = useRef(0);
-  const [sky, setSky] = useState<Sky>("night");
+  const [sky, setSky] = useState<"day" | "night">("night");
   const [clock, setClock] = useState("");
   const [lamp, setLamp] = useState(true);
-  const [mode, setMode] = useState<"sit" | "standing" | "sleeping">("sit");
+  const [mode, setMode] = useState<"idle" | "standing" | "sleeping">("idle");
   const [said, setSaid] = useState(-1);
 
   /* eslint-disable react-hooks/set-state-in-effect -- client-only clock and saved lamp state avoid hydration mismatch */
   useEffect(() => {
     const tick = () => {
       setClock(mauritiusTime());
-      setSky(skyAt(+mauritiusTime().slice(0, 2)));
     };
     tick();
+    setSky(document.documentElement.dataset.theme === "light" ? "day" : "night");
     const id = setInterval(tick, 30000);
     try {
       if (localStorage.getItem("lamp") === "off") setLamp(false);
@@ -89,7 +85,7 @@ export function Room() {
     let x = 112;
     let raf = 0;
     let last = performance.now();
-    let current: typeof mode = "sit";
+    let current: typeof mode = "idle";
     let wander = 0;
     lastInput.current = last;
     const set = (m: typeof mode) => {
@@ -110,9 +106,9 @@ export function Room() {
       if (Math.abs(dx) > 0.6 && !(current === "sleeping" && idle > 1000)) {
         x += reduce ? dx : Math.sign(dx) * Math.min(Math.abs(dx), dt * 0.028);
         set("standing");
-        storm.current?.style.setProperty("--flip", dx < 0 ? "-1" : "1");
+        storm.current?.style.setProperty("--flip", dx > 0 ? "-1" : "1");
       } else if (idle > 18000) set("sleeping");
-      else set("sit");
+      else set("idle");
       storm.current?.style.setProperty("--x", String(x));
       raf = requestAnimationFrame(loop);
     };
@@ -294,11 +290,19 @@ export function Room() {
         <button
           type="button"
           className="spot"
-          data-label="Change the sky"
+          data-label={sky === "day" ? "Switch to dark" : "Switch to light"}
           style={pos([14, 12, 46, 38])}
-          onClick={() => setSky((s) => skies[(skies.indexOf(s) + 1) % 3])}
+          onClick={() => {
+            const next = sky === "day" ? "night" : "day";
+            setSky(next);
+            const t = next === "day" ? "light" : "dark";
+            document.documentElement.dataset.theme = t;
+            try {
+              localStorage.setItem("theme", t);
+            } catch {}
+          }}
         >
-          <span className="sr-only">Change the time of day in the window</span>
+          <span className="sr-only">Switch between light and dark mode</span>
         </button>
 
         <div className="actor asad">

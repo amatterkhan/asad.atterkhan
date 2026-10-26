@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import manifest from "../../public/sprites/manifest.json";
 type Shared = {
   size?: 64 | 128 | 256 | 384;
   description?: string;
@@ -47,7 +48,9 @@ function Sprite({
       style={
         {
           "--sprite-size": `${size}px`,
-          "--sprite-sheet": `url(/sprites/${state}.png)`,
+          "--sprite-sheet": `url(/sprites/${state}.png?v=${manifest.version})`,
+          "--n": manifest.states[state].frames,
+          "--ms": `${manifest.states[state].frameMs}ms`,
           animationPlayState: visible && !paused ? "running" : "paused",
         } as CSSProperties
       }

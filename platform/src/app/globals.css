@@ -20,7 +20,32 @@
   --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: Departure, ui-monospace, monospace;
   --measure: 68ch;
+  --pen: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Crect x='14' y='0' width='1' height='1' fill='%23f38ba8'/%3E%3Crect x='15' y='0' width='1' height='1' fill='%23f38ba8'/%3E%3Crect x='13' y='1' width='1' height='1' fill='%23f38ba8'/%3E%3Crect x='14' y='1' width='1' height='1' fill='%23f38ba8'/%3E%3Crect x='15' y='1' width='1' height='1' fill='%23f38ba8'/%3E%3Crect x='12' y='2' width='1' height='1' fill='%236c7086'/%3E%3Crect x='13' y='2' width='1' height='1' fill='%236c7086'/%3E%3Crect x='14' y='2' width='1' height='1' fill='%23f38ba8'/%3E%3Crect x='11' y='3' width='1' height='1' fill='%236c7086'/%3E%3Crect x='12' y='3' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='13' y='3' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='14' y='3' width='1' height='1' fill='%236c7086'/%3E%3Crect x='10' y='4' width='1' height='1' fill='%236c7086'/%3E%3Crect x='11' y='4' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='12' y='4' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='13' y='4' width='1' height='1' fill='%236c7086'/%3E%3Crect x='9' y='5' width='1' height='1' fill='%236c7086'/%3E%3Crect x='10' y='5' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='11' y='5' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='12' y='5' width='1' height='1' fill='%236c7086'/%3E%3Crect x='8' y='6' width='1' height='1' fill='%236c7086'/%3E%3Crect x='9' y='6' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='10' y='6' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='11' y='6' width='1' height='1' fill='%236c7086'/%3E%3Crect x='7' y='7' width='1' height='1' fill='%236c7086'/%3E%3Crect x='8' y='7' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='9' y='7' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='10' y='7' width='1' height='1' fill='%236c7086'/%3E%3Crect x='6' y='8' width='1' height='1' fill='%236c7086'/%3E%3Crect x='7' y='8' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='8' y='8' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='9' y='8' width='1' height='1' fill='%236c7086'/%3E%3Crect x='5' y='9' width='1' height='1' fill='%236c7086'/%3E%3Crect x='6' y='9' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='7' y='9' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='8' y='9' width='1' height='1' fill='%236c7086'/%3E%3Crect x='4' y='10' width='1' height='1' fill='%236c7086'/%3E%3Crect x='5' y='10' width='1' height='1' fill='%23e8c9a0'/%3E%3Crect x='6' y='10' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='7' y='10' width='1' height='1' fill='%236c7086'/%3E%3Crect x='3' y='11' width='1' height='1' fill='%236c7086'/%3E%3Crect x='4' y='11' width='1' height='1' fill='%23e8c9a0'/%3E%3Crect x='5' y='11' width='1' height='1' fill='%23e8c9a0'/%3E%3Crect x='6' y='11' width='1' height='1' fill='%236c7086'/%3E%3Crect x='2' y='12' width='1' height='1' fill='%236c7086'/%3E%3Crect x='3' y='12' width='1' height='1' fill='%23e8c9a0'/%3E%3Crect x='4' y='12' width='1' height='1' fill='%23e8c9a0'/%3E%3Crect x='5' y='12' width='1' height='1' fill='%236c7086'/%3E%3Crect x='2' y='13' width='1' height='1' fill='%236c7086'/%3E%3Crect x='3' y='13' width='1' height='1' fill='%237a5a45'/%3E%3Crect x='4' y='13' width='1' height='1' fill='%23e8c9a0'/%3E%3Crect x='5' y='13' width='1' height='1' fill='%236c7086'/%3E%3Crect x='1' y='14' width='1' height='1' fill='%236c7086'/%3E%3Crect x='2' y='14' width='1' height='1' fill='%237a5a45'/%3E%3Crect x='3' y='14' width='1' height='1' fill='%236c7086'/%3E%3Crect x='0' y='15' width='1' height='1' fill='%2311111b'/%3E%3Crect x='1' y='15' width='1' height='1' fill='%236c7086'/%3E%3C/svg%3E") 0 31, auto;
+  --marker: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Crect x='14' y='0' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='15' y='0' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='13' y='1' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='14' y='1' width='1' height='1' fill='%23cba6f7'/%3E%3Crect x='15' y='1' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='12' y='2' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='13' y='2' width='1' height='1' fill='%23cba6f7'/%3E%3Crect x='14' y='2' width='1' height='1' fill='%23cba6f7'/%3E%3Crect x='15' y='2' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='11' y='3' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='12' y='3' width='1' height='1' fill='%23cba6f7'/%3E%3Crect x='13' y='3' width='1' height='1' fill='%23cba6f7'/%3E%3Crect x='14' y='3' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='10' y='4' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='11' y='4' width='1' height='1' fill='%23cba6f7'/%3E%3Crect x='12' y='4' width='1' height='1' fill='%23cba6f7'/%3E%3Crect x='13' y='4' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='9' y='5' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='10' y='5' width='1' height='1' fill='%23cba6f7'/%3E%3Crect x='11' y='5' width='1' height='1' fill='%23cba6f7'/%3E%3Crect x='12' y='5' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='8' y='6' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='9' y='6' width='1' height='1' fill='%23cba6f7'/%3E%3Crect x='10' y='6' width='1' height='1' fill='%23cba6f7'/%3E%3Crect x='11' y='6' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='7' y='7' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='8' y='7' width='1' height='1' fill='%23cba6f7'/%3E%3Crect x='9' y='7' width='1' height='1' fill='%23cba6f7'/%3E%3Crect x='10' y='7' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='6' y='8' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='7' y='8' width='1' height='1' fill='%23cba6f7'/%3E%3Crect x='8' y='8' width='1' height='1' fill='%23cba6f7'/%3E%3Crect x='9' y='8' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='5' y='9' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='6' y='9' width='1' height='1' fill='%23cba6f7'/%3E%3Crect x='7' y='9' width='1' height='1' fill='%23cba6f7'/%3E%3Crect x='8' y='9' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='4' y='10' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='5' y='10' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='6' y='10' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='7' y='10' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='3' y='11' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='4' y='11' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='5' y='11' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='6' y='11' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='2' y='12' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='3' y='12' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='4' y='12' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='5' y='12' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='2' y='13' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='3' y='13' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='4' y='13' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='1' y='14' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='2' y='14' width='1' height='1' fill='%23f9e2af'/%3E%3Crect x='3' y='14' width='1' height='1' fill='%234a3f7a'/%3E%3Crect x='0' y='15' width='1' height='1' fill='%2311111b'/%3E%3Crect x='1' y='15' width='1' height='1' fill='%234a3f7a'/%3E%3C/svg%3E") 0 31, pointer;
+  --paper-hl: rgba(249, 226, 175, .85);
 }
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f5efe1; --bg-2: #ebe3d0; --ink: #2d3050; --ink-strong: #14173a; --muted: #5c6184;
+  --faint: #d8cdb4; --mauve: #7a3fd0; --sky: #12689c; --peach: #b8561b; --green: #2c8a4b;
+  --paper-hl: rgba(255, 214, 90, .75);
+}
+:root[data-theme="light"] body {
+  background: radial-gradient(circle, rgba(60, 64, 110, .2) 1px, transparent 1.4px) 0 0 / 24px 24px, var(--bg);
+}
+:root[data-theme="light"] .prose pre { background: #e6dec9; }
+:root[data-theme="light"] .desktop-nav a[aria-current="page"], :root[data-theme="light"] .filters button[aria-pressed="true"] { color: #fff; }
+body { cursor: var(--pen); }
+a, button, summary, label, [role="button"], input[type="search"] { cursor: var(--marker); }
+input[type="search"], input[type="text"] { cursor: text; }
+::selection { background: var(--paper-hl); color: #14173a; }
+.prose a, .hero-sub a, .closing a { background: linear-gradient(transparent 62%, var(--paper-hl) 62%) 0 0 / 0% 100% no-repeat; transition: background-size .25s; text-decoration: none; }
+.prose a:hover, .hero-sub a:hover, .closing a:hover { background-size: 100% 100%; color: var(--ink-strong); }
+:root[data-theme="light"] .prose a:hover, :root[data-theme="light"] .closing a:hover { color: #14173a; }
+.prose mark, mark { background: linear-gradient(transparent 20%, var(--paper-hl) 20%); color: inherit; padding: 0 .15em; }
+:root[data-theme="light"] .room svg { filter: brightness(1.55) saturate(1.05); }
+:root[data-theme="light"] .room { box-shadow: 0 0 0 4px var(--faint), 0 30px 50px -24px rgba(60,50,100,.35); }
+.room { cursor: var(--pen) !important; }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 body {
@@ -314,50 +339,14 @@ p { margin: 0 0 1em; }
 @media print { body { background: #fff; color: #000; } .site-header, .site-footer, .print-button { display: none; } a { color: #000; } h1, h2, h3, h4 { color: #000; } }
 
 /* ---------- sprites (approved art, unchanged behaviour) ---------- */
-.sprite-scene {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  max-width: 100%;
-  position: relative;
-  z-index: 1;
-}
+.sprite-scene { display: flex; justify-content: center; align-items: flex-end; max-width: 100%; position: relative; z-index: 1; }
 .sprite {
-  display: inline-block;
-  flex: none;
-  width: var(--sprite-size, 128px);
-  height: var(--sprite-size, 128px);
-  background-image: var(--sprite-sheet);
-  background-size: calc(var(--sprite-size, 128px) * 2) var(--sprite-size, 128px);
-  background-repeat: no-repeat;
-  image-rendering: pixelated;
-  animation: sprite-half 4.8s steps(1, end) infinite;
+  display: inline-block; flex: none; width: var(--sprite-size, 128px); height: var(--sprite-size, 128px);
+  background-image: var(--sprite-sheet); background-repeat: no-repeat; image-rendering: pixelated;
+  background-size: calc(var(--sprite-size, 128px) * var(--n, 2)) var(--sprite-size, 128px);
+  animation: sprite-play calc(var(--n, 2) * var(--ms, 400ms)) steps(var(--n, 2)) infinite;
 }
-.sprite.asad-idle {
-  animation: none;
-}
-.sprite.asad-typing {
-  animation: sprite-typing 1.46s steps(1, end) infinite;
-}
-.sprite.storm-idle {
-  animation: sprite-blink 4.54s steps(1, end) infinite;
-}
-@keyframes sprite-half {
-  50% {
-    background-position: calc(-1 * var(--sprite-size, 128px)) 0;
-  }
-}
-@keyframes sprite-typing {
-  89.04% {
-    background-position: calc(-1 * var(--sprite-size, 128px)) 0;
-  }
-}
-@keyframes sprite-blink {
-  96.92% {
-    background-position: calc(-1 * var(--sprite-size, 128px)) 0;
-  }
-}
-.sprite.asad-coffee,.sprite.storm-standing,.sprite.storm-sit{animation:none}
+@keyframes sprite-play { to { background-position: calc(-1 * var(--n, 2) * var(--sprite-size, 128px)) 0; } }
 html[data-visibility="hidden"] *,
 html[data-visibility="hidden"] *::before,
 html[data-visibility="hidden"] *::after {
@@ -404,7 +393,8 @@ html[data-motion="paused"] *::after {
 .room svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .room-light { position: absolute; inset: 0; pointer-events: none; transition: background .6s; }
 .room[data-lamp="on"] .room-light { background: radial-gradient(circle at 92% 52%, rgba(250,179,135,.22), transparent 42%); }
-.room[data-lamp="off"] .room-light { background: rgba(5, 6, 22, .62); }
+.room[data-lamp="off"][data-sky="night"] .room-light { background: rgba(5, 6, 22, .62); }
+.room[data-sky="day"] .room-light { background: linear-gradient(100deg, rgba(255, 236, 190, .32), rgba(255, 236, 190, .08)); }
 .room[data-lamp="off"] .beam { opacity: 0; }
 .beam { opacity: .13; transition: opacity .4s; }
 .lamp-head { fill: #f9e2af; transition: fill .3s; }
@@ -448,7 +438,8 @@ html[data-motion="paused"] *::after {
   --x: 112; --flip: 1; top: calc(var(--u) * 73.2); left: 0;
   translate: calc(var(--u) * (var(--x) - 15)) 0;
 }
-.actor.storm .sprite { --sprite-size: calc(var(--u) * 30) !important; transform: scaleX(var(--flip)); }
+.actor.storm .sprite { --sprite-size: calc(var(--u) * 30) !important; }
+.actor.storm .sprite.storm-standing { transform: scaleX(var(--flip)); }
 .actor.storm button { pointer-events: auto; position: relative; border-radius: 8px; display: block; cursor: pointer; }
 .actor.storm button:focus-visible { outline-offset: 0; }
 .zzz { position: absolute; left: 60%; top: 0; font: 12px var(--mono); color: var(--mauve); animation: pop 2.4s ease-in-out infinite; }
