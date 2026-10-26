@@ -7,6 +7,7 @@ import {
   getAchievements,
   getArticles,
   getExperience,
+  getActiveOutfit,
   getFeaturedAchievements,
   getProjects,
   getSiteCopy,
@@ -48,6 +49,7 @@ export const routes: RouteRecordRaw[] = [
           copy: await getSiteCopy(),
           articles: (await getArticles()).slice(0, 3).map(articleSummary),
           projects: (await getProjects()).filter((p) => p.featured).sort((a, b) => b.date.localeCompare(a.date)),
+          outfit: await getActiveOutfit(),
         },
         head: {
           canonical: "/",
@@ -176,7 +178,7 @@ export const routes: RouteRecordRaw[] = [
     component: About,
     meta: {
       load: async () => ({
-        props: { html: (await renderMarkdown((await getSiteCopy()).aboutBody)).html },
+        props: { html: (await renderMarkdown((await getSiteCopy()).aboutBody)).html, outfit: await getActiveOutfit() },
         head: { title: "About", canonical: "/about" },
       }),
     },

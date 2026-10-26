@@ -13,6 +13,8 @@ export type Summary = {
   publishedVersion?: number;
 };
 export type Draft = Summary & { body: string };
+export type Outfit = { id: string; name: string; description: string; createdAt: string; preview: string };
+export type WardrobeState = { outfits: Outfit[]; defaultOutfit: string; activeOutfit: string; updatedAt?: string };
 export type Api = <T>(path: string, init?: RequestInit) => Promise<T>;
 export const slugify = (s: string) =>
   s

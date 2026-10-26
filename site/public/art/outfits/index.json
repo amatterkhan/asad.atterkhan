@@ -1,0 +1,27 @@
+{
+  "version": 21,
+  "default": "forest",
+  "outfits": [
+    {
+      "id": "forest",
+      "name": "Forest",
+      "description": "Deep forest-olive hoodie with bone drawstrings.",
+      "createdAt": "2026-10-26",
+      "preview": "/art/outfits/forest/preview.png"
+    },
+    {
+      "id": "classic",
+      "name": "Classic",
+      "description": "The original plum-charcoal hoodie from the first PixelLab pass.",
+      "createdAt": "2026-07-01",
+      "preview": "/art/outfits/classic/preview.png"
+    },
+    {
+      "id": "charcoal",
+      "name": "Charcoal",
+      "description": "Slate charcoal hoodie with mint drawstrings.",
+      "createdAt": "2026-10-26",
+      "preview": "/art/outfits/charcoal/preview.png"
+    }
+  ]
+}

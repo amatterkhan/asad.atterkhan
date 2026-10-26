@@ -96,8 +96,9 @@ cd ../site
 CONTENT_SOURCE=firestore npm run build
 ```
 
-The exporter writes `site/.content-export/{articles,projects}/*.json`, `site.json`, and
-`achievements.json`. `CONTENT_EXPORT_DIR` overrides its output directory; it is relative to the
+The exporter writes `site/.content-export/{articles,projects}/*.json`, `site.json`,
+`achievements.json` and `wardrobe.json` (Asad's active outfit; an id missing from
+`site/public/art/outfits/index.json` falls back to the default). `CONTENT_EXPORT_DIR` overrides its output directory; it is relative to the
 exporter's working directory. On the site build it is relative to `site/`. Use one absolute path
 for both if overriding. A marker prevents replacing an unrelated non-empty directory. Complete snapshots replace previous snapshots so unpublished articles
 cannot linger. Exported document IDs must equal their slugs. The site validates the exported
@@ -110,7 +111,7 @@ archiving require authentication within the last 300 seconds. Service flags defa
 
 | Variable | Enables |
 | --- | --- |
-| `ENABLE_CONTENT_ADMIN` | Site copy, article drafts, publication and Markdown preview |
+| `ENABLE_CONTENT_ADMIN` | Site copy, article drafts, publication, Markdown preview and the wardrobe (Asad's outfit) |
 | `ENABLE_DOCUMENT_ADMIN` | Private uploads, metadata, publication, downloads and archive |
 | `ENABLE_ACHIEVEMENT_ADMIN` | Featured achievement selection |
 | `ENABLE_PRIVATE_CALENDAR` | Authenticated calendar |

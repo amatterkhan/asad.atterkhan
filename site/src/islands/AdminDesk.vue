@@ -4,13 +4,14 @@ import type { User } from "firebase/auth";
 import OwnerSignIn from "./OwnerSignIn.vue";
 import AdminCopy from "./AdminCopy.vue";
 import AdminWriting from "./AdminWriting.vue";
+import AdminWardrobe from "./AdminWardrobe.vue";
 import type { Api } from "./admin-types";
 
 // Owner-only writing desk. Talks to /api/admin/* (the Go API, docs/admin-contract.md) with the
 // Firebase ID token.
 const user = shallowRef<User | null>(null);
 const status = ref("");
-const tab = ref<"copy" | "writing">("writing");
+const tab = ref<"copy" | "writing" | "wardrobe">("writing");
 
 const api: Api = async <T,>(path: string, init: RequestInit = {}): Promise<T> => {
   if (!user.value) throw new Error("Sign in first");
@@ -34,12 +35,13 @@ const api: Api = async <T,>(path: string, init: RequestInit = {}): Promise<T> =>
   </section>
   <section v-else class="admin-desk">
     <div class="admin-tabs" role="tablist" aria-label="Admin sections">
-      <button v-for="t in ['writing', 'copy'] as const" :key="t" role="tab" :aria-selected="tab === t" @click="tab = t">
-        {{ t === "writing" ? "Writing" : "Site copy" }}
+      <button v-for="t in ['writing', 'copy', 'wardrobe'] as const" :key="t" role="tab" :aria-selected="tab === t" @click="tab = t">
+        {{ { writing: "Writing", copy: "Site copy", wardrobe: "Wardrobe" }[t] }}
       </button>
       <span class="admin-who">{{ user.email }}</span>
     </div>
     <AdminCopy v-if="tab === 'copy'" :api="api" />
+    <AdminWardrobe v-else-if="tab === 'wardrobe'" :api="api" />
     <AdminWriting v-else :api="api" />
   </section>
 </template>

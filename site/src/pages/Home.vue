@@ -4,7 +4,7 @@ import { Room } from "../islands";
 import { date, site } from "../lib/site";
 import type { SiteCopy, Project } from "../lib/schemas";
 import type { ArticleSummary } from "../lib/content.server";
-const { copy, articles, projects } = defineProps<{ copy: SiteCopy; articles: ArticleSummary[]; projects: Project[] }>();
+const { copy, articles, projects, outfit } = defineProps<{ copy: SiteCopy; articles: ArticleSummary[]; projects: Project[]; outfit: string }>();
 const name = copy.heroTitle.match(/Asad\.?$/)?.[0];
 const sections = [
   ["/lab", "The Lab"],
@@ -26,7 +26,7 @@ const sections = [
     </div>
   </section>
 
-  <Room :hint="copy.roomHint" />
+  <Room :hint="copy.roomHint" :outfit="outfit" />
 
   <ul class="room-index" aria-label="Site sections">
     <li v-for="[h, l] in sections" :key="h"><a :href="h">{{ l }}</a></li>

@@ -17,11 +17,12 @@ import {
   type SiteCopy,
 } from "./schemas";
 import { renderMarkdown, type TocEntry } from "./markdown";
+import { DEFAULT_OUTFIT, resolveOutfit } from "./outfits";
 
 // Build-time content gateway (Node only). CONTENT_SOURCE=git (default) reads reviewed files in
 // content/; CONTENT_SOURCE=firestore reads the snapshot written by `go run ./cmd/export` (published
-// articles, projects, site copy and the Experience selection) and falls back to content/ for the
-// rest. Both go through the same zod schemas, so a bad record fails the build.
+// articles, projects, site copy, the Experience selection and Asad's outfit) and falls back to
+// content/ for the rest. Both go through the same zod schemas, so a bad record fails the build.
 
 const root = process.env.SITE_ROOT || process.cwd();
 const dir = (...p: string[]) => path.join(root, ...p);
@@ -143,4 +144,12 @@ export async function getExperience() {
     education: z.array(EducationSchema).parse(await readJson(dir("content/educationData.json"))),
     skills: SkillsSchema.parse(await readJson(dir("content/commandsData.json"))).skills,
   };
+}
+
+/** Asad's outfit: the exported siteSettings/wardrobe when CONTENT_SOURCE=firestore, else (or when
+ *  missing or no longer in public/art/outfits/index.json) the wardrobe default. */
+export async function getActiveOutfit(): Promise<string> {
+  const exported = path.join(exportDir(), "wardrobe.json");
+  if (contentSource() !== "firestore" || !(await exists(exported))) return DEFAULT_OUTFIT;
+  return resolveOutfit((await readJson(exported)).activeOutfit);
 }

@@ -14,8 +14,10 @@ import {
   getProjects,
   getSiteCopy,
   getFeaturedAchievements,
+  getActiveOutfit,
   parseArticle,
 } from "../../src/lib/content.server";
+import { DEFAULT_OUTFIT, outfitSheet } from "../../src/lib/outfits";
 import { renderHead } from "../../src/head";
 import { ICONS, ICON_SOURCES } from "../../src/lib/icons";
 
@@ -128,6 +130,23 @@ describe("content boundaries", () => {
       await fs.rm(dir, { recursive: true, force: true });
     }
   });
+});
+it("reads Asad's outfit from the export and falls back to the wardrobe default", async () => {
+  expect(await getActiveOutfit()).toBe(DEFAULT_OUTFIT);
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "asad-wardrobe-"));
+  try {
+    process.env.CONTENT_SOURCE = "firestore";
+    process.env.CONTENT_EXPORT_DIR = dir;
+    expect(await getActiveOutfit()).toBe(DEFAULT_OUTFIT);
+    await fs.writeFile(path.join(dir, "wardrobe.json"), JSON.stringify({ activeOutfit: "classic" }));
+    expect(await getActiveOutfit()).toBe("classic");
+    await fs.writeFile(path.join(dir, "wardrobe.json"), JSON.stringify({ activeOutfit: "../sprites" }));
+    expect(await getActiveOutfit()).toBe(DEFAULT_OUTFIT);
+  } finally {
+    await fs.rm(dir, { recursive: true, force: true });
+  }
+  expect(outfitSheet("classic", "asad-idle")).toMatch(/^\/art\/outfits\/classic\/asad-idle\.png\?v=/);
+  await fs.access(path.join("public", outfitSheet(DEFAULT_OUTFIT, "asad-typing").split("?")[0]));
 });
 it("groups adjacent company roles without mutating source", () => {
   const roles = [

@@ -13,7 +13,7 @@ const WALK_SPEED = manifest.strideRoomPx / manifest.walkCycleMs;
 // Nap spots on either side of Asad (he sits around x 104-156): rug end by the window, or by the chair.
 const BEDS = [60, 188] as const;
 
-const { hint } = defineProps<{ hint: string }>();
+const { hint, outfit } = defineProps<{ hint: string; outfit?: string }>();
 
 const mauritiusTime = () =>
   new Intl.DateTimeFormat("en-GB", {
@@ -212,7 +212,7 @@ const toggleTheme = () => {
       />
 
       <div class="actor asad">
-        <Sprite :state="happy ? 'asad-happy' : `asad-${asad}`" :size="128" />
+        <Sprite :state="happy ? 'asad-happy' : `asad-${asad}`" :outfit="outfit" :size="128" />
       </div>
       <div class="actor robot">
         <Sprite state="robot-idle" :size="48" />
