@@ -30,8 +30,8 @@ export function initCursor() {
     my = e.clientY;
     const t = e.target as Element | null;
     const link = t?.closest?.(LINKISH) ?? null;
-    // the room's hotspots draw their own brackets
-    target = link && !link.classList.contains("spot") ? link : null;
+    // the room's hotspots draw their own brackets; data-cursor="plain" opts out (Storm)
+    target = link && !link.classList.contains("spot") && !link.matches("[data-cursor=plain]") ? link : null;
     root.dataset.cursor = t?.closest?.("input,textarea") ? "text" : target ? "box" : link ? "link" : "";
     frame();
     dot.style.transform = `translate(${mx}px,${my}px)`;

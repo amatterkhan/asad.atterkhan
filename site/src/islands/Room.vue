@@ -221,7 +221,7 @@ const toggleTheme = () => {
       <div class="layer layer-room room-front" :style="{ ...layer('room'), clipPath: clip(MUG) }" />
       <div ref="storm" class="actor storm" :data-mode="mode">
         <span class="storm-shadow" aria-hidden="true" />
-        <button type="button" aria-label="Pet Storm" @click="pet">
+        <button type="button" aria-label="Pet Storm" data-cursor="plain" @click="pet">
           <span v-if="said >= 0" :key="said" class="storm-says" role="status">{{ mrrps[said] }}</span>
           <span v-if="mode === 'sleeping'" class="zzz" aria-hidden="true">z Z</span>
           <Sprite :state="`storm-${mode}`" :size="64" />
