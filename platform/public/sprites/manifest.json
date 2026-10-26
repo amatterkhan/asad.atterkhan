@@ -1,5 +1,5 @@
 {
-  "version": 14,
+  "version": 15,
   "logicalSize": [
     128,
     128
@@ -222,7 +222,7 @@
     "asad-happy": {
       "sheet": "/sprites/asad-happy.png",
       "still": "/sprites/asad-happy-still.png",
-      "frames": 8,
+      "frames": 6,
       "frameMs": 170,
       "frameWidth": 128,
       "frameHeight": 128,
@@ -231,8 +231,6 @@
         122
       ],
       "durationsMs": [
-        170,
-        170,
         170,
         170,
         170,

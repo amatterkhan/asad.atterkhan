@@ -31,6 +31,10 @@ Canvas: Asad 128×128 with feet at y=122; Storm 64×64 with feet at y=58; both f
 Placement lives in `src/app/globals.css` (`.actor.asad`, `.actor.storm`, `.vignette ...`).
 Storm's walking speed is `strideRoomPx / walkCycleMs` in `public/sprites/manifest.json`.
 
+Facial hair rule for Asad (keep in prompts and references): a short, neat dark goatee under the
+lower lip; no moustache, no cheek beard or sideburns. `scripts/paint_goatee.py` paints it into the
+references before any regeneration.
+
 ## Exporting
 
 `./scripts/export_ase.sh` exports every `art/ase/*.aseprite|*.ase` (Aseprite if installed, else

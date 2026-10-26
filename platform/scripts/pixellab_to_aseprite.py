@@ -19,7 +19,7 @@ STATES = {
     "asad-typing": ("asad", "typing", 140, None),
     "asad-coffee": ("asad", "coffee", 200, None),
     "asad-idle": ("asad", "thinking", 220, None),
-    "asad-happy": ("asad", "happy", 170, None),
+    "asad-happy": ("asad", "happy", 170, [2, 3, 4, 5, 6, 7]),  # frames 0-1 had a moustache
     "storm-standing": ("storm", "walk", 110, None),
     "storm-idle": ("storm", "idle", 180, None),
     "storm-sit": ("storm", "idle", 220, None),
