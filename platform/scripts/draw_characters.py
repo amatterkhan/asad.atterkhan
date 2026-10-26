@@ -8,6 +8,7 @@ import json, math, subprocess
 from pathlib import Path
 from PIL import Image
 from pixelrig import Frame
+import asad_head as H
 from ase import write_ase
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -172,44 +173,15 @@ def asad(hand=0, blink=False, breath=0, nod=0, sip=0.0, look=0):
     for x in (45, 52):
         f.line(x, 50 + by, x - (1 if x == 45 else -1), 62 + by, "#d9cfbd")
         f.dot(x - (1 if x == 45 else -1), 63 + by, "#a89c88")
-    # neck + head
-    f.shade(f.rect(46, 41 + hy, 53, 49 + by), SKIN, 49, 44, 4, 6, bias=-0.1)
-    hair_back = (f.ellipse(46, 27 + hy, 15.5, 14) | f.ellipse(35, 38 + hy, 6.5, 10) | f.ellipse(31, 15 + hy, 6, 5.5)
-                 | f.ellipse(40, 44 + hy, 4, 4))
-    f.shade(hair_back, HAIR, 40, 20 + hy, 16, 16)
-    for (cx, cy, r) in [(33, 30, 3.2), (31, 38, 3), (35, 46, 2.8), (38, 20, 3.4), (43, 14, 3.4), (50, 13, 3.2), (57, 16, 3)]:
-        curl = f.ellipse(cx, cy + hy, r, r) & ~f.ellipse(cx + 0.8, cy + hy + 0.8, r - 1.2, r - 1.2)
-        f.fill(curl, HAIR[2])
-    face = f.ellipse(52.5, 33 + hy, 10.2, 12.4) | f.ellipse(55, 38 + hy, 8, 7)
-    f.shade(face, SKIN, 53, 30 + hy, 11, 13)
-    f.shade(f.ellipse(62.6, 35 + hy, 1.6, 2.2), SKIN, 62, 34 + hy, 2, 2)  # nose
-    stubble = face & (f.Y > 38.5 + hy) & ~f.ellipse(57.5, 40.5 + hy, 3.6, 1.4)
-    f.shade(stubble, [SKIN[0], SKIN[1]], 52, 40 + hy, 10, 6, edge=False)
-    dots = stubble & (((f.X.astype(int) + f.Y.astype(int)) % 2) == 0)
-    f.fill(dots, BEARD[1])
-    f.shade(f.ellipse(57.5, 44.2 + hy, 3, 2.3), BEARD, 57, 44 + hy, 3, 3)  # goatee
-    f.line(55, 38 + hy, 60, 38 + hy, BEARD[1])  # moustache
-    f.shade(f.ellipse(42.5, 34 + hy, 2.4, 3.4), SKIN, 42, 33 + hy, 3, 4)  # ear
-    f.line(56, 41 + hy, 59, 41 + hy, "#8a4a3a"); f.dot(60, 40 + hy, "#8a4a3a")  # a small smile
-    fringe = (f.ellipse(47, 21 + hy, 8, 4.4) | f.ellipse(56, 21 + hy, 6.5, 3.6) | f.ellipse(42, 27 + hy, 3.5, 7)
-              | f.ellipse(62, 24 + hy, 2.4, 3.4) | f.ellipse(52, 24.5 + hy, 2, 2.6))
-    f.shade(fringe, HAIR, 48, 19 + hy, 11, 6)
-    for (cx, cy) in [(45, 19), (50, 19), (55, 19), (59, 21), (40, 24), (62, 23)]:
-        f.dot(cx, cy + hy, HAIR[3])
-    # glasses + eyes (looking down at the laptop unless sipping)
-    for gx, r in ((51.5, 3.9), (60, 3.4)):
-        ring = f.ellipse(gx, 31 + hy, r, 3.5) & ~f.ellipse(gx, 31 + hy, r - 1.1, 2.4)
-        f.fill(ring, "#1b1322")
-    f.line(55, 30 + hy, 56, 30 + hy, "#1b1322"); f.line(47, 30 + hy, 43, 31 + hy, "#1b1322")
-    f.dot(49, 29 + hy, "#e8ecff"); f.dot(58, 29 + hy, "#e8ecff")
-    ey = 31 + hy + (0 if sip > 0.5 or look else 1)
-    if blink:
-        f.line(50, 32 + hy, 53, 32 + hy, "#3a221c"); f.line(59, 32 + hy, 61, 32 + hy, "#3a221c")
-    else:
-        for ex in (52 + look, 60 + look):
-            f.dot(ex, ey, "#1b1322"); f.dot(ex - 1, ey, "#3a221c")
-    f.line(49, 26 + hy, 53, 26 + hy, HAIR[0]); f.line(58, 26 + hy, 61, 26 + hy, HAIR[0])  # brows
-    f.dot(46, 24 + hy, HAIR[1])
+    # neck + head (the head is hand-placed pixel art: scripts/asad_head.py)
+    f.shade(f.rect(46, 42 + hy, 53, 49 + by), SKIN, 49, 45, 4, 6, bias=-0.1)
+    eyes = H.EYES_SHUT if blink else H.EYES_UP if (sip > 0.5 or look) else H.EYES_OPEN
+    grid = [list(r) for r in H.HEAD]
+    for (x, y, ch) in eyes: grid[y][x] = ch
+    ox, oy = 32, 16 + hy
+    for y, row in enumerate(grid):
+        for x, ch in enumerate(row):
+            if ch != ".": f.dot(ox + x, oy + y, H.PAL[ch])
 
     # laptop on the lap
     lid = f.poly([(50, 54 + by * 0), (79, 50), (81, 75), (52, 77)])
@@ -220,7 +192,7 @@ def asad(hand=0, blink=False, breath=0, nod=0, sip=0.0, look=0):
     # arm + hand: typing at the keyboard edge, or lifting the mug
     sx, sy = 33, 54 + by
     t = sip
-    hx_, hy_ = 48 + (hand % 2) * 1.0 * (1 - t) + t * 7, 72 - t * 31 + by
+    hx_, hy_ = 48 + (hand % 2) * 1.0 * (1 - t) + t * 6, 72 - t * 27 + by
     ex_, ey_ = 34 + t * 2, 70 - t * 6 + by
     arm = f.limb([(sx, sy), (ex_, ey_), (hx_ - 3, hy_)], 4.6)
     f.shade(arm, HOOD, 36, 60 + by, 10, 12)
