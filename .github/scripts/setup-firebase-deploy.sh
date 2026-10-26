@@ -11,7 +11,7 @@ set -euo pipefail
 
 PROJECT_ID=${PROJECT_ID:?set PROJECT_ID}
 REPO=${REPO:?set REPO (owner/name)}
-REGION=${REGION:-europe-west1}
+REGION=${REGION:-us-central1}
 BUCKET=${BUCKET:-}            # e.g. asad-atterkhan.firebasestorage.app; empty skips Storage
 OWNER_UID=${OWNER_UID:-}      # Firebase Auth UID of the owner account
 SITE_URL=${SITE_URL:-https://$PROJECT_ID.web.app}
@@ -40,7 +40,7 @@ exists gcloud iam workload-identity-pools describe "$POOL" --project "$PROJECT_I
 exists gcloud iam workload-identity-pools providers describe "$PROVIDER" --project "$PROJECT_ID" \
   --location global --workload-identity-pool "$POOL" ||
   run gcloud iam workload-identity-pools providers create-oidc "$PROVIDER" --project "$PROJECT_ID" \
-    --location global --workload-identity-pool "$POOL" --display-name "GitHub $REPO" \
+    --location global --workload-identity-pool "$POOL" --display-name "GitHub repository" \
     --issuer-uri https://token.actions.githubusercontent.com \
     --attribute-mapping 'google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.repository_id=assertion.repository_id,attribute.ref=assertion.ref' \
     --attribute-condition "assertion.repository_id == '$REPO_ID'"
@@ -99,7 +99,12 @@ for branch in frontend-redesign main; do
   gh api -X POST "repos/$REPO/environments/site-production/deployment-branch-policies" \
     -f name="$branch" -f type=branch --silent 2>/dev/null || true
 done
-set_var() { [ -n "$2" ] && run gh variable set "$1" --repo "$REPO" --body "$2"; return 0; }
+set_var() {
+  if [ -n "$2" ]; then
+    printf '+ gh variable set %s (value omitted)\n' "$1" >&2
+    gh variable set "$1" --repo "$REPO" --body "$2"
+  fi
+}
 set_var WIF_PROVIDER "$WIF_PROVIDER"
 set_var DEPLOY_SERVICE_ACCOUNT "$DEPLOYER"
 set_var API_SERVICE_ACCOUNT "$RUNTIME"
@@ -107,6 +112,11 @@ set_var FIREBASE_PROJECT_ID "$PROJECT_ID"
 set_var FIREBASE_AUTH_DOMAIN "$PROJECT_ID.firebaseapp.com"
 set_var FIREBASE_STORAGE_BUCKET "$BUCKET"
 set_var FIREBASE_OWNER_UID "$OWNER_UID"
+# Actions echo action inputs. Read the UID through a secret so it is masked in every job log.
+if [ -n "$OWNER_UID" ]; then
+  printf '+ gh secret set FIREBASE_OWNER_UID (value omitted)\n' >&2
+  printf %s "$OWNER_UID" | gh secret set FIREBASE_OWNER_UID --repo "$REPO"
+fi
 set_var API_REGION "$REGION"
 set_var SITE_URL "$SITE_URL"
 cat >&2 <<EOF

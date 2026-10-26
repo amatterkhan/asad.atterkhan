@@ -26,7 +26,8 @@ owner publishes in /admin -> API sends repository_dispatch -> export -> build ->
 ```
 
 - **Deploy branch:** `frontend-redesign`, or the `SITE_DEPLOY_BRANCH` variable. Pushes to other
-  branches are ignored, and `main` keeps deploying the old site to GitHub Pages through `deploy.yml`.
+  branches are ignored. GitHub Pages is disabled; the default-branch workflow cleanup is
+  checked again before the merge to `main`.
 - **Content rebuilds:** GitHub delivers `repository_dispatch` only to workflows on the **default
   branch (`main`)**, so publish-triggered rebuilds start once `site-deploy.yml` is on `main`. The
   workflow still checks out the deploy branch, not `main`. Until then, run it manually
@@ -71,9 +72,11 @@ Then turn things on one at a time, each with `gh variable set NAME --body VALUE`
 | `INDEX_SITE=true`, `SITE_URL=https://asad.atterkhan.com` | At the domain cutover only. |
 | `FIREBASE_HOSTING_SITE` | Only to deploy to a second Hosting site instead of the default one. |
 
-All configuration is in **repository variables**, not environment variables, because job
-conditions can't read environment-level variables. None of it is secret. The only secret, the
-dispatch token, lives in Secret Manager and is mounted into Cloud Run.
+Job configuration is in **repository variables**, because job conditions cannot read
+environment-level variables. `FIREBASE_OWNER_UID` and `FIREBASE_WEB_API_KEY` also have
+GitHub Actions secret copies; workflows read these copies so action-input logging masks the
+values. The setup script sets both UID copies; set both API-key copies after the SDK lookup.
+The dispatch token lives only in Secret Manager and is mounted into Cloud Run.
 
 ## Not verified yet
 

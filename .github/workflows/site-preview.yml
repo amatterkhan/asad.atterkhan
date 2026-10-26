@@ -35,7 +35,7 @@ jobs:
           site-url: ${{ vars.SITE_URL }}
           hosting-site: ${{ vars.FIREBASE_HOSTING_SITE }}
           project-id: ${{ vars.FIREBASE_PROJECT_ID }}
-          firebase-api-key: ${{ vars.FIREBASE_WEB_API_KEY }}
+          firebase-api-key: ${{ secrets.FIREBASE_WEB_API_KEY }}
           firebase-auth-domain: ${{ vars.FIREBASE_AUTH_DOMAIN }}
       - name: Deploy preview channel
         id: deploy
