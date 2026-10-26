@@ -5,9 +5,9 @@ import manifest from "../../public/sprites/manifest.json";
 // of the page that corner leads to. Crops are in room pixels (the room is 384x216).
 const CROPS = {
   lab: [128, 92, 162, 72],
-  bench: [240, 80, 144, 44],
-  awards: [256, 4, 128, 39],
-  cv: [236, 14, 148, 45],
+  bench: [196, 62, 188, 72],
+  awards: [232, 4, 144, 64],
+  cv: [244, 14, 140, 70],
   about: [24, 40, 184, 168],
 } as const;
 

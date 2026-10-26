@@ -29,7 +29,7 @@ STATES = {
     "storm-nap": ("storm-curled", "sleep-ball", 300, None),               # small, for the Lab chair
 }
 CANVAS = {"asad": (128, 122), "storm": (64, 58), "storm-nap": (40, 36)}  # square size, feet line
-SCALES = {"storm-nap": 0.45}  # per-state scale override
+SCALES = {"storm-nap": 0.45, "storm-sleeping": 0.58, "storm-dream": 0.6}  # per-state scale override
 
 def scale(im, s_=None):
     a = np.array(im).astype(float)

@@ -252,7 +252,7 @@ p { margin: 0 0 1em; }
 .skills dd { margin: 2px 0 0; color: var(--muted); }
 
 /* ---------- about ---------- */
-.about-grid .vignette { margin: 0; width: 100% !important; }
+.about-grid .vignette { margin: 0; width: 100% !important; max-width: none; }
 .about-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 56px; align-items: start; margin-top: 24px; }
 .about-grid .prose { font: 21px/1.65 var(--serif); }
 .about-grid .prose p:first-child::first-letter { float: left; font-size: 3.6em; line-height: .85; padding: 6px 10px 0 0; color: var(--mauve); }
@@ -408,14 +408,30 @@ html[data-motion="paused"] *::after {
 @keyframes blink { 50% { opacity: .1; } }
 @keyframes steam { 0% { opacity: 0; transform: translateY(0); } 30% { opacity: .8; } 100% { opacity: 0; transform: translateY(calc(var(--u) * -8)) translateX(calc(var(--u) * 1)); } }
 
-.spot { position: absolute; display: block; cursor: pointer; outline: 2px dashed transparent; outline-offset: 2px; transition: outline-color .15s, background .15s; z-index: 5; }
-.spot:hover, .spot:focus-visible { outline-color: var(--mauve); background: rgba(203, 166, 247, .1); }
+.spot {
+  --hl: #fff2d2; --c: calc(var(--u) * 4); --t: max(2px, calc(var(--u) * .9));
+  position: absolute; display: block; cursor: pointer; outline: none; z-index: 5;
+  opacity: .0; transition: opacity .15s steps(2);
+  /* pixel corner brackets, like a selection marker in a game */
+  background:
+    linear-gradient(var(--hl), var(--hl)) left top / var(--c) var(--t) no-repeat,
+    linear-gradient(var(--hl), var(--hl)) left top / var(--t) var(--c) no-repeat,
+    linear-gradient(var(--hl), var(--hl)) right top / var(--c) var(--t) no-repeat,
+    linear-gradient(var(--hl), var(--hl)) right top / var(--t) var(--c) no-repeat,
+    linear-gradient(var(--hl), var(--hl)) left bottom / var(--c) var(--t) no-repeat,
+    linear-gradient(var(--hl), var(--hl)) left bottom / var(--t) var(--c) no-repeat,
+    linear-gradient(var(--hl), var(--hl)) right bottom / var(--c) var(--t) no-repeat,
+    linear-gradient(var(--hl), var(--hl)) right bottom / var(--t) var(--c) no-repeat;
+  filter: drop-shadow(0 0 calc(var(--u) * 1.5) rgba(255, 220, 160, .55));
+}
+.spot:hover, .spot:focus-visible { opacity: 1; }
 .spot::after {
   content: attr(data-label); position: absolute; left: 50%; bottom: calc(100% + 8px); translate: -50% 4px;
-  white-space: nowrap; font: 12px var(--mono); padding: 5px 10px; background: var(--ink-strong); color: var(--bg);
-  opacity: 0; pointer-events: none; transition: opacity .15s, translate .15s steps(2); z-index: 6;
+  white-space: nowrap; font: 12px var(--mono); padding: 4px 9px; background: #1b1d33; color: #fff2d2;
+  border: 1px solid rgba(255, 242, 210, .35); filter: none;
+  pointer-events: none; z-index: 6;
 }
-.spot:hover::after, .spot:focus-visible::after { opacity: 1; translate: -50% 0; }
+.spot::after { translate: -50% 0; }
 .spot.below::after { bottom: auto; top: calc(100% + 8px); }
 
 .actor { position: absolute; pointer-events: none; }
@@ -462,7 +478,7 @@ html[data-motion="paused"] *::after {
 .storm-says { border-radius: 0; box-shadow: 3px 3px 0 rgba(0,0,0,.35); }
 .room { box-shadow: 0 0 0 3px var(--faint), 8px 8px 0 3px rgba(0, 0, 0, .35) !important; }
 :root[data-theme="light"] .room { box-shadow: 0 0 0 3px var(--faint), 8px 8px 0 3px rgba(60, 50, 100, .2) !important; }
-.spot::after { border-radius: 0; box-shadow: 3px 3px 0 rgba(0,0,0,.35); }
+.spot::after { border-radius: 0; box-shadow: 2px 2px 0 rgba(0,0,0,.35); }
 .current-label { border-radius: 0; }
 
 /* ---------- cursor: a dot with a pixel ring ---------- */
@@ -483,6 +499,7 @@ html[data-cursor="text"] .cursor, html[data-cursor="out"] .cursor { opacity: 0; 
 .vignette {
   container-type: inline-size; position: relative; overflow: hidden; width: 100%;
   aspect-ratio: var(--cw) / var(--ch); margin: 4px 0 40px; background: #0a0e2c;
+  max-width: calc(240px * var(--cw) / var(--ch));   /* cap the height at 240px so pixels stay ~3x */
   box-shadow: 0 0 0 3px var(--faint), 8px 8px 0 3px rgba(0, 0, 0, .3);
 }
 .vignette-room {
@@ -497,8 +514,9 @@ html[data-cursor="text"] .cursor, html[data-cursor="out"] .cursor { opacity: 0; 
 .vignette .storm .sprite { --sprite-size: calc(var(--u) * 64) !important; display: block; }
 .vignette .storm .sprite.storm-nap { --sprite-size: calc(var(--u) * 40) !important; }
 .vignette .asad .sprite { --sprite-size: calc(var(--u) * 128) !important; display: block; }
+.vignette .robot .sprite { --sprite-size: calc(var(--u) * 48) !important; display: block; }
 .vignette .sleep-mark { position: absolute; top: 40%; right: 18%; font: 12px var(--mono); color: var(--mauve); animation: pulse 3s infinite; }
-@media (max-width: 760px) { .vignette { margin-inline: -20px; width: calc(100% + 40px); box-shadow: none; } }
+@media (max-width: 760px) { .vignette { max-width: none; margin-inline: -20px; width: calc(100% + 40px); box-shadow: none; } }
 
 /* QROVER drives a little way along the desk and back */
 .actor.robot { left: calc(var(--u) * 286); top: calc(var(--u) * 80); animation: robot-drive 16s ease-in-out infinite; }

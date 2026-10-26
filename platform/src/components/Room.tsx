@@ -13,6 +13,8 @@ const STRETCH_MS =
 const loopMs = (k: keyof typeof manifest.states) => manifest.states[k].frames * manifest.states[k].frameMs;
 // Storm's planted paws travel one stride per walk cycle, so he moves at exactly that speed.
 const WALK_SPEED = manifest.strideRoomPx / manifest.walkCycleMs;
+// Nap spots on either side of Asad (he sits around x 104-156): rug end by the window, or by the chair.
+const BEDS = [60, 188] as const;
 
 const mauritiusTime = () =>
   new Intl.DateTimeFormat("en-GB", {
@@ -102,6 +104,7 @@ export function Room() {
     let wander = 0;
     let busyUntil = 0;
     let dreamAt = 0;
+    let bed: number | null = null; // where he naps: beside Asad, never in front of him
     lastInput.current = last;
     const set = (m: StormMode) => {
       if (m !== current) {
@@ -131,7 +134,11 @@ export function Room() {
         raf = requestAnimationFrame(loop);
         return;
       }
-      if (idle > 6000 && now > wander) {
+      if (idle > 22000) {
+        bed ??= Math.abs(x - BEDS[0]) < Math.abs(x - BEDS[1]) ? BEDS[0] : BEDS[1];
+        target.current = bed;
+      } else bed = null;
+      if (idle > 6000 && idle <= 22000 && now > wander) {
         target.current = 30 + Math.random() * 320;
         wander = now + 7000 + Math.random() * 6000;
       }
@@ -142,7 +149,7 @@ export function Room() {
         storm.current?.style.setProperty("--flip", dx > 0 ? "1" : "-1"); // art faces right
       } else if (current === "standing" && idle > 6000 && Math.random() < 0.35) {
         stretch(now);
-      } else if (idle > 22000) {
+      } else if (idle > 22000 && bed !== null && Math.abs(x - bed) <= 1) {
         set("sleeping");
         dreamAt = now + 12000 + Math.random() * 10000;
       }

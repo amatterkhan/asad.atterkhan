@@ -437,6 +437,18 @@ def curtains(out, h, s):
         reg[pink] = ramp[idx[pink]]
     return out
 
+def remove_mug(src):
+    """The restyle put a second mug at the left end of the desk; paint it out (wall from the same
+    wainscot two periods left, desk top from the plain wood beside it)."""
+    out = src.copy()
+    for y in range(115, 124):
+        for x in range(201, 216):
+            out[y, x] = src[y, x - 48]
+    for y in range(124, 127):
+        for x in range(201, 216):
+            out[y, x] = src[125 if y < 125 else y, 216]
+    return out
+
 CHAIR_BOX, LEG_X, CHAIR_SHIFT = (174, 100, 226, 180), (200, 212), 24
 
 def move_chair(src):
@@ -476,7 +488,7 @@ def move_chair(src):
     return out
 
 def painted_layers():
-    src = move_chair(recolour(np.array(Image.open(PAINTED).convert("RGBA"))))
+    src = move_chair(recolour(remove_mug(np.array(Image.open(PAINTED).convert("RGBA")))))
     room_l, day, night = src.copy(), new(), new()
     for (x0, y0, x1, y1) in PANES:
         for y in range(y0, y1 + 1):
