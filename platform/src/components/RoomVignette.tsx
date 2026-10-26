@@ -4,7 +4,7 @@ import manifest from "../../public/sprites/manifest.json";
 // A close-up of one corner of the homepage room (same LibreSprite layers), used as the header art
 // of the page that corner leads to. Crops are in room pixels (the room is 384x216).
 const CROPS = {
-  lab: [150, 92, 150, 72],
+  lab: [128, 92, 162, 72],
   bench: [240, 80, 144, 44],
   awards: [256, 4, 128, 39],
   cv: [236, 14, 148, 45],

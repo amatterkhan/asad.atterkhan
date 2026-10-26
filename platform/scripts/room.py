@@ -437,8 +437,46 @@ def curtains(out, h, s):
         reg[pink] = ramp[idx[pink]]
     return out
 
+CHAIR_BOX, LEG_X, CHAIR_SHIFT = (174, 100, 226, 180), (200, 212), 24
+
+def move_chair(src):
+    """Slide the chair one wainscot period (24px) left, out from under the desk, so its whole seat
+    shows (Storm naps on it). The seat hidden behind the desk leg is rebuilt from its visible edges;
+    the wall behind the old spot is copied from the same rows 48px to the left."""
+    x0, y0, x1, y1 = CHAIR_BOX
+    rgb = src[..., :3].astype(int)
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    teal = (g > r + 15) & (b > r) & (src[..., 3] > 0)
+    region = np.zeros(src.shape[:2], bool)
+    region[y0:y1, x0:LEG_X[0]] = True               # backrest and front of the seat
+    region[140:y1, LEG_X[0]:x1] = True              # seat end and back legs (not the mug on the desk)
+    leg = np.zeros_like(region); leg[:, LEG_X[0]:LEG_X[1]] = True
+    chair = teal & region & ~leg
+    near = np.zeros_like(chair)                         # the chair's dark outline
+    for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+        near |= np.roll(np.roll(chair, dy, 0), dx, 1)
+    chair |= near & region & ~leg & (rgb.sum(-1) < 160)
+    layer = np.zeros_like(src); layer[chair] = src[chair]
+    for y in range(y0, y1):                             # rebuild the seat behind the desk leg
+        if chair[y, LEG_X[0] - 1] and chair[y, LEG_X[1]:LEG_X[1] + 3].any():
+            layer[y, LEG_X[0]:LEG_X[1]] = src[y, LEG_X[0] - 2]
+    out = src.copy()
+    mx = rgb.max(-1); mn = rgb.min(-1)
+    sat = (mx - mn) / np.maximum(mx, 1)
+    wall_like = (sat < 0.38) & (r >= b) & ~teal                # sand wall / wainscot, not curtain or window
+    leftover = teal & region & ~chair
+    for y, x in zip(*np.nonzero(chair | leftover)):
+        for k in (1, 2, 3, 4, 5):                               # whole wainscot periods to the left (plain wall)
+            sx = x - 24 * k
+            if 0 <= sx < src.shape[1] and not chair[y, sx] and (wall_like[y, sx] or y >= 166):
+                out[y, x] = src[y, sx]; break
+    moved = np.roll(layer, -CHAIR_SHIFT, axis=1)
+    m = moved[..., 3] > 0
+    out[m] = moved[m]
+    return out
+
 def painted_layers():
-    src = recolour(np.array(Image.open(PAINTED).convert("RGBA")))
+    src = move_chair(recolour(np.array(Image.open(PAINTED).convert("RGBA"))))
     room_l, day, night = src.copy(), new(), new()
     for (x0, y0, x1, y1) in PANES:
         for y in range(y0, y1 + 1):
