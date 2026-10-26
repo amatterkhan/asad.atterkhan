@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 6,
   "logicalSize": [
     128,
     128
@@ -104,10 +104,16 @@
     "storm-idle": {
       "sheet": "/sprites/storm-idle.png",
       "still": "/sprites/storm-idle-still.png",
-      "frames": 16,
+      "frames": 22,
       "frameWidth": 128,
       "frameHeight": 128,
       "durationsMs": [
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
         280,
         280,
         280,
@@ -134,22 +140,24 @@
     "storm-sleeping": {
       "sheet": "/sprites/storm-sleeping.png",
       "still": "/sprites/storm-sleeping-still.png",
-      "frames": 6,
+      "frames": 8,
       "frameWidth": 128,
       "frameHeight": 128,
       "durationsMs": [
-        700,
-        700,
-        700,
-        700,
-        700,
-        700
+        520,
+        520,
+        520,
+        520,
+        520,
+        520,
+        520,
+        520
       ],
       "anchor": [
         64,
         120
       ],
-      "frameMs": 700
+      "frameMs": 520
     },
     "asad-coffee": {
       "sheet": "/sprites/asad-coffee.png",
@@ -188,20 +196,24 @@
     "storm-standing": {
       "sheet": "/sprites/storm-standing.png",
       "still": "/sprites/storm-standing-still.png",
-      "frames": 4,
+      "frames": 8,
       "frameWidth": 128,
       "frameHeight": 128,
       "durationsMs": [
-        120,
-        120,
-        120,
-        120
+        95,
+        95,
+        95,
+        95,
+        95,
+        95,
+        95,
+        95
       ],
       "anchor": [
         64,
         120
       ],
-      "frameMs": 120
+      "frameMs": 95
     },
     "storm-sit": {
       "sheet": "/sprites/storm-sit.png",
@@ -220,6 +232,34 @@
         120
       ],
       "frameMs": 900
+    },
+    "storm-stretch": {
+      "sheet": "/sprites/storm-stretch.png",
+      "still": "/sprites/storm-stretch-still.png",
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "anchor": [
+        64,
+        120
+      ],
+      "frames": 14,
+      "frameMs": 110,
+      "durationsMs": [
+        110,
+        110,
+        110,
+        110,
+        110,
+        110,
+        110,
+        110,
+        110,
+        110,
+        110,
+        110,
+        110,
+        110
+      ]
     }
   }
 }

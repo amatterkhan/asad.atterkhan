@@ -13,6 +13,7 @@ type State =
   | "storm-sleeping"
   | "storm-standing"
   | "storm-sit"
+  | "storm-stretch"
   | "asad-coffee";
 function Sprite({
   state,
@@ -66,7 +67,7 @@ export function AsadSprite({
 export function StormSprite({
   animation = "idle",
   ...props
-}: Shared & { animation?: "idle" | "sleeping" | "standing" | "sit" }) {
+}: Shared & { animation?: "idle" | "sleeping" | "standing" | "sit" | "stretch" }) {
   return <Sprite state={`storm-${animation}`} {...props} />;
 }
 const mrrps = ["mrrp?", "*purr*", "mew.", "…supervising", "prrrt!", "(blink)"];
