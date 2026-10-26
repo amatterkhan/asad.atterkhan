@@ -169,7 +169,7 @@ func (s *Server) quota(ctx context.Context, key string, limit, amount int64) {
 			return &HTTPError{429, "Daily operation limit reached"}
 		}
 		return tx.Set(ref, map[string]any{"count": count + amount, "day": day})
-	}))
+	}, firestore.MaxAttempts(25)))
 }
 func readBody(w http.ResponseWriter, r *http.Request, max int64) []byte {
 	if r.ContentLength > max {
