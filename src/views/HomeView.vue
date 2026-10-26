@@ -1,10 +1,15 @@
 <script setup>
 import TerminalOutput from '@/components/TerminalOutput.vue'
 import TerminalCommands from '@/components/TerminalCommands.vue'
+import PixelQuestHome from '@/components/prototype/PixelQuestHome.vue'
+
+const isDev = import.meta.env.DEV
 </script>
 
 <template>
-    <div class="terminal-home w-full h-full flex flex-col">
+    <!-- PROTOTYPE: Pixel Quest is the selected local development direction. -->
+    <PixelQuestHome v-if="isDev" />
+    <div v-else class="terminal-home w-full h-full flex flex-col">
         <!-- Terminal Output -->
         <TerminalOutput />
         
