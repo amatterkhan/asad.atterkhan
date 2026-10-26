@@ -63,11 +63,76 @@ the rebuild hand-off notes (now in git history); this run specifically added the
 - Go Markdown preview uses Chroma/Everforest. Code text matches the golden fixtures; token splits
   and classifications can differ from the site's Shiki highlighting. Go heading slugs use a
   generated filter from the site's github-slugger package, including Unicode cases.
-- Real Google sign-in/TOTP enrollment, real Firebase/Storage IAM and rules, GitHub dispatch,
-  workload identity and Cloud Run/Hosting deployment remain unverified.
+- Real web.app owner/TOTP sign-in and GitHub dispatch remain unverified; the cloud rollout
+  checks completed on 27 October are recorded below.
 - The Docker daemon was unavailable, so the distroless image was not built or run locally.
   No attempt was made to start or reconfigure Docker.
 - Automated accessibility checks do not replace a manual assistive-technology review.
 
-The deployment workflow is present but has not been invoked. Review its checkout ref, project,
-region, identities and environment configuration before enabling it.
+Launch deployment results and remaining external checks are recorded below.
+
+## Launch verification — 27 October 2026 (paused at owner sign-in)
+
+All launch commands target `asad-atterkhan` and `amatterkhan/asad.atterkhan` explicitly.
+No DNS changes, feature-flag enables, indexing enable or merge to `main` have been performed.
+
+- `make check`: passed after deployment configuration changes (Go vet/tests, site typecheck,
+  12 Vitest tests).
+- `npm run test:e2e`: 54 passed, two expected desktop mobile-menu skips.
+- Setup shell syntax and Git whitespace checks: passed.
+- Project number, billing enabled, Firestore/bucket region: read back and matched.
+- Budget API: project-scoped USD 5 budget with current-spend alerts at 20%, 60%, 100%.
+- WIF provider condition: repository numeric ID `1045770351`; deployer policy uses the matching
+  principal set. Two dedicated service accounts and `asad` Docker repository verified.
+- Project IAM, runtime impersonation and bucket object role verified with read commands.
+- GitHub environment branch policies and configuration variable/secret names read back.
+- GitHub Actions WIF authentication and site build succeeded. First deploy found missing
+  Firebase Storage metadata permission; Firebase and bucket-scoped GCS metadata viewer roles
+  added and setup script corrected. Third attempt deployed Hosting and both rulesets successfully
+  ([run 40393106963](https://github.com/amatterkhan/asad.atterkhan/actions/runs/40393106963)).
+
+Concurrent frontend edits in the local working tree were excluded from deployment commits.
+The globally installed Firebase executable could not run on this Mac; CLI reads use
+`npx --yes firebase-tools@15.34.1`, matching the pinned deploy version.
+
+Live static checks at `https://asad-atterkhan.web.app`:
+
+- All 12 prerendered page routes returned 200; `/nope` returned 404.
+- All nine configured legacy redirects returned 301 and their exact configured targets.
+- CSP, nosniff, referrer policy, frame denial and permissions policy matched `site/firebase.json`
+  on pages, public indexes and the 404 response.
+- Hosting overrides the configured HSTS with `max-age=31556926; includeSubDomains; preload`.
+  This meets/exceeds the configured one-year policy; record it as platform behavior.
+- `/admin` and `/calendar`: `Cache-Control: no-store`, `X-Robots-Tag: noindex, nofollow`.
+- `robots.txt`: `Disallow: /`; sitemap points to the web.app origin.
+- `/rss.xml`, `/sitemap.xml` and `/search.json` returned 200. The initial check ran before adding the user-selected `Lab 000` article.
+- Static-only deploy succeeded with Cloud Run rewrites removed, proving that configuration path.
+- Temporary owner-to-deployer impersonation grants used for diagnosis were removed; the final
+  deployer SA policy contains only the repository-scoped workload identity user binding.
+
+The full demo Auth/Firestore/Storage emulator suite passed again with
+`go test -race ./... -count=1` using the documented Java 21 runtime and pinned Firebase CLI.
+Manual dispatch of `site-ci.yml` is not available before that workflow reaches the default
+branch (GitHub returned 404); the PR/push workflow will supply hosted checks.
+
+API deployment succeeded in
+[run 40394130364](https://github.com/amatterkhan/asad.atterkhan/actions/runs/40394130364).
+Live checks passed against both the direct Cloud Run URL and Hosting origin:
+
+- `/api/healthz`: 200, `{"ok":true}`.
+- `/api/admin/site`, `/api/admin/articles`, `/api/admin/achievements`, `/api/admin/documents`,
+  `/api/owner/calendar`: 503 with no-store while all five runtime flags are false.
+- `/files/launch-check`, `/media/launch-check`: 404 with no-store.
+- Public invoker IAM binding succeeded (`allUsers`, `roles/run.invoker`).
+- Runtime identity, max 2 instances, default/min 0, concurrency 8, CPU/memory limits read back.
+- Auth authorized domains and enabled TOTP read back with explicit quota-project header.
+- Browser API-key referrers updated for web.app while preserving the API restrictions.
+
+Owner sign-in is a required human check. Missing-token 401 checks cannot be performed live
+before feature enablement because disabled service flags return 503 first; emulator coverage
+passed for enabled-service authentication. Content/document end-to-end tests, hook token,
+repository dispatch, Firestore content source, PR previews, merge/main checks, DNS/TLS custom
+domain and indexing are pending the corresponding owner actions and approvals.
+
+The owner selected `Lab 000` with body “Welcome to the lab.” as the first launch article.
+`make check` and the browser suite passed again after adding it (54 passed / two expected skips).

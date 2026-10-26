@@ -12,8 +12,8 @@ the Storage bucket, to avoid cross-region latency on API calls. Do not use `APP_
    Review `site/firebase/{firestore.rules,storage.rules}` and the index file. Client access to
    owner content must remain denied; the API uses the Admin SDK.
 2. Build `api/Dockerfile` with `api/` as the build context. It produces a static Go executable
-   in a distroless image running as a non-root user. Docker build and Cloud Run deployment have
-   not been verified here.
+   in a distroless image running as a non-root user. Docker build and Cloud Run deployment
+   succeeded through GitHub Actions on 27 October 2026.
 3. Configure Cloud Run's managed identity with access to the intended Firestore database,
    private bucket and Firebase user verification. Supply `FIREBASE_PROJECT_ID`,
    `FIREBASE_STORAGE_BUCKET`, `FIREBASE_OWNER_UID`, `APP_ENV=production`, and the required flags.
@@ -29,3 +29,21 @@ the Storage bucket, to avoid cross-region latency on API calls. Do not use `APP_
    <approved-project>` from `site/`.
 7. Verify real owner/TOTP sign-in, stale/revoked sessions, publication/rebuild delivery, upload
    and archive, private/public files, the calendar, headers, redirects and 404s on the real host.
+
+## Deployed staging origin — 27 October 2026
+
+- Hosting: `asad-atterkhan`, `https://asad-atterkhan.web.app`, with Firestore/Storage rules.
+- API: `asad-api`, `us-central1`, dedicated `asad-api` runtime identity, public invoker enabled
+  successfully. Direct URL: `https://asad-api-cqbapmrj3a-uc.a.run.app`.
+- Cloud Run: minimum 0 / maximum 2 instances, concurrency 8, 1 CPU, 512 MiB, request-based billing.
+- `/api/**`, `/files/**`, `/media/**` Hosting rewrites reach Cloud Run. Health returns 200;
+  disabled owner services return 503; disabled public files/media return 404, all uncached.
+- All five feature flags remain false. Because the flag gate precedes authentication, a missing
+  token returns 503 while disabled; production 401 checks wait for per-feature approval.
+- Browser Auth already authorizes `asad-atterkhan.web.app`. The browser key now also allows
+  `https://asad-atterkhan.web.app/*`; its four API restrictions and original referrers remain intact.
+- Git content, noindex, web.app canonical URL. `Lab 000` is the user-selected initial article.
+
+Real Google/TOTP sign-in and feature enablement await the owner. No custom Hosting domain has
+been added, no Cloudflare DNS records have changed and `main` has not been merged. Exact custom
+domain records will be recorded after the approved cutover; none are claimed verified yet.

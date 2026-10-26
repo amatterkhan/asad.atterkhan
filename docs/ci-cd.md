@@ -78,10 +78,29 @@ GitHub Actions secret copies; workflows read these copies so action-input loggin
 values. The setup script sets both UID copies; set both API-key copies after the SDK lookup.
 The dispatch token lives only in Secret Manager and is mounted into Cloud Run.
 
-## Not verified yet
+## Rollout status — 27 October 2026
 
-The workflows have been parsed and their `jq`/change-detection logic exercised locally, but they
-haven't run on GitHub, and the setup script hasn't been run. Expect the first run to surface IAM
-details. In particular, Firebase CLI permission needs can change between versions, and an
-organisation policy may block the public Cloud Run invoker that Hosting rewrites need.
-Pull requests from forks get no credentials: they run checks only.
+The setup script has run successfully. Workload Identity authentication and the Hosting build
+have run on GitHub; static Hosting and Firestore/Storage rule deployment succeeded.
+The first Hosting deployment exposed a missing
+`firebasestorage.defaultBucket.get` permission; the deployer now has
+`roles/firebasestorage.viewer` plus bucket-scoped `roles/storage.bucketViewer`, and the setup
+script preserves both grants. These read Firebase and GCS bucket metadata, not file contents.
+
+Cloud Run image build and rollout, public invoker and Hosting API rewrites also succeeded
+([run 40394130364](https://github.com/amatterkhan/asad.atterkhan/actions/runs/40394130364)).
+Real owner/TOTP sign-in, publish-triggered rebuild delivery, preview channels and custom-domain
+cutover are still pending verification. Pull requests from forks get no
+credentials: they run checks only.
+
+Configuration names set during launch (values of UID/key omitted):
+`WIF_PROVIDER`, `DEPLOY_SERVICE_ACCOUNT`, `API_SERVICE_ACCOUNT`, `FIREBASE_PROJECT_ID`,
+`FIREBASE_AUTH_DOMAIN`, `FIREBASE_STORAGE_BUCKET`, `FIREBASE_OWNER_UID`, `API_REGION`,
+`SITE_URL`, `FIREBASE_WEB_API_KEY`, `API_ENABLED`, `CONTENT_SOURCE`, `INDEX_SITE`.
+GitHub secrets: `FIREBASE_OWNER_UID`, `FIREBASE_WEB_API_KEY`. No Secret Manager rebuild token
+has been created. Feature flags and `REBUILD_HOOK` remain unset in GitHub (runtime flags false).
+
+Cost follow-up: Cloud Run scales to zero with maximum two instances. Artifact images currently
+accumulate without a cleanup policy; configure a reviewed retention policy before frequent
+rebuilds. Hosting traffic, stored objects, Firestore usage and logs can also incur charges.
+The $1/$3/$5 budget alerts are notifications, not spending caps.

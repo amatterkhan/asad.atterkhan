@@ -1,17 +1,17 @@
 # Firebase project
 
-## Current state (verified 2026-10-26)
+## Current state (verified 2026-10-27)
 
 Firebase project **Asad's Lab** (`asad-atterkhan`, number `840582082351`) belongs to `dev@asad.atterkhan.com`. The user chose a neutral project name and intends to use this project for staging and production. Both deployment environments still need deliberate data and service-identity isolation before production onboarding.
 
-Provisioned and verified on 2026-10-26:
+Provisioned on 2026-10-26 and deployment setup verified on 2026-10-27:
 
 - `(default)` Firestore: Standard, Native, `us-central1`, deletion protection enabled, scheduled backups/PITR disabled. The original empty `europe-west4` database was deleted by the user and recreated in the approved US region.
 - Default bucket: `asad-atterkhan.firebasestorage.app`, `us-central1`, uniform bucket IAM enabled and public access prevention explicitly enforced. No public IAM principals.
 - Repository Firestore rules, indexes, and Storage rules deployed to the explicit project with the personal Firebase CLI account.
 - Google is the only enabled sign-in provider. Identity Platform and TOTP are enabled; one adjacent TOTP interval is accepted. No SMS factor is configured.
-- Authorized domains: `localhost`, `127.0.0.1`, and Firebase's default project domains. No production domain is connected.
-- Browser API key restricted to the Auth, token, Firestore and Firebase Storage APIs and `http://localhost:4180/*`, `http://127.0.0.1:4180/*`, `https://asad-atterkhan.firebaseapp.com/*`. Add an actual approved hosting origin before hosting sign-in elsewhere.
+- Authorized domains: `localhost`, `127.0.0.1`, and Firebase's default project domains. The web.app domain is authorized; no custom production domain is connected.
+- Browser API key restricted to the Auth, token, Firestore and Firebase Storage APIs and `http://localhost:4180/*`, `http://127.0.0.1:4180/*`, `https://asad-atterkhan.firebaseapp.com/*` and (added 27 October) `https://asad-atterkhan.web.app/*`. The four API restrictions were preserved; the custom domain will be added during its rollout.
 - The only human project IAM principal is `dev@asad.atterkhan.com` with Owner. Other IAM principals are Firebase/Google service identities.
 - Billing: Blaze via Google Cloud Free Trial; project budget alerts at US$1, US$3 and US$5. Alerts are not spending caps.
 
@@ -44,3 +44,25 @@ To switch production over: enable `ENABLE_CONTENT_ADMIN` once owner TOTP sign-in
 ## Security verification
 
 `go test ./...` under the emulators (see [development.md](development.md)) exercises real HTTP against Auth, Firestore and Storage: 401/403/400/409/413/503 on every route, owner/admin/TOTP policy, recent authentication, quotas, file signatures, publish visibility and the exporter. Java 21+ is required for the emulators. Rules are checked separately by the emulator suite in `site/firebase/`.
+
+## Launch rollout — 27 October 2026
+
+Keyless GitHub deployment setup is provisioned in this project only:
+
+- Workload Identity pool/provider `github`, restricted to repository ID `1045770351`.
+- `github-deployer@asad-atterkhan.iam.gserviceaccount.com`: Hosting/rules administration,
+  Firestore index administration and read/export access, Cloud Run rollout, service usage and
+  API-key lookup and Firebase Storage metadata read. Repository-scoped image write access,
+  runtime-account impersonation and bucket-scoped GCS metadata read.
+- `asad-api@asad-atterkhan.iam.gserviceaccount.com`: Firestore read/write, Firebase Auth read,
+  object administration on the private site bucket. No service-account keys were created.
+- Artifact Registry Docker repository `asad` in `us-central1`.
+- GitHub environment `site-production`, branch policies for `frontend-redesign` and `main`.
+- Billing enabled. Budget read-back confirms USD 5/month, project-scoped, current-spend
+  thresholds 20%, 60%, 100% ($1/$3/$5). No budget settings were changed.
+
+Runtime and Hosting rewrites use `us-central1`. The static launch succeeded with
+`API_ENABLED=false`; the API is now deployed with `API_ENABLED=true`, `CONTENT_SOURCE=git`, `INDEX_SITE=false`, `SITE_URL=https://asad-atterkhan.web.app`.
+All five `ENABLE_*` flags remain false. Real web.app owner/TOTP sign-in awaits the user.
+UID and web API-key values are omitted from setup output and mirrored into GitHub secrets so
+Actions masks action inputs. The browser API key remains a public client credential.
