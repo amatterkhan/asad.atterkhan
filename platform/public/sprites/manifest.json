@@ -1,5 +1,5 @@
 {
-  "version": 15,
+  "version": 19,
   "logicalSize": [
     128,
     128
@@ -114,22 +114,24 @@
     "storm-sleeping": {
       "sheet": "/sprites/storm-sleeping.png",
       "still": "/sprites/storm-sleeping-still.png",
-      "frames": 6,
+      "frames": 8,
       "frameWidth": 64,
       "frameHeight": 64,
       "durationsMs": [
-        420,
-        420,
-        420,
-        420,
-        420,
-        420
+        300,
+        300,
+        300,
+        300,
+        300,
+        300,
+        300,
+        300
       ],
       "anchor": [
         32,
         58
       ],
-      "frameMs": 420
+      "frameMs": 300
     },
     "asad-coffee": {
       "sheet": "/sprites/asad-coffee.png",
@@ -238,6 +240,56 @@
         170,
         170
       ]
+    },
+    "storm-dream": {
+      "sheet": "/sprites/storm-dream.png",
+      "still": "/sprites/storm-dream-still.png",
+      "anchor": [
+        32,
+        58
+      ],
+      "frames": 14,
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "durationsMs": [
+        240,
+        240,
+        240,
+        240,
+        240,
+        240,
+        240,
+        240,
+        240,
+        240,
+        240,
+        240,
+        240,
+        240
+      ],
+      "frameMs": 240
+    },
+    "robot-idle": {
+      "sheet": "/sprites/robot-idle.png",
+      "still": "/sprites/robot-idle-still.png",
+      "anchor": [
+        24,
+        44
+      ],
+      "frames": 8,
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "durationsMs": [
+        150,
+        150,
+        150,
+        150,
+        150,
+        150,
+        150,
+        150
+      ],
+      "frameMs": 150
     }
   },
   "strideRoomPx": 9,

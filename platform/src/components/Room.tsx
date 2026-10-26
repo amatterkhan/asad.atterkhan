@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { AsadSprite, StormSprite } from "./Sprites";
+import { AsadSprite, RobotSprite, StormSprite } from "./Sprites";
 import manifest from "../../public/sprites/manifest.json";
 import { site } from "@/lib/site";
 
@@ -47,7 +47,7 @@ const layer = (name: string) => (
   />
 );
 
-type StormMode = "idle" | "standing" | "sleeping" | "stretch";
+type StormMode = "idle" | "standing" | "sleeping" | "dream" | "stretch";
 
 export function Room() {
   const root = useRef<HTMLDivElement>(null);
@@ -101,6 +101,7 @@ export function Room() {
     let current: StormMode = "idle";
     let wander = 0;
     let busyUntil = 0;
+    let dreamAt = 0;
     lastInput.current = last;
     const set = (m: StormMode) => {
       if (m !== current) {
@@ -120,8 +121,13 @@ export function Room() {
         raf = requestAnimationFrame(loop);
         return;
       }
-      if (current === "sleeping") {
+      if (current === "sleeping" || current === "dream") {
         if (idle < 400) stretch(now);
+        else if (now > dreamAt) {
+          // mostly curled up in a ball; now and then a short dream with kneading paws
+          set(current === "sleeping" ? "dream" : "sleeping");
+          dreamAt = now + (current === "dream" ? 4500 : 12000 + Math.random() * 10000);
+        }
         raf = requestAnimationFrame(loop);
         return;
       }
@@ -136,7 +142,10 @@ export function Room() {
         storm.current?.style.setProperty("--flip", dx > 0 ? "1" : "-1"); // art faces right
       } else if (current === "standing" && idle > 6000 && Math.random() < 0.35) {
         stretch(now);
-      } else if (idle > 22000) set("sleeping");
+      } else if (idle > 22000) {
+        set("sleeping");
+        dreamAt = now + 12000 + Math.random() * 10000;
+      }
       else set("idle");
       storm.current?.style.setProperty("--x", x.toFixed(1));
       raf = requestAnimationFrame(loop);
@@ -191,6 +200,9 @@ export function Room() {
         <div className="actor asad">
           <AsadSprite animation={happy ? "happy" : asad} size={128} />
         </div>
+        <div className="actor robot">
+          <RobotSprite size={48} />
+        </div>
         <div className="actor storm" ref={storm} data-mode={mode}>
           <span className="storm-shadow" aria-hidden="true" />
           <button
@@ -223,9 +235,8 @@ export function Room() {
         <span className="fx fx-router a" style={at([238, 42, 1, 1])} />
         <span className="fx fx-router b" style={at([242, 42, 1, 1])} />
         <span className="fx fx-router c" style={at([246, 42, 1, 1])} />
-        <span className="fx fx-antenna" style={at([326, 99, 1, 2])} />
-        <span className="fx fx-steam" style={at([335, 104, 1, 3])} />
-        <span className="fx fx-steam two" style={at([339, 102, 1, 3])} />
+        <span className="fx fx-steam" style={at([338, 106, 1, 3])} />
+        <span className="fx fx-steam two" style={at([342, 104, 1, 3])} />
 
         {spots.map((s) =>
           s.href ? (

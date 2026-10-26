@@ -220,17 +220,7 @@ def room():
     rect(L, 265, 114, 267, 116, c("#89b4fa")); px(L, 265, 114, c("#dce6ff"))
     line(L, 260, 122, 256, 124, BLACK); line(L, 256, 124, 255, 136, BLACK); line(L, 255, 136, 258, 150, BLACK)
 
-    # QROVER robot
-    bevel(L, 296, 114, 328, 120, c("#cba6f7"), c("#e2d1fb"), c("#9a72d6"))
-    for wx in (302, 322):
-        ellipse(L, wx, 120, 4.5, 4.5, BLACK); ellipse(L, wx, 120, 1.6, 1.6, METAL)
-    bevel(L, 300, 104, 312, 114, c("#ffffff"), c("#ffffff"), c("#bcc0cc"))
-    qr = ["1110111", "1010100", "1110101", "0001010", "1101111", "0101001", "1011101"]
-    for j, row in enumerate(qr):
-        for i, v in enumerate(row):
-            if v == "1": px(L, 302 + i, 106 + j, BLACK)
-    rect(L, 318, 108, 320, 114, METAL_SH); bevel(L, 314, 102, 324, 108, c("#45475a"), c("#6c7086"), BLACK)
-    ellipse(L, 318, 105, 1.6, 1.6, c("#89dceb")); line(L, 326, 114, 326, 100, METAL_SH)
+    # (the QROVER robot is its own animated sprite: scripts/robot.py)
 
     # mug with cat ears
     bevel(L, 332, 113, 343, 124, c("#f5e0dc"), c("#ffffff"), c("#d9b9b4"))
@@ -267,6 +257,23 @@ def room():
         for x in range(92, 176):
             if ((x - 133) / 42) ** 2 + ((y - 198) / 5) ** 2 <= 1 and 0.55 > bay(x, y):
                 px(L, x, y, shade(L[y, x], 0.72))
+    # office chair, pulled out from the desk and turned toward the room
+    CH = [c("#3b3d52"), c("#4c4f69"), c("#6c6f85")]
+    CU = [c("#5b4a8a"), c("#7a64b0"), c("#9a86cc")]
+    for i, x in enumerate((172, 180, 190, 200, 207)):              # star base + casters
+        line(L, 189, 178, x, 183 + (i % 2), CH[0]); rect(L, x - 1, 184 + (i % 2), x + 2, 186 + (i % 2), c("#1e1e2e"))
+    rect(L, 187, 157, 191, 179, CH[1]); rect(L, 187, 157, 188, 179, CH[2])  # gas lift
+    for y in range(149, 158):                                         # seat, seen at an angle
+        x0, x1 = 172 + (157 - y) // 2, 206 - (y - 149) // 3
+        rect(L, x0, y, x1, y + 1, CU[1] if y < 155 else CU[0])
+    rect(L, 173, 149, 205, 150, CU[2])
+    for y in range(114, 150):                                         # backrest, turned
+        x0 = 176 + (y - 114) // 9
+        x1 = 196 + (y - 114) // 12
+        rect(L, x0, y, x1, y + 1, CU[1])
+        px(L, x0, y, CU[2]); px(L, x1, y, CU[0])
+    rect(L, 177, 113, 196, 115, CU[2]); rect(L, 194, 134, 198, 150, CH[0])  # top edge, arm of the back support
+    for y in range(120, 146, 6): rect(L, 180 + (y - 114) // 9, y, 192 + (y - 114) // 12, y + 1, CU[0])  # stitching
     return L
 
 # ---------------------------------------------------------------- sky layers (seen through the glass)
@@ -336,8 +343,8 @@ def night():
     def a(x, y):
         if glass(x, y): return 0.08
         d = math.hypot((x - bx) * 0.8, (y - by - 18) * 1.15)
-        return 0.52 * min(1, (d / 170) ** 1.1) + 0.04
-    return quant_alpha(new(), c("#080a26"), a)
+        return 0.58 * min(1, (d / 170) ** 1.1) + 0.06
+    return quant_alpha(new(), c("#0a1442"), a)
 def dark():
     def a(x, y):
         if glass(x, y): return 0.1
@@ -345,7 +352,7 @@ def dark():
             s = (y - 168) * 0.9 + 64
             if 37 + s <= x < 115 + s: return 0.48
         return 0.68
-    return quant_alpha(new(), c("#05071a"), a)
+    return quant_alpha(new(), c("#060d30"), a)
 def glow():
     bx, by = BULB
     def a(x, y):
@@ -369,9 +376,96 @@ def bulb():
     ellipse(L, bx, by, 3.5, 2, c("#fffbe0")); ellipse(L, bx, by, 2, 1.2, c("#ffffff"))
     return L
 
+# The base room is the PixelLab restyle of this layout (art/pixellab/room/room-v2.png, made with
+# create-image-pixflux from the procedural room as init image). Its window view becomes the day
+# sky; a darkened copy becomes the night sky, so the mountains match in both themes.
+PAINTED = ROOT / "art/pixellab/room/room-v2.png"
+PANES = [(39, 26, 74, 58), (78, 26, 115, 58), (39, 61, 74, 95), (78, 61, 115, 95)]  # x0, y0, x1, y1 inclusive
+PLANT = (36, 74, 58, 101)
+
+WALL_HUE, WALL_SAT, WALL_LIFT = 0.085, 0.26, 1.22   # warm sand / oat walls
+SEAM_HUE = 0.055                                     # floor seams: darker wood
+
+def recolour(src):
+    """Turn the restyle's lavender walls (low-saturation purples) warm; keep saturated purple
+    accents (chair, rug, certificate frame). Night shading then cools the warm walls."""
+    rgb = src[..., :3].astype(float) / 255
+    mx, mn = rgb.max(-1), rgb.min(-1)
+    v = mx; s = np.where(mx > 0, (mx - mn) / np.maximum(mx, 1e-6), 0)
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    d = np.maximum(mx - mn, 1e-6)
+    h = np.where(mx == r, ((g - b) / d) % 6, np.where(mx == g, (b - r) / d + 2, (r - g) / d + 4)) / 6
+    purple = (h > 0.62) & (h < 0.80) & (s <= 0.45) & (src[..., 3] > 0)
+    floor = np.zeros_like(purple); floor[168:] = True
+    accent = (h > 0.62) & (h < 0.86) & (s > 0.45) & (src[..., 3] > 0)
+    def box(x0, y0, x1, y1):
+        m = np.zeros_like(purple); m[y0:y1, x0:x1] = True; return m
+    chair, rug, frame = box(170, 100, 225, 178), box(40, 176, 230, 210), box(280, 20, 338, 70)
+    out = src.copy()
+    for mask, hue, sat, lift in ((purple & ~floor, WALL_HUE, WALL_SAT, WALL_LIFT), (purple & floor, SEAM_HUE, 0.45, 0.85),
+                                 (accent & chair, 0.47, 0.42, 0.95),    # chair: muted teal, like the lamp
+                                 (accent & rug, 0.97, 0.38, 1.05),      # rug: dusty rose
+                                 (accent & frame, 0.07, 0.55, 0.85)):   # certificate frame: walnut
+        vv = np.clip(v[mask] * lift, 0, 1)
+        ss = np.clip(sat * (0.6 + s[mask]), 0, 1)
+        i = np.floor(hue * 6); f = hue * 6 - i
+        p_, q_, t_ = vv * (1 - ss), vv * (1 - ss * f), vv * (1 - ss * (1 - f))
+        sector = int(i) % 6
+        cols = [(vv, t_, p_), (q_, vv, p_), (p_, vv, t_), (p_, q_, vv), (t_, p_, vv), (vv, p_, q_)][sector]
+        out[mask, 0], out[mask, 1], out[mask, 2] = [(c * 255).astype(np.uint8) for c in cols]
+    return curtains(out, h, s)
+
+CURTAIN_RAMP = [c("#3f5a4a"), c("#58765f"), c("#77967a"), c("#9cb89a")]   # muted sage, dark -> light
+
+def curtains(out, h, s):
+    """Replace the speckled pink curtains with smooth sage folds: median along each column (folds run
+    vertically), then a clean 4-tone ramp. The brass rod and tie-backs (yellow hues) are kept."""
+    for (x0, y0, x1, y1) in ((14, 14, 42, 118), (110, 14, 140, 118)):
+        reg = out[y0:y1, x0:x1]
+        hh, ss = h[y0:y1, x0:x1], s[y0:y1, x0:x1]
+        pink = ((hh > 0.70) | (hh < 0.03)) & (ss > 0.06) & (reg[..., 3] > 0)
+        val = reg[..., :3].astype(float).max(-1)
+        sm = val.copy()
+        for x in range(val.shape[1]):
+            col = val[:, x]
+            for y in range(len(col)):
+                sm[y, x] = np.median(col[max(0, y - 3):y + 4])
+        lo, hi = np.percentile(sm[pink], 5), np.percentile(sm[pink], 95)
+        t = np.clip((sm - lo) / max(hi - lo, 1), 0, 0.999)
+        idx = (t * len(CURTAIN_RAMP)).astype(int)
+        ramp = np.array(CURTAIN_RAMP, np.uint8)
+        reg[pink] = ramp[idx[pink]]
+    return out
+
+def painted_layers():
+    src = recolour(np.array(Image.open(PAINTED).convert("RGBA")))
+    room_l, day, night = src.copy(), new(), new()
+    for (x0, y0, x1, y1) in PANES:
+        for y in range(y0, y1 + 1):
+            for x in range(x0, x1 + 1):
+                r, g, b, _ = (int(v) for v in src[y, x])
+                plant = PLANT[0] <= x <= PLANT[2] and PLANT[1] <= y <= PLANT[3] and (
+                    (g > 110 and b < 70 and r > 60) or (r > 150 and b < 90 and g < 170))
+                day[y, x] = src[y, x]
+                if r > 230 and g > 220 and b > 150:            # the sun becomes the moon
+                    night[y, x] = (238, 232, 205, 255)
+                else:
+                    night[y, x] = (int(r * .16 + 6), int(g * .18 + 8), int(b * .34 + 22), 255)
+                if not plant:
+                    room_l[y, x] = (0, 0, 0, 0)
+    # certificate: replace the gibberish heading with a plain title rule
+    paper = tuple(int(v) for v in src[29, 304])
+    rect(room_l, 297, 29, 322, 36, paper)
+    rect(room_l, 300, 31, 319, 33, c("#4c3b45")); rect(room_l, 303, 34, 316, 35, c("#9c8a86"))
+    return room_l, day, night
+
 LAYERS = [("sky-night", sky(False)), ("stars-a", stars(1)), ("stars-b", stars(2)), ("sky-day", sky(True)),
           ("clouds", clouds()), ("room", room()), ("sunbeam", sunbeam()), ("night", night()),
           ("dark", dark()), ("glow", glow()), ("bulb", bulb())]
+
+if PAINTED.exists():
+    _room, _day, _night = painted_layers()
+    LAYERS = [(n, {"room": _room, "sky-day": _day, "sky-night": _night}.get(n, a)) for n, a in LAYERS]
 
 if __name__ == "__main__":
     out = ROOT / "art/ase/room.ase"

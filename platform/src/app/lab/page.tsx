@@ -24,7 +24,7 @@ export default async function Lab() {
         </div>
       </div>
       <RoomVignette corner="lab">
-        <At x={236} y={66}>
+        <At x={171} y={88}>
           <div className="storm">
             <StormSprite animation="sleeping" size={64} />
             <span className="sleep-mark">z Z</span>

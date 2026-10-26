@@ -402,7 +402,6 @@ html[data-motion="paused"] *::after {
 .fx-router { background: #a6e3a1; animation: blink .7s steps(1) infinite; }
 .fx-router.b { animation-duration: 1.3s; }
 .fx-router.c { background: #f9e2af; animation-duration: .45s; }
-.fx-antenna { background: #f38ba8; animation: blink 2s steps(1) infinite; }
 .fx-steam { background: rgba(255, 255, 255, .7); animation: steam 2.6s steps(6) infinite; opacity: 0; }
 .fx-steam.two { animation-delay: -1.3s; }
 .room[data-lamp="off"][data-sky="night"] .fx-steam { display: none; }
@@ -499,3 +498,9 @@ html[data-cursor="text"] .cursor, html[data-cursor="out"] .cursor { opacity: 0; 
 .vignette .asad .sprite { --sprite-size: calc(var(--u) * 128) !important; display: block; }
 .vignette .sleep-mark { position: absolute; top: 40%; right: 18%; font: 12px var(--mono); color: var(--mauve); animation: pulse 3s infinite; }
 @media (max-width: 760px) { .vignette { margin-inline: -20px; width: calc(100% + 40px); box-shadow: none; } }
+
+/* QROVER drives a little way along the desk and back */
+.actor.robot { left: calc(var(--u) * 286); top: calc(var(--u) * 80); animation: robot-drive 16s ease-in-out infinite; }
+.actor.robot .sprite { --sprite-size: calc(var(--u) * 48) !important; display: block; }
+@keyframes robot-drive { 0%, 20% { translate: 0 0; } 45%, 60% { translate: calc(var(--u) * 14) 0; } 85%, 100% { translate: 0 0; } }
+.room[data-lamp="off"][data-sky="night"] .actor.robot { animation-play-state: paused; }

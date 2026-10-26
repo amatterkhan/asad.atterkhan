@@ -15,6 +15,8 @@ type State =
   | "storm-standing"
   | "storm-sit"
   | "storm-stretch"
+  | "storm-dream"
+  | "robot-idle"
   | "asad-coffee";
 function Sprite({
   state,
@@ -65,10 +67,13 @@ export function AsadSprite({
 }: Shared & { animation?: "idle" | "typing" | "coffee" | "happy" }) {
   return <Sprite state={`asad-${animation}`} {...props} />;
 }
+export function RobotSprite(props: Shared) {
+  return <Sprite state="robot-idle" {...props} />;
+}
 export function StormSprite({
   animation = "idle",
   ...props
-}: Shared & { animation?: "idle" | "sleeping" | "standing" | "sit" | "stretch" }) {
+}: Shared & { animation?: "idle" | "sleeping" | "standing" | "sit" | "stretch" | "dream" }) {
   return <Sprite state={`storm-${animation}`} {...props} />;
 }
 const mrrps = ["mrrp?", "*purr*", "mew.", "…supervising", "prrrt!", "(blink)"];

@@ -4,10 +4,14 @@ import sys, json, subprocess, time
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent)); import pixellab as P
 who, name, direction, n, start, action = sys.argv[1:7]
+mode = sys.argv[7] if len(sys.argv) > 7 else "v3"
+initial_pose = sys.argv[8] if len(sys.argv) > 8 else None
 ROOT = P.ROOT
 cid = json.loads((ROOT / f"art/pixellab/{who}.json").read_text())["character_id"]
-body = {"character_id": cid, "animation_name": name, "action_description": action, "mode": "v3",
+body = {"character_id": cid, "animation_name": name, "action_description": action, "mode": mode,
         "frame_count": int(n), "directions": [direction], "keep_first_frame": False}
+if initial_pose:
+    body["initial_pose"] = initial_pose
 if start != "-":
     body["custom_start_frame"] = {"type": "base64", "base64": P.b64png(ROOT / start), "format": "png"}
 r = P.call("POST", "/characters/animations", body)

@@ -24,7 +24,8 @@ STATES = {
     "storm-idle": ("storm", "idle", 180, None),
     "storm-sit": ("storm", "idle", 220, None),
     "storm-stretch": ("storm", "stretch", 140, None),
-    "storm-sleeping": ("storm", "sleep", 420, [4, 5, 6, 7, 6, 5]),  # the curled-up frames, breathing
+    "storm-sleeping": ("storm-curled", "sleep-ball", 300, None),          # curled into a ball (character state)
+    "storm-dream": ("storm", "sleep-dream", 240, list(range(2, 16))),   # kneading paws, head shift
 }
 CANVAS = {"asad": (128, 122), "storm": (64, 58)}  # square size, feet line
 
@@ -52,7 +53,7 @@ def build():
         files = sorted((SRC / who / anim).glob("[0-9][0-9].png"))
         frames = [scale(Image.open(f).convert("RGBA")) for f in files]
         if idx: frames = [frames[i] for i in idx]
-        by_char.setdefault(who, []).append((state, frames, ms))
+        by_char.setdefault(who.split("-")[0], []).append((state, frames, ms))
     for who, items in by_char.items():
         size, foot = CANVAS[who]
         opaque = np.concatenate([f[f[..., 3] > 0][:, :3] for _, fs, _ in items for f in fs])
@@ -90,7 +91,7 @@ if __name__ == "__main__":
         for f in (ASE / f"{stale}.ase", ROOT / f"public/sprites/{stale}.png", ROOT / f"public/sprites/{stale}-still.png"):
             f.unlink(missing_ok=True)
     for state, (who, *_rest) in STATES.items():
-        size, foot = CANVAS[who]
+        size, foot = CANVAS[who.split("-")[0]]
         man["states"].setdefault(state, {"sheet": f"/sprites/{state}.png", "still": f"/sprites/{state}-still.png"})["anchor"] = [size // 2, foot]
     man["strideRoomPx"] = 9
     man["walkCycleMs"] = 8 * STATES["storm-standing"][2]
