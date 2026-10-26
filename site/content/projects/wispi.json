@@ -1,0 +1,24 @@
+{
+  "id": 4,
+  "title": "Wispi",
+  "description": "A Quote sharing single page social network called \"Wispi\" through HTML,CSS, JS, Node.js & MongoDB.",
+  "date": "2023-08-20",
+  "categories": [
+    "Web Development",
+    "Full Stack"
+  ],
+  "tags": [
+    "nodejs",
+    "mongodb",
+    "social"
+  ],
+  "featured": false,
+  "hasWriteup": false,
+  "links": [
+    {
+      "type": "Code",
+      "url": "https://github.com/amatterkhan/wispi"
+    }
+  ],
+  "slug": "wispi"
+}

@@ -1,0 +1,173 @@
+name: Deploy site and API
+# Pushes to the deploy branch: checks → API (Cloud Run, when enabled and api/ changed) → Hosting.
+# content-published (sent by the API after site-copy saves and article publish/unpublish) and
+# manual runs rebuild Hosting from the deploy branch. GitHub only delivers repository_dispatch to
+# workflows on the default branch, so content rebuilds start working once this file is on main.
+#
+# Nothing deploys until the one-time setup has set the repository variables (docs/ci-cd.md).
+on:
+  push:
+    branches: [main, frontend-redesign]
+    paths: ['site/**', 'api/**', '.github/workflows/site-*.yml', '.github/actions/site-build/**']
+  repository_dispatch:
+    types: [content-published]
+  workflow_dispatch:
+    inputs:
+      deploy_api:
+        description: Also build and deploy the API
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  # Newest wins: every build contains all published content, so an older one is never needed.
+  group: site-deploy
+  cancel-in-progress: true
+env:
+  FIREBASE_TOOLS: firebase-tools@15.34.1
+  DEPLOY_BRANCH: ${{ vars.SITE_DEPLOY_BRANCH || 'frontend-redesign' }}
+  # Pushes deploy the pushed commit; dispatches and manual runs deploy the deploy branch head.
+  DEPLOY_REF: ${{ github.event_name == 'push' && github.sha || vars.SITE_DEPLOY_BRANCH || 'frontend-redesign' }}
+  REGION: ${{ vars.API_REGION || 'us-central1' }}
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    # Only the deploy branch deploys; other pushes are ignored (pull requests run site-ci.yml).
+    if: github.event_name != 'push' || github.ref_name == (vars.SITE_DEPLOY_BRANCH || 'frontend-redesign')
+    outputs:
+      api: ${{ steps.diff.outputs.api }}
+      site: ${{ steps.diff.outputs.site }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.DEPLOY_REF }}
+          fetch-depth: 0
+      - id: diff
+        run: |
+          case "$EVENT" in
+            push) ;;
+            workflow_dispatch) echo "api=$DEPLOY_API" >> "$GITHUB_OUTPUT"; echo "site=true" >> "$GITHUB_OUTPUT"; exit 0 ;;
+            *) echo "api=false" >> "$GITHUB_OUTPUT"; echo "site=true" >> "$GITHUB_OUTPUT"; exit 0 ;;
+          esac
+          if git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            changed=$(git diff --name-only "$BEFORE" "$GITHUB_SHA")
+          else
+            changed=$(git ls-files) # new branch or force push: treat everything as changed
+          fi
+          grep -qE '^(api/|\.github/workflows/site-deploy\.yml)' <<<"$changed" && api=true || api=false
+          grep -qE '^(site/|\.github/)' <<<"$changed" && site=true || site=false
+          echo "api=$api" >> "$GITHUB_OUTPUT"
+          echo "site=$site" >> "$GITHUB_OUTPUT"
+          echo "api=$api site=$site"
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          DEPLOY_API: ${{ inputs.deploy_api }}
+
+  checks:
+    needs: changes
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/site-ci.yml
+
+  api:
+    needs: [changes, checks]
+    if: >-
+      always() && !cancelled() && needs.changes.result == 'success'
+      && needs.checks.result != 'failure' && needs.changes.outputs.api == 'true'
+      && vars.API_ENABLED == 'true' && vars.DEPLOY_SERVICE_ACCOUNT != ''
+    runs-on: ubuntu-latest
+    environment: site-production
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.DEPLOY_REF }}
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.DEPLOY_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v3
+      - name: Build and push image
+        id: image
+        working-directory: api
+        run: |
+          image="$REGION-docker.pkg.dev/$PROJECT_ID/asad/api:$(git rev-parse HEAD)"
+          gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
+          docker build --tag "$image" .
+          docker push "$image"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+      - uses: google-github-actions/deploy-cloudrun@v3
+        with:
+          service: asad-api
+          region: ${{ env.REGION }}
+          image: ${{ steps.image.outputs.image }}
+          # Public invoker so Hosting rewrites can reach it; every owner route checks the
+          # Firebase ID token, owner UID, admin claim and TOTP itself.
+          flags: >-
+            --allow-unauthenticated
+            --service-account=${{ vars.API_SERVICE_ACCOUNT || format('asad-api@{0}.iam.gserviceaccount.com', vars.FIREBASE_PROJECT_ID) }}
+            --min-instances=0 --max-instances=2 --concurrency=8 --cpu=1 --memory=512Mi
+          env_vars_update_strategy: overwrite
+          env_vars: |-
+            APP_ENV=production
+            FIREBASE_PROJECT_ID=${{ vars.FIREBASE_PROJECT_ID }}
+            FIREBASE_STORAGE_BUCKET=${{ vars.FIREBASE_STORAGE_BUCKET }}
+            FIREBASE_OWNER_UID=${{ secrets.FIREBASE_OWNER_UID }}
+            ENABLE_CONTENT_ADMIN=${{ vars.ENABLE_CONTENT_ADMIN || 'false' }}
+            ENABLE_DOCUMENT_ADMIN=${{ vars.ENABLE_DOCUMENT_ADMIN || 'false' }}
+            ENABLE_ACHIEVEMENT_ADMIN=${{ vars.ENABLE_ACHIEVEMENT_ADMIN || 'false' }}
+            ENABLE_PUBLIC_FILES=${{ vars.ENABLE_PUBLIC_FILES || 'false' }}
+            REBUILD_HOOK=${{ vars.REBUILD_HOOK }}
+            GITHUB_REPO=${{ github.repository }}
+          secrets_update_strategy: overwrite
+          # The dispatch token lives in Secret Manager, never in GitHub or the image.
+          secrets: ${{ vars.REBUILD_HOOK == 'github' && 'GITHUB_TOKEN=asad-api-github-token:latest' || '' }}
+
+  hosting:
+    needs: [changes, checks, api]
+    if: >-
+      always() && !cancelled() && needs.changes.result == 'success'
+      && needs.checks.result != 'failure' && needs.api.result != 'failure'
+      && needs.changes.outputs.site == 'true' && vars.DEPLOY_SERVICE_ACCOUNT != ''
+    runs-on: ubuntu-latest
+    environment:
+      name: site-production
+      url: ${{ vars.SITE_URL }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.DEPLOY_REF }}
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.DEPLOY_SERVICE_ACCOUNT }}
+      - uses: ./.github/actions/site-build
+        with:
+          content-source: ${{ vars.CONTENT_SOURCE || 'git' }}
+          index-site: ${{ vars.INDEX_SITE || 'false' }}
+          site-url: ${{ vars.SITE_URL }}
+          api-enabled: ${{ vars.API_ENABLED || 'false' }}
+          api-region: ${{ env.REGION }}
+          hosting-site: ${{ vars.FIREBASE_HOSTING_SITE }}
+          project-id: ${{ vars.FIREBASE_PROJECT_ID }}
+          storage-bucket: ${{ vars.FIREBASE_STORAGE_BUCKET }}
+          owner-uid: ${{ secrets.FIREBASE_OWNER_UID }}
+          firebase-api-key: ${{ secrets.FIREBASE_WEB_API_KEY }}
+          firebase-auth-domain: ${{ vars.FIREBASE_AUTH_DOMAIN }}
+      - name: Deploy Hosting and security rules
+        working-directory: site
+        run: |
+          only=hosting,firestore
+          [ -n "$BUCKET" ] && only="$only,storage"
+          npx --yes "$FIREBASE_TOOLS" deploy --only "$only" --config firebase.ci.json \
+            --project "$PROJECT_ID" --non-interactive --message "$(git rev-parse --short HEAD) ${{ github.event_name }}"
+        env:
+          PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+          BUCKET: ${{ vars.FIREBASE_STORAGE_BUCKET }}

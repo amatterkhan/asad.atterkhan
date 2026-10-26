@@ -1,0 +1,16 @@
+{
+  "role": "Security Analyst",
+  "company": "Checkout.com",
+  "location": "Mauritius",
+  "heroTitle": "Hey, I'm Asad.",
+  "heroLede": "I build things, break things, and try to understand how they work.",
+  "heroBody": "I'm a Security Analyst at Checkout.com, working where security operations meets engineering: digging into what happened, then building and automating so it's easier next time. Outside work I'm studying for a CS master's at Georgia Tech and writing down what I learn along the way, usually with Storm asleep somewhere nearby.",
+  "roomHint": "Poke around. Everything on the desk leads somewhere.",
+  "closingTitle": "Say hello",
+  "closingBody": "Got a question about something here, or just want to talk shop? Write to me at",
+  "labIntro": "Experiments, useful notes, and things I'm figuring out. A technical journal, with room for the unfinished questions.",
+  "workbenchIntro": "Websites, tools and the occasional piece of hardware. Some were built for other people; some just to see whether I could.",
+  "experienceIntro": "From the service desk to security operations. Each role taught me something the next one needed.",
+  "achievementsIntro": "Certifications and badges I've picked up along the way, each linked to the original credential.",
+  "aboutBody": "I'm Asad. I work in security operations, and I like knowing how the whole stack fits together: the software, the infrastructure, the cloud underneath it, and all the ways it can go wrong.\n\nMost of my side projects start with a small question: how does this work, why did it break, could it be simpler? Usually that ends in a script, a tool, or a long evening of reading.\n\nThe Lab is where I keep what I learn. The name is a nod to *Steins;Gate*, one of my favourite anime: a small, messy lab where curious people try things just to see what happens.\n\nAnd this is Storm, a fluffy tabby-and-white cat with a firm claim on any warm spot near my desk.\n\nIf you'd like to talk about something I've built or written, [say hello](mailto:contact@asad.atterkhan.com)."
+}

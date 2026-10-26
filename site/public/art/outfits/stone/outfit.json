@@ -1,0 +1,11 @@
+{
+  "id": "stone",
+  "name": "Stone",
+  "description": "Light warm-grey hoodie with deep green drawstrings.",
+  "palette": {
+    "hoodie": ["#5f625c", "#8b8d84", "#b4b3a6", "#d2cfc0", "#ece8d8"],
+    "rim": "#b48a5a",
+    "drawstring": ["#2f7a5c", "#1f5a44"]
+  },
+  "createdAt": "2026-10-26"
+}

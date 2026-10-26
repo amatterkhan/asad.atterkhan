@@ -1,0 +1,63 @@
+<h2 id="start-with-a-question">Start with a question</h2>
+<p>This is <strong>sample content for local testing</strong>, not a published technical article or a claim about a completed project. A notebook should leave enough room for the commands, diagrams, screenshots, and context that make an experiment reproducible.</p>
+<blockquote>
+<p>Keep the observation close to the command that produced it. A result is easier to understand when its context has not disappeared.</p>
+</blockquote>
+<h2 id="keep-the-commands-readable">Keep the commands readable</h2>
+<figure data-rehype-pretty-code-figure=""><pre tabindex="0" data-language="typescript" data-theme="everforest-dark everforest-light"><code data-language="typescript" data-theme="everforest-dark everforest-light" style="display: grid;"><span data-line=""><span style="--shiki-dark:#E69875;--shiki-light:#F57D26">const</span><span style="--shiki-dark:#D3C6AA;--shiki-light:#5C6A72"> note </span><span style="--shiki-dark:#E69875;--shiki-light:#F57D26">=</span><span style="--shiki-dark:#D3C6AA;--shiki-light:#5C6A72"> {</span></span>
+<span data-line=""><span style="--shiki-dark:#D3C6AA;--shiki-light:#5C6A72">  title</span><span style="--shiki-dark:#859289;--shiki-light:#939F91">:</span><span style="--shiki-dark:#DBBC7F;--shiki-light:#DFA000"> "An experiment worth keeping"</span><span style="--shiki-dark:#D3C6AA;--shiki-light:#5C6A72">,</span></span>
+<span data-line=""><span style="--shiki-dark:#D3C6AA;--shiki-light:#5C6A72">  status</span><span style="--shiki-dark:#859289;--shiki-light:#939F91">:</span><span style="--shiki-dark:#DBBC7F;--shiki-light:#DFA000"> "draft"</span><span style="--shiki-dark:#D3C6AA;--shiki-light:#5C6A72">,</span></span>
+<span data-line=""><span style="--shiki-dark:#D3C6AA;--shiki-light:#5C6A72">  artifact</span><span style="--shiki-dark:#859289;--shiki-light:#939F91">:</span></span>
+<span data-line=""><span style="--shiki-dark:#DBBC7F;--shiki-light:#DFA000">    "private/owner/documents/an-experiment-with-a-deliberately-long-file-name.pdf"</span><span style="--shiki-dark:#D3C6AA;--shiki-light:#5C6A72">,</span></span>
+<span data-line=""><span style="--shiki-dark:#D3C6AA;--shiki-light:#5C6A72">};</span></span>
+<span data-line=""><span style="--shiki-dark:#D3C6AA;--shiki-light:#5C6A72">console</span><span style="--shiki-dark:#859289;--shiki-light:#939F91">.</span><span style="--shiki-dark:#A7C080;--shiki-light:#8DA101">log</span><span style="--shiki-dark:#D3C6AA;--shiki-light:#5C6A72">(note</span><span style="--shiki-dark:#859289;--shiki-light:#939F91">.</span><span style="--shiki-dark:#D3C6AA;--shiki-light:#5C6A72">title);</span></span></code></pre></figure>
+<p>Code should scroll inside its container, rather than pushing the whole page sideways. The same applies to wide tables.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Table, horizontally scrollable"><table>
+<thead>
+<tr>
+<th>Material</th>
+<th>Canonical source</th>
+<th>Public by default?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Article draft</td>
+<td>Private working directory or private Git content source</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Published article</td>
+<td>Reviewed Markdown source</td>
+<td>Deliberately</td>
+</tr>
+<tr>
+<td>Document original</td>
+<td>Private Cloud Storage path</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Public download</td>
+<td>Explicitly published copy, with a separate object path</td>
+<td>Deliberately</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="a-small-diagram">A small diagram</h3>
+<figure class="flow-diagram" aria-label="Flow diagram"><ol><li>Private draft</li><li>Local preview</li><li>Review</li><li>Publish</li><li>Public page</li></ol></figure>
+<p>A plain text diagram can sometimes explain a boundary better than a complicated illustration. When it can't, Mermaid works too:</p>
+<figure class="mermaid-diagram" aria-label="Diagram"><pre class="mermaid-src">flowchart LR
+  A[Alert] --> B{Real?}
+  B -- yes --> C[Investigate]
+  B -- no --> D[Tune the rule]
+  C --> E[Write it up]</pre></figure>
+<h2 id="images-and-links">Images and links</h2>
+<p><img src="/sprites/asad-idle-still.png" alt="Asad and Storm, the website&#x27;s approved pixel-art characters" loading="lazy" decoding="async"></p>
+<p>Images should have useful descriptions and a natural aspect ratio. Follow an <a href="/projects">internal link to Projects</a> without losing the site’s normal navigation.</p>
+<ul>
+<li>Keep publication and update dates separate.</li>
+<li>Use stable article slugs.</li>
+<li>Include enough detail to make a note useful next month.</li>
+</ul>
+<h2 id="leave-a-useful-ending">Leave a useful ending</h2>
+<p>The reading experience should work when animations are disabled. Decoration should never compete with the idea a reader is trying to understand.</p>

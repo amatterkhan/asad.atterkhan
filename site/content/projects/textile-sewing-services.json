@@ -1,0 +1,29 @@
+{
+  "id": 1,
+  "title": "Textile Sewing Services Ltd Website",
+  "description": "A website for a textile company built using Vue.js and Tailwind CSS.",
+  "date": "2024-01-15",
+  "categories": [
+    "Web Development",
+    "Vue.js"
+  ],
+  "tags": [
+    "vue",
+    "tailwind",
+    "web"
+  ],
+  "featured": true,
+  "hasWriteup": true,
+  "links": [
+    {
+      "type": "Live",
+      "url": "https://textilesewingservices.com/"
+    },
+    {
+      "type": "Code",
+      "url": "https://github.com/amatterkhan/textile-sewing-services"
+    }
+  ],
+  "slug": "textile-sewing-services",
+  "writeup": "textile-sewing-services.md"
+}

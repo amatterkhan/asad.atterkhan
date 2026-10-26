@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://asad.atterkhan.com/sitemap.xml

@@ -1,0 +1,71 @@
+name: Site and API checks
+# Runs on pull requests that touch the Vue site, the Go API or these workflows, and as the first
+# step of site-deploy.yml on pushes to the deploy branch. Demo emulators only; no cloud credentials.
+on:
+  pull_request:
+    paths: ['site/**', 'api/**', '.github/workflows/site-*.yml', '.github/actions/site-build/**']
+  workflow_call:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: site-ci-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  FIREBASE_TOOLS: firebase-tools@15.34.1
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: api/go.mod
+          cache-dependency-path: api/go.sum
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+      - run: go vet ./...
+      - name: Unit and emulator tests (every route, exporter)
+        run: >
+          npx --yes "$FIREBASE_TOOLS" emulators:exec
+          --config ../site/firebase.json --only auth,firestore,storage
+          --project demo-asad-exe 'go test -race ./... -count=1'
+      - name: Container image builds
+        run: docker build --tag asad-api:ci .
+
+  site:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm audit --omit=dev --audit-level=moderate
+      - run: npm run build
+      # Browser suite: production prerender + preview server, desktop/mobile, both themes,
+      # axe, overflow, hydration. Uses the Chrome already installed on GitHub's runners.
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-traces
+          path: site/test-results/
+          retention-days: 7
