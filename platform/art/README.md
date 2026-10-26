@@ -35,6 +35,20 @@ Facial hair rule for Asad (keep in prompts and references): a short, neat dark g
 lower lip; no moustache, no cheek beard or sideburns. `scripts/paint_goatee.py` paints it into the
 references before any regeneration.
 
+## Outfits
+
+Asad's clothes are swappable without touching the character. `public/sprites/asad-*.png` (exported
+from `ase/`) is the `classic` outfit; `scripts/outfits.py` copies it to `public/art/outfits/classic/`
+and builds every other `public/art/outfits/<id>/` by recolouring only the hoodie pixels (a fixed
+region per animation, the face and goatee protected, shades mapped by brightness onto the outfit's
+ramp, drawstrings repainted). Pose, hair, glasses, goatee, frames and timing stay identical.
+
+To add one: make `public/art/outfits/<id>/outfit.json` (copy `forest/`; `palette.hoodie` is five
+colours from shadow to highlight, `rim` tints the lamp-lit edge, `drawstring` is light/dark), run
+`python3 scripts/outfits.py --preview`, check `art/previews/outfits.png`, commit the folder. The
+owner picks the live outfit in `/admin` → Wardrobe (`siteSettings/wardrobe`). Re-run the script
+after any re-export of Asad's sheets so every outfit follows.
+
 ## Exporting
 
 `./scripts/export_ase.sh` exports every `art/ase/*.aseprite|*.ase` (Aseprite if installed, else

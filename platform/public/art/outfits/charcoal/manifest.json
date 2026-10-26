@@ -1,0 +1,96 @@
+{
+  "version": 21,
+  "outfit": "charcoal",
+  "logicalSize": [
+    128,
+    128
+  ],
+  "states": {
+    "asad-idle": {
+      "sheet": "/art/outfits/charcoal/asad-idle.png",
+      "still": "/art/outfits/charcoal/asad-idle-still.png",
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        220,
+        220,
+        220,
+        220,
+        220,
+        220,
+        220,
+        220
+      ],
+      "anchor": [
+        64,
+        122
+      ],
+      "frameMs": 220
+    },
+    "asad-typing": {
+      "sheet": "/art/outfits/charcoal/asad-typing.png",
+      "still": "/art/outfits/charcoal/asad-typing-still.png",
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        140,
+        140,
+        140,
+        140,
+        140,
+        140,
+        140,
+        140
+      ],
+      "anchor": [
+        64,
+        122
+      ],
+      "frameMs": 140
+    },
+    "asad-coffee": {
+      "sheet": "/art/outfits/charcoal/asad-coffee.png",
+      "still": "/art/outfits/charcoal/asad-coffee-still.png",
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "anchor": [
+        64,
+        122
+      ],
+      "frameMs": 200
+    },
+    "asad-happy": {
+      "sheet": "/art/outfits/charcoal/asad-happy.png",
+      "still": "/art/outfits/charcoal/asad-happy-still.png",
+      "frames": 6,
+      "frameMs": 170,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "anchor": [
+        64,
+        122
+      ],
+      "durationsMs": [
+        170,
+        170,
+        170,
+        170,
+        170,
+        170
+      ]
+    }
+  }
+}

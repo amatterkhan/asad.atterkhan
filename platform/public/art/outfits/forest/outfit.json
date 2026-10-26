@@ -1,0 +1,11 @@
+{
+  "id": "forest",
+  "name": "Forest",
+  "description": "Deep forest-olive hoodie with bone drawstrings.",
+  "palette": {
+    "hoodie": ["#121b17", "#1d2c24", "#2c4033", "#435a44", "#6c8462"],
+    "rim": "#8a6a3c",
+    "drawstring": ["#ddd3b8", "#a89c80"]
+  },
+  "createdAt": "2026-10-26"
+}
