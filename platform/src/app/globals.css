@@ -642,8 +642,8 @@ html[data-cursor="box"] .cursor-dot span { background: var(--accent); }
 .room[data-lamp="off"][data-sky="night"] .actor.robot { animation-play-state: paused; }
 
 /* pixel icons inside links */
-.pixel-icon { height: .95em; width: auto; fill: currentColor; vertical-align: -0.1em; margin-right: .3em; flex: none; }
-.pixel-icon.ext { height: .6em; margin: 0 0 0 .15em; vertical-align: .15em; opacity: .7; }
+.pixel-icon { width: 1.15em; height: 1.15em; fill: currentColor; vertical-align: -0.2em; margin-right: .3em; flex: none; shape-rendering: crispEdges; }
+.pixel-icon.ext { width: .85em; height: .85em; margin: 0 0 0 .15em; vertical-align: 0; opacity: .7; }
 .closing-links a, .footer-meta a, .mobile-menu-links a { display: inline-flex; align-items: center; gap: .1em; text-decoration: none; }
 .closing-links { gap: 4px 28px; max-width: none !important; }
 

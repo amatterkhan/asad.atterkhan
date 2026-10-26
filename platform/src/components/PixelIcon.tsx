@@ -1,31 +1,17 @@
-// Small pixel-art icons drawn on a grid ("#" = filled), in the link's own colour.
+// Icons from pixelarticons (MIT, https://pixelarticons.com): 24px pixel-grid icons in currentColor.
+import { Briefcase, ExternalLink, Github, Linkedin, Mail, Trophy } from "pixelarticons/react";
+
 const ICONS = {
-  mail: ["############", "##........##", "#.#......#.#", "#..#....#..#", "#...#..#...#", "#....##....#", "#..........#", "############"],
-  github: ["...######...", ".##########.", "##.##..##.##", "############", "##.######.##", "##.##..##.##", "############", ".##########.", "..##....##..", "...#....#..."],
-  linkedin: ["##########", "#........#", "#.#......#", "#........#", "#.#.#.##.#", "#.#.##..##", "#.#.#...##", "#.#.#...##", "#........#", "##########"],
-  external: ["...######", "......###", ".....#.##", "....#..##", "...#....#", "..#......", ".#.......", "#........"],
-  briefcase: ["....####....", "....#..#....", "############", "#..........#", "#....##....#", "############", "#..........#", "############"],
-  medal: ["##......##", ".##....##.", "..##..##..", "..######..", ".##....##.", "##..##..##", "##..##..##", ".##....##.", "..######.."],
-  book: ["#####.#####", "#...#.#...#", "#.#.#.#.#.#", "#...#.#...#", "#.#.#.#.#.#", "#...#.#...#", "#####.#####", ".....#....."],
-  wrench: ["......###.", ".....##.##", ".....#...#", "....##.###", "...##.##..", "..##.##...", ".##.##....", "##.##.....", "#.##......", "###......."],
-  user: ["...####...", "..######..", "..######..", "...####...", "..........", ".########.", "##########", "##########"],
+  github: Github,
+  linkedin: Linkedin,
+  mail: Mail,
+  briefcase: Briefcase,
+  medal: Trophy,
+  external: ExternalLink,
 } as const;
 export type IconName = keyof typeof ICONS;
 
 export function PixelIcon({ name, className = "" }: { name: IconName; className?: string }) {
-  const rows = ICONS[name];
-  const w = Math.max(...rows.map((r) => r.length));
-  return (
-    <svg
-      className={`pixel-icon ${className}`}
-      viewBox={`0 0 ${w} ${rows.length}`}
-      shapeRendering="crispEdges"
-      aria-hidden="true"
-      focusable="false"
-    >
-      {rows.flatMap((row, y) =>
-        [...row].map((ch, x) => (ch === "#" ? <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" /> : null)),
-      )}
-    </svg>
-  );
+  const Icon = ICONS[name];
+  return <Icon className={`pixel-icon ${className}`} aria-hidden="true" focusable="false" />;
 }
