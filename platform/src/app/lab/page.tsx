@@ -23,10 +23,10 @@ export default async function Lab() {
           </p>
         </div>
       </div>
-      <RoomVignette corner="lab">
-        <At x={171} y={88}>
+      <RoomVignette corner="lab" front={[[196, 124, 18, 9], [200, 128, 12, 50]]}>
+        <At x={168} y={112}>
           <div className="storm">
-            <StormSprite animation="sleeping" size={64} />
+            <StormSprite animation="nap" size={40} />
             <span className="sleep-mark">z Z</span>
           </div>
         </At>

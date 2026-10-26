@@ -26,13 +26,16 @@ STATES = {
     "storm-stretch": ("storm", "stretch", 140, None),
     "storm-sleeping": ("storm-curled", "sleep-ball", 300, None),          # curled into a ball (character state)
     "storm-dream": ("storm", "sleep-dream", 240, list(range(2, 16))),   # kneading paws, head shift
+    "storm-nap": ("storm-curled", "sleep-ball", 300, None),               # small, for the Lab chair
 }
-CANVAS = {"asad": (128, 122), "storm": (64, 58)}  # square size, feet line
+CANVAS = {"asad": (128, 122), "storm": (64, 58), "storm-nap": (40, 36)}  # square size, feet line
+SCALES = {"storm-nap": 0.45}  # per-state scale override
 
-def scale(im):
+def scale(im, s_=None):
     a = np.array(im).astype(float)
     a[..., :3] *= a[..., 3:4] / 255
-    w, h = round(im.width * SCALE), round(im.height * SCALE)
+    k = s_ or SCALE
+    w, h = round(im.width * k), round(im.height * k)
     s = np.array(Image.fromarray(a.astype(np.uint8)).resize((w, h), Image.LANCZOS)).astype(float)
     al = s[..., 3]
     s[..., :3] = np.where(al[..., None] > 0, s[..., :3] * 255 / np.maximum(al[..., None], 1), 0)
@@ -51,14 +54,14 @@ def build():
     by_char = {}
     for state, (who, anim, ms, idx) in STATES.items():
         files = sorted((SRC / who / anim).glob("[0-9][0-9].png"))
-        frames = [scale(Image.open(f).convert("RGBA")) for f in files]
+        frames = [scale(Image.open(f).convert("RGBA"), SCALES.get(state)) for f in files]
         if idx: frames = [frames[i] for i in idx]
         by_char.setdefault(who.split("-")[0], []).append((state, frames, ms))
     for who, items in by_char.items():
-        size, foot = CANVAS[who]
         opaque = np.concatenate([f[f[..., 3] > 0][:, :3] for _, fs, _ in items for f in fs])
         pal = Image.fromarray(opaque.reshape(1, -1, 3)).quantize(colors=64, method=Image.Quantize.MEDIANCUT)
         for state, frames, ms in items:
+            size, foot = CANVAS.get(state, CANVAS[who])
             cx, bottom = feet(frames[0])
             ox, oy = int(round(size / 2 - cx)), foot - bottom
             out = BUILD / state
@@ -91,7 +94,7 @@ if __name__ == "__main__":
         for f in (ASE / f"{stale}.ase", ROOT / f"public/sprites/{stale}.png", ROOT / f"public/sprites/{stale}-still.png"):
             f.unlink(missing_ok=True)
     for state, (who, *_rest) in STATES.items():
-        size, foot = CANVAS[who.split("-")[0]]
+        size, foot = CANVAS.get(state, CANVAS[who.split("-")[0]])
         man["states"].setdefault(state, {"sheet": f"/sprites/{state}.png", "still": f"/sprites/{state}-still.png"})["anchor"] = [size // 2, foot]
     man["strideRoomPx"] = 9
     man["walkCycleMs"] = 8 * STATES["storm-standing"][2]

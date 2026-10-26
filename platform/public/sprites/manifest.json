@@ -1,5 +1,5 @@
 {
-  "version": 19,
+  "version": 20,
   "logicalSize": [
     128,
     128
@@ -290,6 +290,28 @@
         150
       ],
       "frameMs": 150
+    },
+    "storm-nap": {
+      "sheet": "/sprites/storm-nap.png",
+      "still": "/sprites/storm-nap-still.png",
+      "anchor": [
+        20,
+        36
+      ],
+      "frames": 8,
+      "frameWidth": 40,
+      "frameHeight": 40,
+      "durationsMs": [
+        300,
+        300,
+        300,
+        300,
+        300,
+        300,
+        300,
+        300
+      ],
+      "frameMs": 300
     }
   },
   "strideRoomPx": 9,

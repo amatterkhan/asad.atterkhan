@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import manifest from "../../public/sprites/manifest.json";
 type Shared = {
-  size?: 48 | 64 | 96 | 128 | 192 | 256 | 384;
+  size?: 40 | 48 | 64 | 96 | 128 | 192 | 256 | 384;
   description?: string;
   paused?: boolean;
 };
@@ -16,6 +16,7 @@ type State =
   | "storm-sit"
   | "storm-stretch"
   | "storm-dream"
+  | "storm-nap"
   | "robot-idle"
   | "asad-coffee";
 function Sprite({
@@ -73,7 +74,7 @@ export function RobotSprite(props: Shared) {
 export function StormSprite({
   animation = "idle",
   ...props
-}: Shared & { animation?: "idle" | "sleeping" | "standing" | "sit" | "stretch" | "dream" }) {
+}: Shared & { animation?: "idle" | "sleeping" | "standing" | "sit" | "stretch" | "dream" | "nap" }) {
   return <Sprite state={`storm-${animation}`} {...props} />;
 }
 const mrrps = ["mrrp?", "*purr*", "mew.", "…supervising", "prrrt!", "(blink)"];

@@ -13,7 +13,18 @@ const CROPS = {
 
 export type Corner = keyof typeof CROPS;
 
-export function RoomVignette({ corner, children }: { corner: Corner; children?: ReactNode }) {
+type Rect = [number, number, number, number];
+
+/** `front` re-draws parts of the room (x, y, w, h in room px) over the children, for depth. */
+export function RoomVignette({
+  corner,
+  children,
+  front = [],
+}: {
+  corner: Corner;
+  children?: ReactNode;
+  front?: Rect[];
+}) {
   const [x, y, w, h] = CROPS[corner];
   const v = manifest.version;
   return (
@@ -27,6 +38,16 @@ export function RoomVignette({ corner, children }: { corner: Corner; children?: 
           <div key={n} className={`layer layer-${n}`} style={{ backgroundImage: `url(/room/${n}.png?v=${v})` }} />
         ))}
         {children}
+        {front.map(([fx, fy, fw, fh]) => (
+          <div
+            key={`${fx}-${fy}`}
+            className="layer layer-room"
+            style={{
+              backgroundImage: `url(/room/room.png?v=${v})`,
+              clipPath: `inset(${(fy / 216) * 100}% ${100 - ((fx + fw) / 384) * 100}% ${100 - ((fy + fh) / 216) * 100}% ${(fx / 384) * 100}%)`,
+            }}
+          />
+        ))}
         {["night", "glow", "bulb"].map((n) => (
           <div key={n} className={`layer layer-${n}`} style={{ backgroundImage: `url(/room/${n}.png?v=${v})` }} />
         ))}

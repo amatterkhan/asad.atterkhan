@@ -495,6 +495,7 @@ html[data-cursor="text"] .cursor, html[data-cursor="out"] .cursor { opacity: 0; 
 .vignette-at { position: absolute; left: calc(var(--u) * var(--x)); top: calc(var(--u) * var(--y)); }
 .vignette .storm { position: relative; }
 .vignette .storm .sprite { --sprite-size: calc(var(--u) * 64) !important; display: block; }
+.vignette .storm .sprite.storm-nap { --sprite-size: calc(var(--u) * 40) !important; }
 .vignette .asad .sprite { --sprite-size: calc(var(--u) * 128) !important; display: block; }
 .vignette .sleep-mark { position: absolute; top: 40%; right: 18%; font: 12px var(--mono); color: var(--mauve); animation: pulse 3s infinite; }
 @media (max-width: 760px) { .vignette { margin-inline: -20px; width: calc(100% + 40px); box-shadow: none; } }
