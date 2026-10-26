@@ -4,12 +4,14 @@ import { initSprites } from "./behaviors/sprites";
 import { initVisibility } from "./behaviors/visibility";
 import { initArticle } from "./behaviors/article";
 import { initPrint } from "./behaviors/print";
+import { initTheme, syncTheme } from "./behaviors/theme";
 
 // Pages are static HTML. Small behaviours (no framework) run everywhere; Vue loads only on pages
 // with islands, and each island's code loads only where it appears.
 initVisibility();
 initCursor();
 initNav();
+initTheme();
 initSprites();
 initArticle();
 initPrint();
@@ -26,4 +28,5 @@ if (marks.length) {
       createSSRApp(component, JSON.parse(el.dataset.props || "{}")).mount(el);
     }),
   );
+  syncTheme();
 }

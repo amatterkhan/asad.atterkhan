@@ -15,12 +15,19 @@ const current = (href: string) =>
   path.startsWith(href) || (href === "/lab" && path.startsWith("/preview/")) ? "page" : undefined;
 </script>
 <template>
-  <nav class="desktop-nav" aria-label="Main navigation">
-    <a v-for="[href, label] in links" :key="href" :href="href" :aria-current="current(href)">{{ label }}</a>
-  </nav>
-  <button class="menu-trigger" aria-label="Open navigation menu" aria-haspopup="dialog" data-menu-open>
-    <span aria-hidden="true">Menu</span>
-  </button>
+  <div class="header-end">
+    <nav class="desktop-nav" aria-label="Main navigation">
+      <a v-for="[href, label] in links" :key="href" :href="href" :aria-current="current(href)">{{ label }}</a>
+    </nav>
+    <!-- shown by behaviors/theme.ts; without JavaScript it cannot do anything -->
+    <button class="theme-toggle" type="button" aria-label="Switch colour theme" aria-pressed="false" data-theme-toggle hidden>
+      <PixelIcon name="sun" extra="icon-sun" />
+      <PixelIcon name="moon" extra="icon-moon" />
+    </button>
+    <button class="menu-trigger" aria-label="Open navigation menu" aria-haspopup="dialog" data-menu-open>
+      <span aria-hidden="true">Menu</span>
+    </button>
+  </div>
   <dialog aria-label="Navigation menu" class="mobile-menu" data-menu>
     <div class="mobile-menu-head">
       <Brand />

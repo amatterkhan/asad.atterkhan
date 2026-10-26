@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
+import PixelIcon from "../components/PixelIcon.vue";
 import { slugify, type Api, type Draft, type Summary } from "./admin-types";
 const { api } = defineProps<{ api: Api }>();
 const list = ref<Summary[] | null>(null);
@@ -7,6 +8,9 @@ const draft = ref<Draft | null>(null);
 const preview = ref<string | null>(null);
 const note = ref("");
 const creating = ref({ title: "", description: "" });
+const filter = ref<"all" | "draft" | "published">("all");
+const count = (f: "draft" | "published") => (list.value ?? []).filter((a) => a.status === f).length;
+const visible = computed(() => (list.value ?? []).filter((a) => filter.value === "all" || a.status === filter.value));
 
 const refresh = () =>
   api<{ articles: Summary[] }>("/api/admin/articles").then(
@@ -83,22 +87,31 @@ const statusLine = (d: Draft) =>
 <template>
   <div class="admin-writing">
     <aside class="admin-list">
-      <form class="admin-new" @submit.prevent="create">
-        <p class="eyebrow">New note</p>
-        <input v-model="creating.title" placeholder="Title" required />
-        <input v-model="creating.description" placeholder="One-line description" required />
-        <small>{{ creating.title && `/lab/${slugify(creating.title)}` }}</small>
-        <button :disabled="!creating.title || !creating.description">Create draft</button>
-      </form>
-      <p class="eyebrow">Notes</p>
-      <p v-if="!list" class="admin-status">Loading…</p>
+      <details class="admin-new" :open="list !== null && !list.length">
+        <summary><PixelIcon name="note" /> New note</summary>
+        <form @submit.prevent="create">
+          <input v-model="creating.title" placeholder="Title" aria-label="Title" required />
+          <input v-model="creating.description" placeholder="One-line description" aria-label="One-line description" required />
+          <small>{{ creating.title && `/lab/${slugify(creating.title)}` }}</small>
+          <button class="primary" :disabled="!creating.title || !creating.description">Create draft</button>
+        </form>
+      </details>
+      <div class="admin-filter" role="group" aria-label="Filter notes">
+        <button type="button" :aria-pressed="filter === 'all'" @click="filter = 'all'">All <small>{{ list?.length ?? 0 }}</small></button>
+        <button type="button" :aria-pressed="filter === 'draft'" @click="filter = 'draft'">Drafts <small>{{ count("draft") }}</small></button>
+        <button type="button" :aria-pressed="filter === 'published'" @click="filter = 'published'">Live <small>{{ count("published") }}</small></button>
+      </div>
+      <p v-if="!list" class="admin-status">{{ note || "Loading…" }}</p>
       <p v-else-if="!list.length" class="admin-status">No notes yet.</p>
+      <p v-else-if="!visible.length" class="admin-status">Nothing here.</p>
       <ul>
-        <li v-for="a in list ?? []" :key="a.slug">
-          <button :class="draft?.slug === a.slug ? 'is-open' : ''" @click="open(a.slug)">
-            <span :class="`badge ${a.status}`">{{ a.status }}</span>
+        <li v-for="a in visible" :key="a.slug">
+          <button :class="draft?.slug === a.slug ? 'is-open' : ''" :aria-current="draft?.slug === a.slug ? 'true' : undefined" @click="open(a.slug)">
             <strong>{{ a.title }}</strong>
-            <small>{{ new Date(a.modifiedAt).toLocaleDateString() }}</small>
+            <span class="admin-list-meta">
+              <span :class="`badge ${a.status}`">{{ a.status }}</span>
+              <small>{{ new Date(a.modifiedAt).toLocaleDateString() }}</small>
+            </span>
           </button>
         </li>
       </ul>
@@ -138,7 +151,7 @@ const statusLine = (d: Draft) =>
     </form>
     <div v-else class="admin-empty">
       <p>Pick a note on the left, or start a new one.</p>
-      <p v-if="note" class="admin-status">{{ note }}</p>
+      <p v-if="note && list" class="admin-status" role="status">{{ note }}</p>
     </div>
   </div>
 </template>

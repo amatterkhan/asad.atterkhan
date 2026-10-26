@@ -65,7 +65,12 @@ onMounted(() => {
   // client-only clock, theme and saved lamp state (the build renders night, lamp on, no time)
   const tick = () => (clock.value = mauritiusTime());
   tick();
-  sky.value = document.documentElement.dataset.theme === "light" ? "day" : "night";
+  const syncSky = () => (sky.value = document.documentElement.dataset.theme === "light" ? "day" : "night");
+  syncSky();
+  // the nav's theme button changes it too
+  const themeWatch = new MutationObserver(syncSky);
+  themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  stops.push(() => themeWatch.disconnect());
   const clockId = setInterval(tick, 30000);
   try {
     if (localStorage.getItem("lamp") === "off") lamp.value = false;
