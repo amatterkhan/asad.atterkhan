@@ -4,7 +4,7 @@ name: Deploy site and API
 # manual runs rebuild Hosting from the deploy branch. GitHub only delivers repository_dispatch to
 # workflows on the default branch, so content rebuilds start working once this file is on main.
 #
-# Nothing deploys until the one-time setup has set the repository variables (docs/rebuild/ci-cd.md).
+# Nothing deploys until the one-time setup has set the repository variables (docs/ci-cd.md).
 on:
   push:
     branches: [main, frontend-redesign]

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-time setup for .github/workflows/site-{ci,deploy,preview}.yml (see docs/rebuild/ci-cd.md).
+# One-time setup for .github/workflows/site-{ci,deploy,preview}.yml (see docs/ci-cd.md).
 # Creates keyless GitHub → Google Cloud authentication (Workload Identity Federation), a deploy
 # identity, the API's runtime identity and an image repository, then stores the non-secret
 # configuration as GitHub repository variables. Safe to re-run. Needs gcloud and gh, signed in

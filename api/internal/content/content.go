@@ -31,7 +31,7 @@ func Achievements() []map[string]any {
 }
 
 // Outfits lists Asad's outfit ids (data/outfits.json, a copy of site/public/art/outfits/index.json
-// written by platform/scripts/outfits.py) and the default one.
+// written by art/scripts/outfits.py) and the default one.
 func Outfits() (ids []string, def string) {
 	var v struct {
 		Default string `json:"default"`

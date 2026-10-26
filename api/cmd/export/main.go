@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/amatterkhan/asad-exe/api/internal/server"
+	"github.com/amatterkhan/asad.atterkhan/api/internal/server"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"log"

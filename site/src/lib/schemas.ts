@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-// The same rules as the Next.js version (platform/src/lib/content.ts, achievements.ts). Every
-// record from Git or from a Firestore export passes these before it reaches a page.
+// Content schemas. Every record from Git or from a Firestore export passes these before it reaches a page.
 
 export const ArticleSchema = z
   .object({

@@ -8,7 +8,7 @@ export async function ownerAuth() {
     projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID as string | undefined,
   };
   if (!config.apiKey || !config.authDomain)
-    throw new Error("Firebase is not configured. Follow docs/rebuild/README.md before enabling services.");
+    throw new Error("Firebase is not configured. Follow docs/development.md before enabling services.");
   const app = getApps()[0] || initializeApp(config);
   const auth = getAuth(app);
   const emulator = import.meta.env.VITE_FIREBASE_AUTH_EMULATOR as string | undefined;

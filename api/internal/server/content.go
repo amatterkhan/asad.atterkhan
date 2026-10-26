@@ -9,8 +9,8 @@ import (
 	"unicode/utf16"
 
 	"cloud.google.com/go/firestore"
-	"github.com/amatterkhan/asad-exe/api/internal/content"
-	"github.com/amatterkhan/asad-exe/api/internal/markdown"
+	"github.com/amatterkhan/asad.atterkhan/api/internal/content"
+	"github.com/amatterkhan/asad.atterkhan/api/internal/markdown"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

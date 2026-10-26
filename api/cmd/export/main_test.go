@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"github.com/amatterkhan/asad-exe/api/internal/server"
+	"github.com/amatterkhan/asad.atterkhan/api/internal/server"
 	"os"
 	"os/exec"
 	"path/filepath"

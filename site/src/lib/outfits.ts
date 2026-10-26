@@ -1,7 +1,7 @@
 import wardrobe from "../../public/art/outfits/index.json";
 
 // Asad's wardrobe: one folder per outfit in public/art/outfits/<id>/ (built by
-// platform/scripts/outfits.py), listed in public/art/outfits/index.json. Only the hoodie changes
+// art/scripts/outfits.py), listed in public/art/outfits/index.json. Only the hoodie changes
 // between outfits; frames and timing match public/sprites/manifest.json.
 
 export const DEFAULT_OUTFIT = wardrobe.default;

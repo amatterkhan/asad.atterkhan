@@ -1,9 +1,9 @@
 /* ASAD.EXE design system: Tailwind 4, CSS-first.
  *
- * Ported from platform/src/app/globals.css. Tokens live in @theme (so utilities such as
+ * Tokens live in @theme (so utilities such as
  * `text-accent`, `bg-bg-2`, `font-mono`, `max-w-measure` exist), and switch per theme on
- * :root[data-theme]. The component rules keep the Next.js class names and cascade order, in one
- * layer, so the pages match the original pixel for pixel. Preflight is not imported: the site has
+ * :root[data-theme]. The component rules keep the original class names and cascade order, in one
+ * layer. Preflight is not imported: the site has
  * always relied on its own small reset below.
  */
 @layer theme, base, components, utilities;

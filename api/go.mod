@@ -1,4 +1,4 @@
-module github.com/amatterkhan/asad-exe/api
+module github.com/amatterkhan/asad.atterkhan/api
 
 go 1.27.3
 

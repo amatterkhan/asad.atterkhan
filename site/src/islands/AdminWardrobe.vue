@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import type { Api, WardrobeState } from "./admin-types";
-// Asad's outfits live as files in public/art/outfits/ (platform/scripts/outfits.py); this picks the
+// Asad's outfits live as files in public/art/outfits/ (art/scripts/outfits.py); this picks the
 // one the room and the About vignette show.
 const { api } = defineProps<{ api: Api }>();
 const state = ref<WardrobeState | null>(null);
