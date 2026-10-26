@@ -21,9 +21,10 @@ export async function Article({
   ));
   return (
     <>
-      <div className="path">
-        <Link href="/lab">The Lab</Link> · {article.category || "notes"}
-      </div>
+      <div className="read-progress" aria-hidden="true" />
+      <p className="eyebrow article-crumb">
+        <Link href="/lab">The Lab</Link> <span aria-hidden="true">/</span> {article.category || "Notes"}
+      </p>
       {draft && (
         <aside className="callout draft">
           <strong>LOCAL DRAFT PREVIEW</strong>

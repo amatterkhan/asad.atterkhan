@@ -192,7 +192,8 @@ export async function renderArticle(body: string) {
       .use(enhance)
       .use(collect)
       .use(rehypePrettyCode, {
-        theme: "catppuccin-mocha",
+        // follows the site theme: CSS picks --shiki-dark or --shiki-light per span
+        theme: { dark: "everforest-dark", light: "everforest-light" },
         keepBackground: false,
       })
       .use(rehypeStringify)
