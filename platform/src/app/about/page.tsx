@@ -1,4 +1,5 @@
-import { SpriteScene } from "@/components/Sprites";
+import { AsadSprite, StormSprite } from "@/components/Sprites";
+import { RoomVignette, At } from "@/components/RoomVignette";
 import { site } from "@/lib/site";
 export const metadata = { title: "About", alternates: { canonical: "/about" } };
 export default function About() {
@@ -33,9 +34,20 @@ export default function About() {
           </p>
         </div>
         <div>
-          <SpriteScene large />
+          <RoomVignette corner="about">
+            <At x={82} y={108}>
+              <div className="asad">
+                <AsadSprite animation="coffee" size={96} />
+              </div>
+            </At>
+            <At x={150} y={146}>
+              <div className="storm">
+                <StormSprite animation="sleeping" size={64} />
+              </div>
+            </At>
+          </RoomVignette>
           <p className="sprite-caption">
-            Asad & Storm. Good company for a long experiment.
+            Asad &amp; Storm. Good company for a long experiment.
           </p>
         </div>
       </div>

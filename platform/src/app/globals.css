@@ -188,7 +188,7 @@ p { margin: 0 0 1em; }
 
 /* ---------- lists: lab / workbench / achievements ---------- */
 .lab-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; }
-.lab-heading p { font: 22px/1.5 var(--serif); color: var(--muted); max-width: 40ch; margin: 18px 0 36px; }
+.lab-heading p:not(.eyebrow) { font: 22px/1.5 var(--serif); color: var(--muted); max-width: 40ch; margin: 18px 0 32px; }
 .lab-companion { text-align: center; display: grid; justify-items: center; position: relative; flex: none; }
 .lab-companion .scene-note { order: 2; margin: 0 0 4px; font-size: 12px; }
 .sleep-mark { position: absolute; top: 28%; right: 6%; font: 14px var(--mono); color: var(--mauve); animation: pulse 3s infinite; }
@@ -252,6 +252,7 @@ p { margin: 0 0 1em; }
 .skills dd { margin: 2px 0 0; color: var(--muted); }
 
 /* ---------- about ---------- */
+.about-grid .vignette { margin: 0; }
 .about-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 56px; align-items: start; margin-top: 24px; }
 .about-grid .prose { font: 21px/1.65 var(--serif); }
 .about-grid .prose p:first-child::first-letter { float: left; font-size: 3.6em; line-height: .85; padding: 6px 10px 0 0; color: var(--mauve); }
@@ -478,3 +479,23 @@ html[data-cursor="link"] .cursor-ring svg { transform: scale(1.5) rotate(45deg);
 html[data-cursor="link"] .cursor-dot span { transform: scale(1.6); background: var(--mauve); }
 html[data-press] .cursor-ring svg { transform: scale(.6); }
 html[data-cursor="text"] .cursor, html[data-cursor="out"] .cursor { opacity: 0; }
+
+/* ---------- room vignettes: page headers cropped from the homepage room ---------- */
+.vignette {
+  container-type: inline-size; position: relative; overflow: hidden; width: 100%;
+  aspect-ratio: var(--cw) / var(--ch); margin: 4px 0 40px; background: #0a0e2c;
+  box-shadow: 0 0 0 3px var(--faint), 8px 8px 0 3px rgba(0, 0, 0, .3);
+}
+.vignette-room {
+  --u: calc(100cqw / var(--cw)); position: absolute;
+  width: calc(var(--u) * 384); height: calc(var(--u) * 216);
+  left: calc(var(--u) * var(--cx) * -1); top: calc(var(--u) * var(--cy) * -1);
+}
+:root:not([data-theme="light"]) .vignette :is(.layer-sky-day, .layer-sunbeam) { opacity: 0; }
+:root[data-theme="light"] .vignette :is(.layer-sky-night, .layer-night, .layer-glow, .layer-bulb) { opacity: 0; }
+.vignette-at { position: absolute; left: calc(var(--u) * var(--x)); top: calc(var(--u) * var(--y)); }
+.vignette .storm { position: relative; }
+.vignette .storm .sprite { --sprite-size: calc(var(--u) * 64) !important; display: block; }
+.vignette .asad .sprite { --sprite-size: calc(var(--u) * 96) !important; display: block; }
+.vignette .sleep-mark { position: absolute; top: 40%; right: 18%; font: 12px var(--mono); color: var(--mauve); animation: pulse 3s infinite; }
+@media (max-width: 760px) { .vignette { margin-inline: -20px; width: calc(100% + 40px); box-shadow: none; } }

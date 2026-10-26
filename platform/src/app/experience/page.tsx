@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PrintButton } from "@/components/PrintButton";
+import { RoomVignette } from "@/components/RoomVignette";
 import { groupExperience } from "@/lib/experience";
 import { getAchievementSettings } from "@/lib/achievement-settings";
 import { selectFeatured } from "@/lib/achievements";
@@ -26,6 +27,7 @@ export default async function Experience() {
         From software and IT operations to security engineering. The work
         connects.
       </p>
+      <RoomVignette corner="cv" />
       <section className="career-section">
         <h2>Where I’ve worked</h2>
         {groupExperience(work).map((group) => (
