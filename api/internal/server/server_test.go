@@ -23,7 +23,7 @@ import (
 )
 
 func TestDisabledAndDevelopment(t *testing.T) {
-	for _, flag := range []string{"ENABLE_CONTENT_ADMIN", "ENABLE_DOCUMENT_ADMIN", "ENABLE_ACHIEVEMENT_ADMIN", "ENABLE_PRIVATE_CALENDAR", "ENABLE_PUBLIC_FILES"} {
+	for _, flag := range []string{"ENABLE_CONTENT_ADMIN", "ENABLE_DOCUMENT_ADMIN", "ENABLE_ACHIEVEMENT_ADMIN", "ENABLE_PUBLIC_FILES"} {
 		t.Setenv(flag, "false")
 	}
 	t.Setenv("APP_ENV", "production")
@@ -43,7 +43,7 @@ func TestDisabledAndDevelopment(t *testing.T) {
 	}
 	t.Setenv("APP_ENV", "development")
 	w := httptest.NewRecorder()
-	h.ServeHTTP(w, httptest.NewRequest("GET", "/api/owner/calendar?year=2025&month=10", nil))
+	h.ServeHTTP(w, httptest.NewRequest("GET", "/api/calendar?year=2025&month=10", nil))
 	if w.Code != 200 {
 		t.Fatal(w.Body.String())
 	}
@@ -55,7 +55,7 @@ func TestDisabledAndDevelopment(t *testing.T) {
 	}
 	for _, query := range []string{"year=2019", "month=12", "month=1.5", "year=no"} {
 		w = httptest.NewRecorder()
-		h.ServeHTTP(w, httptest.NewRequest("GET", "/api/owner/calendar?"+query, nil))
+		h.ServeHTTP(w, httptest.NewRequest("GET", "/api/calendar?"+query, nil))
 		if w.Code != 400 {
 			t.Fatal(query, w.Code)
 		}
@@ -73,7 +73,7 @@ type route struct{ method, path string }
 
 func protectedRoutes() []route {
 	id := "12345678-1234-4234-8234-123456789012"
-	return []route{{"GET", "/api/admin/site"}, {"PUT", "/api/admin/site"}, {"GET", "/api/admin/wardrobe"}, {"PUT", "/api/admin/wardrobe"}, {"GET", "/api/admin/articles"}, {"POST", "/api/admin/articles"}, {"GET", "/api/admin/articles/test"}, {"PUT", "/api/admin/articles/test"}, {"DELETE", "/api/admin/articles/test"}, {"POST", "/api/admin/articles/test/publish"}, {"POST", "/api/admin/articles/test/unpublish"}, {"POST", "/api/admin/preview"}, {"GET", "/api/admin/achievements"}, {"PATCH", "/api/admin/achievements"}, {"GET", "/api/admin/documents"}, {"POST", "/api/admin/documents"}, {"PATCH", "/api/admin/documents/" + id}, {"DELETE", "/api/admin/documents/" + id}, {"POST", "/api/admin/documents/" + id + "/publish"}, {"GET", "/api/admin/documents/" + id + "/download"}, {"GET", "/api/owner/calendar"}}
+	return []route{{"GET", "/api/admin/site"}, {"PUT", "/api/admin/site"}, {"GET", "/api/admin/wardrobe"}, {"PUT", "/api/admin/wardrobe"}, {"GET", "/api/admin/articles"}, {"POST", "/api/admin/articles"}, {"GET", "/api/admin/articles/test"}, {"PUT", "/api/admin/articles/test"}, {"DELETE", "/api/admin/articles/test"}, {"POST", "/api/admin/articles/test/publish"}, {"POST", "/api/admin/articles/test/unpublish"}, {"POST", "/api/admin/preview"}, {"GET", "/api/admin/achievements"}, {"PATCH", "/api/admin/achievements"}, {"GET", "/api/admin/documents"}, {"POST", "/api/admin/documents"}, {"PATCH", "/api/admin/documents/" + id}, {"DELETE", "/api/admin/documents/" + id}, {"POST", "/api/admin/documents/" + id + "/publish"}, {"GET", "/api/admin/documents/" + id + "/download"}}
 }
 func TestShiftRotation(t *testing.T) {
 	for date, want := range map[string]string{"2025-11-24": "night", "2025-11-26": "off", "2025-12-03": "night", "2025-12-05": "off", "2025-12-22": "day", "2025-11-19": "day"} {
@@ -110,7 +110,7 @@ func TestEmulatorRoutes(t *testing.T) {
 	signed := authREST(t, "signUp", map[string]any{"email": email, "password": password, "returnSecureToken": true})
 	uid := str(signed["localId"])
 	t.Setenv("FIREBASE_OWNER_UID", uid)
-	for _, flag := range []string{"ENABLE_CONTENT_ADMIN", "ENABLE_DOCUMENT_ADMIN", "ENABLE_ACHIEVEMENT_ADMIN", "ENABLE_PRIVATE_CALENDAR", "ENABLE_PUBLIC_FILES"} {
+	for _, flag := range []string{"ENABLE_CONTENT_ADMIN", "ENABLE_DOCUMENT_ADMIN", "ENABLE_ACHIEVEMENT_ADMIN", "ENABLE_PUBLIC_FILES"} {
 		t.Setenv(flag, "true")
 	}
 	services, err := Open(context.Background())
@@ -182,8 +182,8 @@ func TestEmulatorRoutes(t *testing.T) {
 		}
 	}
 	check("GET", "/api/healthz", nil, 200)
-	check("GET", "/api/owner/calendar?year=2025&month=10", nil, 200)
-	check("GET", "/api/owner/calendar?month=12", nil, 400)
+	check("GET", "/api/calendar?year=2025&month=10", nil, 200)
+	check("GET", "/api/calendar?month=12", nil, 400)
 	copy := check("GET", "/api/admin/site", nil, 200)
 	copy["heroTitle"] = "Emulator test"
 	check("PUT", "/api/admin/site", copy, 200)

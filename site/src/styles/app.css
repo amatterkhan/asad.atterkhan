@@ -369,9 +369,7 @@ p { margin: 0 0 1em; }
 .project-facts dd { margin: 0; }
 .text-links { display: flex; flex-wrap: wrap; gap: 4px 22px; margin: 18px 0; }
 
-/* ---------- private shift calendar ---------- */
-.calendar-locked { border: 2px solid var(--color-faint); padding: 28px; max-width: 34rem; box-shadow: 6px 6px 0 var(--color-faint); }
-.calendar-locked h2 { margin: 4px 0 10px; }
+/* ---------- shift calendar ---------- */
 .calendar-status { color: var(--color-muted); font: 13px var(--font-mono); }
 .calendar-next { margin-bottom: 36px; }
 .calendar-next ol { list-style: none; padding: 0; margin: 8px 0 12px; display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 6px; }

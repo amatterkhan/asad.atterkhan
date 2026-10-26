@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, shallowRef, watch } from "vue";
-import type { User } from "firebase/auth";
-import OwnerSignIn from "./OwnerSignIn.vue";
 
-// Owner-only shift calendar. The rotation lives on the server: data comes from
-// GET /api/owner/calendar after sign-in (`open` skips sign-in on the local dev server only).
+// Public but unlinked shift calendar. The rotation lives on the server: data comes from GET /api/calendar.
 type Shift = "day" | "night" | "off";
 type Cell = { day: number; shift: Shift; iso: string } | null;
 type Data = {
@@ -20,17 +17,14 @@ const ICON: Record<Shift, string> = { night: "☾", day: "☀", off: "·" };
 const fmt = (iso: string, opts: Intl.DateTimeFormatOptions) =>
   new Intl.DateTimeFormat("en-GB", { ...opts, timeZone: "UTC" }).format(new Date(iso + "T00:00:00Z"));
 
-const { open = false } = defineProps<{ open?: boolean }>();
-const user = shallowRef<User | null>(null);
 const status = ref("");
 const data = shallowRef<Data | null>(null);
 const view = ref<{ year: number; month: number } | null>(null);
 
 async function load(target?: { year: number; month: number } | null) {
   const q = target ? `?year=${target.year}&month=${target.month}` : "";
-  const headers: HeadersInit = user.value ? { Authorization: `Bearer ${await user.value.getIdToken()}` } : {};
   try {
-    const res = await fetch(`/api/owner/calendar${q}`, { headers, cache: "no-store" });
+    const res = await fetch(`/api/calendar${q}`, { cache: "no-store" });
     const body = await res.json();
     if (!res.ok) {
       status.value = body.error || "The calendar could not be loaded";
@@ -42,15 +36,7 @@ async function load(target?: { year: number; month: number } | null) {
     status.value = "The calendar could not be loaded";
   }
 }
-onMounted(() =>
-  watch(
-    [() => open, user, view],
-    () => {
-      if (open || user.value) void load(view.value);
-    },
-    { immediate: true },
-  ),
-);
+onMounted(() => watch(view, () => void load(view.value), { immediate: true }));
 
 const monthName = computed(() =>
   data.value
@@ -78,14 +64,7 @@ const next = computed(() => data.value?.upcoming.find((u, i) => i > 0 && u.shift
 const goToday = () => (view.value = { year: data.value!.today.year, month: data.value!.today.month });
 </script>
 <template>
-  <section v-if="!open && !user" class="calendar-locked" aria-label="Private calendar">
-    <p class="eyebrow">Locked</p>
-    <h2>This one is just for me.</h2>
-    <p>Sign in with the owner account to see the rotation.</p>
-    <OwnerSignIn :user="user" @user="(u) => (user = u)" @status="(s) => (status = s)" />
-    <p v-if="status" class="calendar-status" role="status">{{ status }}</p>
-  </section>
-  <p v-else-if="!data" class="calendar-status" role="status">{{ status || "Loading the rotation…" }}</p>
+  <p v-if="!data" class="calendar-status" role="status">{{ status || "Loading the rotation…" }}</p>
   <section v-else class="shift-calendar" aria-label="Shift calendar">
     <div class="calendar-next">
       <p class="eyebrow">Next two weeks</p>

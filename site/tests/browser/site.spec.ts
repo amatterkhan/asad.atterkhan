@@ -130,7 +130,7 @@ test("redirects and missing pages", async ({ request }) => {
 test("calendar development preview navigates mocked months", async ({
   page,
 }) => {
-  await page.route("**/api/owner/calendar*", (route) => {
+  await page.route("**/api/calendar*", (route) => {
     const url = new URL(route.request().url());
     const year = Number(url.searchParams.get("year") ?? 2026),
       month = Number(url.searchParams.get("month") ?? 9);

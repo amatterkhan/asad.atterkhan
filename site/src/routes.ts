@@ -186,7 +186,7 @@ export const routes: RouteRecordRaw[] = [
   {
     path: "/calendar",
     component: Calendar,
-    meta: { load: async (_, ctx) => ({ props: { open: ctx.dev }, head: { title: "Calendar", noindex: true } }) },
+    meta: { load: async () => ({ props: {}, head: { title: "Calendar", noindex: true } }) },
   },
   {
     path: "/admin",

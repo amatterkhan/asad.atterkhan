@@ -123,7 +123,7 @@ func (s *Server) Close() {
 	}
 }
 func (s *Server) owner(r *http.Request, service string, recent bool) string {
-	flag := map[string]string{"content": "ENABLE_CONTENT_ADMIN", "documents": "ENABLE_DOCUMENT_ADMIN", "achievements": "ENABLE_ACHIEVEMENT_ADMIN", "calendar": "ENABLE_PRIVATE_CALENDAR"}[service]
+	flag := map[string]string{"content": "ENABLE_CONTENT_ADMIN", "documents": "ENABLE_DOCUMENT_ADMIN", "achievements": "ENABLE_ACHIEVEMENT_ADMIN"}[service]
 	if os.Getenv(flag) != "true" {
 		fail(503, "Content management is not enabled")
 	}
@@ -285,7 +285,7 @@ func (s *Server) Handler() http.Handler {
 	}
 	mux.HandleFunc("POST /api/admin/documents/{id}/publish", endpoint(s.document))
 	mux.HandleFunc("GET /api/admin/documents/{id}/download", endpoint(s.document))
-	mux.HandleFunc("GET /api/owner/calendar", endpoint(s.calendar))
+	mux.HandleFunc("GET /api/calendar", endpoint(s.calendar))
 	mux.HandleFunc("GET /files/{id}", endpoint(s.publicFile))
 	mux.HandleFunc("GET /media/{id}", endpoint(s.publicFile))
 	mux.HandleFunc("/", endpoint(func(w http.ResponseWriter, r *http.Request) { fail(404, "Not found") }))

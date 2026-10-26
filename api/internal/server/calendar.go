@@ -3,7 +3,6 @@ package server
 import (
 	"math"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 	_ "time/tzdata"
@@ -33,9 +32,6 @@ func shift(d time.Time) string {
 	return "day"
 }
 func (s *Server) calendar(w http.ResponseWriter, r *http.Request) {
-	if os.Getenv("APP_ENV") != "development" {
-		s.owner(r, "calendar", false)
-	}
 	loc, err := time.LoadLocation("Indian/Mauritius")
 	must(err)
 	now := time.Now().In(loc)

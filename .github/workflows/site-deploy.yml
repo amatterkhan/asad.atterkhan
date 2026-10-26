@@ -120,7 +120,6 @@ jobs:
             ENABLE_CONTENT_ADMIN=${{ vars.ENABLE_CONTENT_ADMIN || 'false' }}
             ENABLE_DOCUMENT_ADMIN=${{ vars.ENABLE_DOCUMENT_ADMIN || 'false' }}
             ENABLE_ACHIEVEMENT_ADMIN=${{ vars.ENABLE_ACHIEVEMENT_ADMIN || 'false' }}
-            ENABLE_PRIVATE_CALENDAR=${{ vars.ENABLE_PRIVATE_CALENDAR || 'false' }}
             ENABLE_PUBLIC_FILES=${{ vars.ENABLE_PUBLIC_FILES || 'false' }}
             REBUILD_HOOK=${{ vars.REBUILD_HOOK }}
             GITHUB_REPO=${{ github.repository }}
