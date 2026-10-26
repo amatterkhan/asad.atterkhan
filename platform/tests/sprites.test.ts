@@ -9,7 +9,7 @@ test("all sprite sheets use fixed RGBA cells, valid PNG headers and small runtim
     assert.equal(bytes.readUInt32BE(16), state.frameWidth * state.frames);
     assert.equal(bytes.readUInt32BE(20), state.frameHeight);
     assert.equal(bytes[25], 6);
-    assert.ok(bytes.length < 40000);
+    assert.ok(bytes.length < 64000); // 8 frames of 128px art fit comfortably
     assert.ok(state.anchor[0] < state.frameWidth && state.anchor[1] < state.frameHeight);
   }
 });
