@@ -1,0 +1,27 @@
+[
+  {
+    "id": "start-with-a-question",
+    "title": "Start with a question",
+    "depth": 2
+  },
+  {
+    "id": "keep-the-commands-readable",
+    "title": "Keep the commands readable",
+    "depth": 2
+  },
+  {
+    "id": "a-small-diagram",
+    "title": "A small diagram",
+    "depth": 3
+  },
+  {
+    "id": "images-and-links",
+    "title": "Images and links",
+    "depth": 2
+  },
+  {
+    "id": "leave-a-useful-ending",
+    "title": "Leave a useful ending",
+    "depth": 2
+  }
+]
