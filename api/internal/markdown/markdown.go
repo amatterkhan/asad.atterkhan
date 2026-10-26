@@ -227,7 +227,6 @@ func colors(t chroma.TokenType) (string, string) {
 	return "#D3C6AA", "#5C6A72"
 }
 
-var tableOpen = regexp.MustCompile(`<table>`)
 var href = regexp.MustCompile(` href="([^"]*)"`)
 
 func Render(body string) (Result, error) {
@@ -255,7 +254,7 @@ func Render(body string) (Result, error) {
 	}
 	out := strings.TrimSuffix(b.String(), "\n")
 	out = strings.NewReplacer("&amp;", "&#x26;", "&lt;", "&#x3C;", "&gt;", ">", "&quot;", "&#x22;").Replace(out)
-	out = tableOpen.ReplaceAllString(out, `<div class="table-wrap" tabindex="0" role="region" aria-label="Table, horizontally scrollable"><table>`)
+	out = strings.ReplaceAll(out, "<table>", `<div class="table-wrap" tabindex="0" role="region" aria-label="Table, horizontally scrollable"><table>`)
 	out = strings.ReplaceAll(out, "</table>", "</table></div>")
 	out = href.ReplaceAllStringFunc(out, func(attr string) string {
 		m := href.FindStringSubmatch(attr)

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -13,9 +12,13 @@ import (
 	"regexp"
 )
 
+var repoPattern = regexp.MustCompile(`^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`)
+
 // A failed hook is logged after the content commit. Returning a failure for an already committed
 // publish would encourage retrying a non-idempotent action. Operators can dispatch a rebuild manually.
 func (s *Server) rebuild(ctx context.Context, reason string) {
+	// The content is already committed: finish the delivery even if the owner's request goes away.
+	ctx = context.WithoutCancel(ctx)
 	hook := os.Getenv("REBUILD_HOOK")
 	if hook == "" {
 		slog.Info("rebuild_requested", "reason", reason, "delivery", "log-only")
@@ -26,7 +29,7 @@ func (s *Server) rebuild(ctx context.Context, reason string) {
 	authorization := ""
 	if hook == "github" {
 		repo := os.Getenv("GITHUB_REPO")
-		if !regexp.MustCompile(`^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`).MatchString(repo) || os.Getenv("GITHUB_TOKEN") == "" {
+		if !repoPattern.MatchString(repo) || os.Getenv("GITHUB_TOKEN") == "" {
 			slog.Error("rebuild_hook_failed", "reason", "missing GitHub configuration")
 			return
 		}
@@ -54,16 +57,16 @@ func (s *Server) rebuild(ctx context.Context, reason string) {
 	req.Header.Set("Accept", "application/vnd.github+json")
 	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
 	res, err := s.client.Do(req)
-	if err == nil {
-		defer res.Body.Close()
-		_, _ = io.Copy(io.Discard, io.LimitReader(res.Body, 4096))
-		if res.StatusCode < 200 || res.StatusCode >= 300 {
-			err = fmt.Errorf("HTTP %d", res.StatusCode)
-		}
-	}
 	if err != nil {
-		slog.Error("rebuild_hook_failed", "reason", reason)
-	} else {
-		slog.Info("rebuild_hook_delivered", "reason", reason)
+		// The error text can include the hook URL; log only that delivery failed.
+		slog.Error("rebuild_hook_failed", "reason", reason, "cause", "request failed")
+		return
 	}
+	defer res.Body.Close()
+	_, _ = io.Copy(io.Discard, io.LimitReader(res.Body, 4096))
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		slog.Error("rebuild_hook_failed", "reason", reason, "status", res.StatusCode)
+		return
+	}
+	slog.Info("rebuild_hook_delivered", "reason", reason)
 }

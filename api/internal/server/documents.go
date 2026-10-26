@@ -358,8 +358,7 @@ func (s *Server) publicFile(w http.ResponseWriter, r *http.Request) {
 	if os.Getenv("ENABLE_PUBLIC_FILES") != "true" || !idPattern.MatchString(id) {
 		fail(404, "Not found")
 	}
-	s.once.Do(func() { s.services, s.initErr = Open(context.Background()) })
-	must(s.initErr)
+	s.open()
 
 	v := s.get(r.Context(), "documents", id)
 	inline := strings.HasPrefix(r.URL.Path, "/media/")

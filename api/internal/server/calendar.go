@@ -48,10 +48,10 @@ func (s *Server) calendar(w http.ResponseWriter, r *http.Request) {
 		if len(v) != 1 {
 			fail(400, "Invalid month")
 		}
-		f, err := strconv.ParseFloat(v[0], 64)
 		if v[0] == "" {
-			return 0
+			return 0 // matches Number("") in the reference implementation
 		}
+		f, err := strconv.ParseFloat(v[0], 64)
 		if err != nil || math.IsNaN(f) || math.IsInf(f, 0) || f != math.Trunc(f) {
 			fail(400, "Invalid month")
 		}

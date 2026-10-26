@@ -29,7 +29,11 @@ type HTTPError struct {
 	Message string
 }
 
-func (e *HTTPError) Error() string  { return e.Message }
+func (e *HTTPError) Error() string { return e.Message }
+
+// fail and must abort a handler by panicking; endpoint turns the panic into a JSON error.
+// Never call them inside a RunTransaction callback: the Firestore client does not recover
+// panics, so the transaction would not be rolled back. Callbacks return *HTTPError instead.
 func fail(code int, message string) { panic(&HTTPError{code, message}) }
 func must(err error) {
 	if err != nil {
@@ -88,9 +92,8 @@ func Open(ctx context.Context) (*Services, error) {
 }
 
 type Server struct {
-	once     sync.Once
-	services *Services
-	initErr  error
+	mu       sync.Mutex
+	services *Services // set once by open, never replaced
 	client   *http.Client
 }
 
@@ -100,7 +103,21 @@ func New() *Server {
 	}
 	return &Server{client: &http.Client{Timeout: 10 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}}
 }
+
+// open connects to Firebase on first use. A failed attempt is retried on the next request
+// rather than cached, so a transient startup error does not break the instance until restart.
+func (s *Server) open() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.services == nil {
+		services, err := Open(context.Background())
+		must(err)
+		s.services = services
+	}
+}
 func (s *Server) Close() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	if s.services != nil {
 		s.services.DB.Close()
 	}
@@ -114,8 +131,7 @@ func (s *Server) owner(r *http.Request, service string, recent bool) string {
 	if !strings.HasPrefix(bearer, "Bearer ") || len(bearer) > 9000 {
 		fail(401, "Sign in required")
 	}
-	s.once.Do(func() { s.services, s.initErr = Open(context.Background()) })
-	must(s.initErr)
+	s.open()
 	token, err := s.services.Auth.VerifyIDTokenAndCheckRevoked(r.Context(), strings.TrimPrefix(bearer, "Bearer "))
 	if err != nil {
 		fail(401, "Your session has expired. Sign in again.")
@@ -227,6 +243,9 @@ func endpoint(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if p := recover(); p != nil {
+				if p == http.ErrAbortHandler {
+					panic(p)
+				}
 				code, message := 500, "The operation could not be completed"
 				if e, ok := p.(*HTTPError); ok {
 					code, message = e.Status, e.Message
