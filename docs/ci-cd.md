@@ -66,7 +66,7 @@ Then turn things on one at a time, each with `gh variable set NAME --body VALUE`
 | Variable | When |
 | --- | --- |
 | `API_ENABLED=true` | Blaze billing, Storage bucket (`FIREBASE_STORAGE_BUCKET`), Google sign-in + TOTP and `FIREBASE_OWNER_UID` (with its `admin` claim) are ready. The next deploy builds and rolls out `asad-api`, then adds the rewrites. Run the deploy with "Also build and deploy the API" for the first rollout. |
-| `ENABLE_CONTENT_ADMIN`, `ENABLE_DOCUMENT_ADMIN`, `ENABLE_ACHIEVEMENT_ADMIN`, `ENABLE_PRIVATE_CALENDAR`, `ENABLE_PUBLIC_FILES` = `true` | Per feature, after owner sign-in is verified on the deployed site. They take effect on the next API deploy. |
+| `ENABLE_CONTENT_ADMIN`, `ENABLE_DOCUMENT_ADMIN`, `ENABLE_ACHIEVEMENT_ADMIN`, `ENABLE_PUBLIC_FILES` = `true` | Per feature, after owner sign-in is verified on the deployed site. They take effect on the next API deploy. |
 | `REBUILD_HOOK=github` | After creating the `asad-api-github-token` secret in Secret Manager (fine-grained token for this repository, Contents: read and write) and re-running the setup script so the runtime can read it. |
 | `CONTENT_SOURCE=firestore` | Once the published articles live in Firestore. |
 | `INDEX_SITE=true`, `SITE_URL=https://asad.atterkhan.com` | At the domain cutover only. |

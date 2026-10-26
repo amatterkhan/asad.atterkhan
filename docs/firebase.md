@@ -12,7 +12,7 @@ Provisioned on 2026-10-26 and deployment setup verified on 2026-10-27:
 - Google is the only enabled sign-in provider. Identity Platform and TOTP are enabled; one adjacent TOTP interval is accepted. No SMS factor is configured.
 - Authorized domains: `localhost`, `127.0.0.1`, and Firebase's default project domains. The web.app domain is authorized; no custom production domain is connected.
 - Browser API key restricted to the Auth, token, Firestore and Firebase Storage APIs and `http://localhost:4180/*`, `http://127.0.0.1:4180/*`, `https://asad-atterkhan.firebaseapp.com/*` and (added 27 October) `https://asad-atterkhan.web.app/*`. The four API restrictions were preserved; the custom domain will be added during its rollout.
-- The only human project IAM principal is `dev@asad.atterkhan.com` with Owner. Other IAM principals are Firebase/Google service identities.
+- The only human project IAM principal is `dev@asad.atterkhan.com` with Owner. Other IAM principals include Firebase/Google service identities and the two site service accounts listed below.
 - Billing: Blaze via Google Cloud Free Trial; project budget alerts at US$1, US$3 and US$5. Alerts are not spending caps.
 
 The first real Google sign-in for `dev@asad.atterkhan.com` succeeded, the Admin SDK granted that UID `admin: true`, and TOTP enrollment was verified. Never paste OAuth secrets into chat or the repository.
@@ -63,6 +63,8 @@ Keyless GitHub deployment setup is provisioned in this project only:
 
 Runtime and Hosting rewrites use `us-central1`. The static launch succeeded with
 `API_ENABLED=false`; the API is now deployed with `API_ENABLED=true`, `CONTENT_SOURCE=git`, `INDEX_SITE=false`, `SITE_URL=https://asad-atterkhan.web.app`.
-All five `ENABLE_*` flags remain false. Real web.app owner/TOTP sign-in awaits the user.
+The owner confirmed real Google + TOTP sign-in on web.app on 27 October.
+`ENABLE_CONTENT_ADMIN=true` was explicitly approved; its API rollout and checks are in progress.
+The other four feature flags remain false.
 UID and web API-key values are omitted from setup output and mirrored into GitHub secrets so
 Actions masks action inputs. The browser API key remains a public client credential.

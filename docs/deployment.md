@@ -44,6 +44,7 @@ the Storage bucket, to avoid cross-region latency on API calls. Do not use `APP_
   `https://asad-atterkhan.web.app/*`; its four API restrictions and original referrers remain intact.
 - Git content, noindex, web.app canonical URL. `Lab 000` is the user-selected initial article.
 
-Real Google/TOTP sign-in and feature enablement await the owner. No custom Hosting domain has
+The owner confirmed real Google/TOTP sign-in on web.app. Per-feature enablement and its
+end-to-end checks remain gated by owner approval. No custom Hosting domain has
 been added, no Cloudflare DNS records have changed and `main` has not been merged. Exact custom
 domain records will be recorded after the approved cutover; none are claimed verified yet.

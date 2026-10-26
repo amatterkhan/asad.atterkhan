@@ -1,7 +1,7 @@
 # asad.atterkhan
 
 Source for [asad.atterkhan.com](https://asad.atterkhan.com): a pixel-art room homepage, a Lab
-(articles), Workbench (projects), Experience, Achievements, About and a private shift calendar,
+(articles), Workbench (projects), Experience, Achievements, About and an unlisted public shift calendar,
 with an owner-only admin for writing and editing content.
 
 | Path | What it is |

@@ -11,8 +11,8 @@ the token with revocation checks, then the owner UID (`FIREBASE_OWNER_UID`), the
 a TOTP second factor (skipped only for the Auth emulator with a `demo-` project). Publish,
 unpublish, delete and archive also need a sign-in within the last five minutes. Each service is
 off unless its flag is `true`: `content` (`ENABLE_CONTENT_ADMIN`), `documents`
-(`ENABLE_DOCUMENT_ADMIN`), `achievements` (`ENABLE_ACHIEVEMENT_ADMIN`), `calendar`
-(`ENABLE_PRIVATE_CALENDAR`).
+(`ENABLE_DOCUMENT_ADMIN`), `achievements` (`ENABLE_ACHIEVEMENT_ADMIN`).
+`GET /api/calendar` is public and needs neither a flag nor a sign-in.
 
 Errors are JSON `{ "error": string }` with status 400, 401, 403, 404, 409, 413, 415, 429, 500 or
 503. Unexpected failures return a generic message; details go to structured logs only. Responses

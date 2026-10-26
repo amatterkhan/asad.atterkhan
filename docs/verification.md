@@ -34,7 +34,7 @@ outer command. Ordinary Go tests skip emulator-dependent cases when emulators ar
 Browser checks cover production prerenders, WCAG 2 A/AA axe checks, horizontal overflow,
 hydration warnings/errors, room controls, collection searches, mobile menu Escape/focus return,
 redirects, Hosting security headers and 404s. Calendar navigation uses a mocked API response on
-the separate development server; the production calendar stays locked. A seeded component test
+the separate development server; the calendar is public but unlinked. A seeded component test
 covers Lab search/clear because the Git source currently has no published notes.
 
 Accessibility verification found a light-theme “Current” badge with contrast below AA. Its text
@@ -71,7 +71,7 @@ the rebuild hand-off notes (now in git history); this run specifically added the
 
 Launch deployment results and remaining external checks are recorded below.
 
-## Launch verification — 27 October 2026 (paused at owner sign-in)
+## Launch verification — 27 October 2026 (feature rollout in progress)
 
 All launch commands target `asad-atterkhan` and `amatterkhan/asad.atterkhan` explicitly.
 No DNS changes, feature-flag enables, indexing enable or merge to `main` have been performed.
@@ -120,8 +120,7 @@ API deployment succeeded in
 Live checks passed against both the direct Cloud Run URL and Hosting origin:
 
 - `/api/healthz`: 200, `{"ok":true}`.
-- `/api/admin/site`, `/api/admin/articles`, `/api/admin/achievements`, `/api/admin/documents`,
-  `/api/owner/calendar`: 503 with no-store while all five runtime flags are false.
+- `/api/admin/site`, `/api/admin/articles`, `/api/admin/achievements`, `/api/admin/documents`: 503 with no-store while the runtime flags are false.
 - `/files/launch-check`, `/media/launch-check`: 404 with no-store.
 - Public invoker IAM binding succeeded (`allUsers`, `roles/run.invoker`).
 - Runtime identity, max 2 instances, default/min 0, concurrency 8, CPU/memory limits read back.
@@ -136,3 +135,11 @@ domain and indexing are pending the corresponding owner actions and approvals.
 
 The owner selected `Lab 000` with body “Welcome to the lab.” as the first launch article.
 `make check` and the browser suite passed again after adding it (54 passed / two expected skips).
+
+The owner confirmed that real Google + TOTP sign-in worked on web.app. `Lab 000` deployed
+successfully after the full GitHub site/API checks
+([run 40394874364](https://github.com/amatterkhan/asad.atterkhan/actions/runs/40394874364)).
+It returned 200 with the requested title/body, and appeared in `/lab`, RSS, sitemap and search.
+Raw completed deploy logs were checked without printing values: both the owner UID and browser
+API key were absent, confirming Actions masking. The owner separately approved content admin;
+other feature flags still require approval.
