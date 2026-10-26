@@ -12,8 +12,8 @@ export default function Achievements() {
       <p className="eyebrow">Credentials &amp; milestones</p>
       <h1>Achievements</h1>
       <p className="page-intro">
-        Certifications, badges, and milestones along the way: a growing
-        collection, with links to the original credentials.
+        Certifications and badges I&apos;ve picked up along the way, each
+        linked to the original credential.
       </p>
       <RoomVignette corner="awards" />
       <AchievementCollection records={achievements} />

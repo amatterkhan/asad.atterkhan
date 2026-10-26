@@ -22,23 +22,24 @@ export default function About() {
       <div className="about-grid">
         <div className="prose">
           <p>
-            I&apos;m Asad, a security analyst and engineer. My work spans
-            security operations and hands-on engineering, and I&apos;m
-            interested in the connections between software, infrastructure,
-            cloud, and security.
+            I&apos;m Asad. I work in security operations, and I like knowing
+            how the whole stack fits together: the software, the
+            infrastructure, the cloud underneath it, and all the ways it can
+            go wrong.
           </p>
           <p>
-            I enjoy building tools, experimenting, and automating tasks. Often,
-            a small question is enough to send me down a rabbit hole: how does
-            this work, why did it break, and could it be simpler?
+            Most of my side projects start with a small question: how does this
+            work, why did it break, could it be simpler? Usually that ends in a
+            script, a tool, or a long evening of reading.
           </p>
           <p>
-            The Lab is my place to keep what I learn along the way. The name is
-            a small nod to <em>Steins;Gate</em>, one of my favourite anime.
+            The Lab is where I keep what I learn. The name is a nod to{" "}
+            <em>Steins;Gate</em>, one of my favourite anime: a small, messy lab
+            where curious people try things just to see what happens.
           </p>
           <p>
-            And this is Storm: a fluffy tabby-and-white companion with a very
-            good claim on any nearby resting spot.
+            And this is Storm, a fluffy tabby-and-white cat with a firm claim
+            on any warm spot near my desk.
           </p>
           <p>
             If you&apos;d like to talk about something I&apos;ve built or

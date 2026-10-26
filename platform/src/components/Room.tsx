@@ -49,6 +49,10 @@ const layer = (name: string) => (
   />
 );
 
+const MUG: Box = [332, 110, 17, 14];
+const clip = ([x, y, w, h]: Box) =>
+  `inset(${(y / H) * 100}% ${100 - ((x + w) / W) * 100}% ${100 - ((y + h) / H) * 100}% ${(x / W) * 100}%)`;
+
 type StormMode = "idle" | "standing" | "sleeping" | "dream" | "stretch";
 
 export function Room() {
@@ -210,6 +214,8 @@ export function Room() {
         <div className="actor robot">
           <RobotSprite size={48} />
         </div>
+        {/* the mug is redrawn over the robot, so QROVER drives behind it, not over it */}
+        <div className="layer layer-room room-front" style={{ backgroundImage: `url(/room/room.png?v=${manifest.version})`, clipPath: clip(MUG) }} />
         <div className="actor storm" ref={storm} data-mode={mode}>
           <span className="storm-shadow" aria-hidden="true" />
           <button
@@ -290,7 +296,7 @@ export function Room() {
       </div>
       <figcaption className="room-caption">
         <span>It&apos;s {clock || "--:--"} in Mauritius.</span>
-        <span className="hint">Poke around: everything on the desk is a door.</span>
+        <span className="hint">Poke around. Everything on the desk leads somewhere.</span>
       </figcaption>
     </figure>
   );

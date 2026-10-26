@@ -24,8 +24,8 @@ export default async function Experience() {
         <PrintButton />
       </div>
       <p className="page-intro">
-        From software and IT operations to security engineering. The work
-        connects.
+        From the service desk to security operations. Each role taught me
+        something the next one needed.
       </p>
       <RoomVignette corner="cv" />
       <section className="career-section">

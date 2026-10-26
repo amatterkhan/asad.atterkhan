@@ -3,7 +3,6 @@ import { getArticles, getProjects } from "@/lib/content";
 import { Room } from "@/components/Room";
 import { site, date } from "@/lib/site";
 import work from "../../content/workExpData.json";
-import { selectFeatured, defaultFeatured } from "@/lib/achievements";
 import type { Metadata } from "next";
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 export default async function Home() {
@@ -12,12 +11,11 @@ export default async function Home() {
     .filter((p) => p.featured)
     .sort((a, b) => b.date.localeCompare(a.date));
   const current = work.find((w) => w.isCurrent);
-  const credentials = selectFeatured(defaultFeatured.featuredIds).slice(0, 2);
   return (
     <>
       <section className="hero">
         <div>
-          <p className="eyebrow">Security analyst &amp; engineer · Mauritius</p>
+          <p className="eyebrow">Security analyst · Mauritius</p>
           <h1>
             Hey, I&apos;m <em>Asad.</em>
           </h1>
@@ -27,8 +25,10 @@ export default async function Home() {
             I build things, break things, and try to understand how they work.
           </p>
           <p className="hero-sub">
-            Security operations, cloud and a lot of small tools. {current?.title}{" "}
-            at {current?.company}, studying CS at Georgia Tech.
+            By day I&apos;m a {current?.title} at {current?.company}, chasing
+            alerts until they make sense. Off the clock it&apos;s small tools,
+            half-finished experiments and a CS master&apos;s at Georgia Tech.
+            Storm supervises all of it.
           </p>
         </div>
       </section>
@@ -65,8 +65,8 @@ export default async function Home() {
           </ul>
         ) : (
           <p className="quiet-note">
-            The notebook is open, and the first notes are on the way. Experiments,
-            write-ups and the occasional dead end.
+            Nothing published yet. The first notes are being written:
+            experiments, write-ups, and the occasional dead end worth keeping.
           </p>
         )}
       </section>
@@ -97,16 +97,15 @@ export default async function Home() {
       <section className="block closing">
         <h2>Say hello</h2>
         <p>
-          If something here sparked a question, I&apos;d like to hear it.{" "}
+          Got a question about something here, or just want to talk shop?
+          Write to me at{" "}
           <a href={`mailto:${site.email}`}>{site.email}</a>
         </p>
         <p className="closing-links">
           <a href={site.github}>GitHub ↗</a>
           <a href={site.linkedin}>LinkedIn ↗</a>
           <Link href="/experience">Experience</Link>
-          <Link href="/achievements">
-            {credentials.length ? "Achievements" : "Achievements"}
-          </Link>
+          <Link href="/achievements">Achievements</Link>
         </p>
       </section>
       <script

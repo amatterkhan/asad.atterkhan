@@ -15,8 +15,8 @@ export default async function Projects() {
       <p className="eyebrow">Things I&apos;ve built</p>
       <h1>Workbench</h1>
       <p className="page-intro">
-        Websites, tools, and the occasional piece of hardware. Some are small
-        experiments; others have a life beyond my desk.
+        Websites, tools and the occasional piece of hardware. Some were built
+        for other people; some just to see whether I could.
       </p>
       <RoomVignette corner="bench">
         <At x={286} y={80}>

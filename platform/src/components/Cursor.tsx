@@ -7,7 +7,7 @@ const cells: [number, number][] = [];
 for (let y = 0; y < N; y++)
   for (let x = 0; x < N; x++) {
     const d = Math.hypot(x - 6, y - 6);
-    if (d > 4.6 && d < 6.1) cells.push([x, y]);
+    if (d > 4.9 && d < 6.1) cells.push([x, y]); // a one-pixel ring
   }
 
 export function Cursor() {
@@ -35,8 +35,8 @@ export function Cursor() {
     const up = () => delete root.dataset.press;
     const leave = () => (root.dataset.cursor = "out");
     const loop = () => {
-      rx += (mx - rx) * (reduce ? 1 : 0.2);
-      ry += (my - ry) * (reduce ? 1 : 0.2);
+      rx += (mx - rx) * (reduce ? 1 : 0.28);
+      ry += (my - ry) * (reduce ? 1 : 0.28);
       ring.current?.style.setProperty("transform", `translate(${rx}px,${ry}px)`);
       raf = requestAnimationFrame(loop);
     };
