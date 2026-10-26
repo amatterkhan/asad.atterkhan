@@ -221,6 +221,7 @@ export function Room({ hint }: { hint: string }) {
           <button
             type="button"
             aria-label="Pet Storm"
+            data-cursor="plain"
             onClick={() => {
               lastInput.current = performance.now();
               setSaid((n) => (n + 1) % mrrps.length);
