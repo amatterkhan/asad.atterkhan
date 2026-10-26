@@ -104,11 +104,12 @@ main { padding: 36px 0 72px; min-height: 70vh; animation: arrive 0.5s ease both;
 .desktop-nav a[aria-current="page"] { color: var(--color-accent); border-color: var(--color-accent); }
 .theme-toggle {
   display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px;
+  box-sizing: border-box; padding: 0; line-height: 0;
   color: var(--color-muted); border: 2px solid var(--color-faint); transition: color .2s, border-color .2s;
 }
 .theme-toggle[hidden] { display: none; }
 .theme-toggle:hover { color: var(--color-ink-strong); border-color: var(--color-accent); }
-.theme-toggle .pixel-icon { width: 18px; height: 18px; }
+.theme-toggle .pixel-icon { width: 24px; height: 24px; display: block; flex: none; margin: 0; }
 /* show the icon of the theme you would switch to */
 .theme-toggle .icon-moon, :root[data-theme="light"] .theme-toggle .icon-sun { display: none; }
 :root[data-theme="light"] .theme-toggle .icon-moon { display: block; }
@@ -135,13 +136,10 @@ main { padding: 36px 0 72px; min-height: 70vh; animation: arrive 0.5s ease both;
 .mobile-menu-links a { color: var(--color-muted); min-height: 44px; display: inline-flex; align-items: center; }
 .noscript-nav { display: flex; flex-wrap: wrap; gap: 14px; padding: 12px 0; }
 .site-footer {
-  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
-  gap: 8px 24px; padding: 28px 0 44px; color: var(--color-muted); font-size: 14px;
+  display: flex; justify-content: center; align-items: center; flex-wrap: wrap;
+  gap: 8px 24px; padding: 28px 0 44px; color: var(--color-muted); font-size: 14px; text-align: center;
 }
 .site-footer p { margin: 0; }
-.footer-meta { display: flex; flex-wrap: wrap; gap: 0 20px; align-items: center; }
-.footer-meta a { color: var(--color-muted); min-height: 44px; display: inline-flex; align-items: center; }
-.footer-meta a:hover { color: var(--color-sky); }
 .motion-control { color: var(--color-muted); font: 12px var(--font-mono); min-height: 44px; }
 .motion-control:hover { color: var(--color-accent); }
 
@@ -449,7 +447,6 @@ p { margin: 0 0 1em; }
   .flow-diagram li + li { margin-left: 22px !important; }
   .flow-diagram li + li::after { left: -19px; width: 12px; }
   .page-intro, .opening, .article-lead { font-size: 19px; }
-  .site-footer { flex-direction: column; align-items: flex-start; }
   .achievement-collection { grid-template-columns: 1fr; }
 }
 @media print { body { background: #fff; color: #000; } .site-header, .site-footer, .print-button { display: none; } a { color: #000; } h1, h2, h3, h4 { color: #000; } }
@@ -503,7 +500,7 @@ html[data-motion="paused"] *::after {
 .room {
   --u: calc(100cqw / 384);
   container-type: inline-size; position: relative; aspect-ratio: 384 / 216; width: 100%;
-  overflow: hidden; background: #0a0e2c; touch-action: manipulation;
+  overflow: hidden; background: #0a0e2c; touch-action: manipulation; contain: paint;
 }
 .layer {
   position: absolute; inset: 0; background-size: 100% 100%; image-rendering: pixelated;
@@ -515,7 +512,7 @@ html[data-motion="paused"] *::after {
 .room[data-sky="day"] .layer-glow { opacity: .45; }
 .layer-stars-a { animation: twinkle 3.2s steps(2) infinite; }
 .layer-stars-b { animation: twinkle 2.6s steps(2) infinite reverse; }
-.layer-clouds { inset: 0 auto 0 0; width: 100%; animation: drift 60s linear infinite; }
+.layer-clouds { inset: 0 auto 0 0; width: 100%; animation: drift 60s linear infinite; will-change: transform; }
 @keyframes drift { to { transform: translateX(calc(var(--u) * -96)); } }
 @keyframes twinkle { 50% { opacity: .25; } }
 
@@ -559,7 +556,7 @@ html[data-motion="paused"] *::after {
 .actor { position: absolute; pointer-events: none; }
 .actor.asad { left: calc(var(--u) * 66); top: calc(var(--u) * 78); }
 .actor.asad .sprite { --sprite-size: calc(var(--u) * 128) !important; }
-.actor.storm { --x: 230; --flip: 1; left: 0; top: calc(var(--u) * 146); translate: calc(var(--u) * (var(--x) - 32)) 0; z-index: 2; }
+.actor.storm { --x: 230; --flip: 1; left: 0; top: calc(var(--u) * 146); translate: calc(var(--u) * 198) 0; z-index: 2; will-change: translate; }
 .actor.storm .sprite { --sprite-size: calc(var(--u) * 64) !important; display: block; }
 .actor.storm .sprite { transform: scaleX(var(--flip)); }
 .actor.storm button { pointer-events: auto; position: relative; display: block; cursor: pointer; }
@@ -572,13 +569,13 @@ html[data-motion="paused"] *::after {
 .room .storm-says { left: 40%; top: -16%; z-index: 4; }
 .room-caption { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 20px; margin-top: 14px; font: 12px var(--font-mono); color: var(--color-muted); }
 .room-caption .hint { color: var(--color-accent); }
-.room-index { display: none; list-style: none; padding: 0; margin: 14px 0 0; flex-wrap: wrap; gap: 0 18px; }
-.room-index a { display: inline-flex; min-height: 44px; align-items: center; font: 13px var(--font-mono); }
 @media (max-width: 760px) {
   .hero { grid-template-columns: 1fr; gap: 12px; padding-bottom: 20px; }
-  .room-index { display: flex; }
   .room { margin-inline: -20px; width: calc(100% + 40px); }
   .room .spot::after { display: none; }
+  .room .spot { filter: none; }
+  .layer { transition: none; }
+  .layer-stars-b, .fx-steam.two { animation: none; }
   .room-caption .hint { display: none; }
 }
 
@@ -670,7 +667,7 @@ html[data-cursor="box"] .cursor-dot span { background: var(--color-accent); }
 .pixel-icon.after { margin: 0 0 0 .3em; }
 .calendar-toolbar button .pixel-icon, .mobile-menu-head button .pixel-icon { margin: 0; width: 20px; height: 20px; }
 .pixel-icon.ext { width: .85em; height: .85em; margin: 0 0 0 .15em; vertical-align: 0; opacity: .7; }
-.closing-links a, .footer-meta a, .mobile-menu-links a { display: inline-flex; align-items: center; gap: .1em; text-decoration: none; }
+.closing-links a, .mobile-menu-links a { display: inline-flex; align-items: center; gap: .1em; text-decoration: none; }
 .closing-links { gap: 4px 28px; max-width: none !important; }
 
 /* mermaid diagrams (```mermaid): source shown until the browser renders the SVG */
