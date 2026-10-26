@@ -44,7 +44,10 @@ export type Article = z.infer<typeof ArticleSchema> & {
 };
 export function parseArticle(source: string): Article {
   const { data, content } = matter(source);
-  const meta = ArticleSchema.parse(data);
+  return withDerived(ArticleSchema.parse(data), content);
+}
+/** Adds reading time and search text to validated metadata (shared by every content source). */
+export function withDerived(meta: z.infer<typeof ArticleSchema>, content: string): Article {
   return {
     ...meta,
     body: content,
@@ -58,14 +61,15 @@ export function parseArticle(source: string): Article {
       .slice(0, 120000),
   };
 }
+/** Where public content comes from: "git" (default, reviewed files in content/) or "firestore". */
+export const contentSource = () =>
+  process.env.CONTENT_SOURCE === "firestore" ? "firestore" : "git";
+
 export async function getArticles(): Promise<Article[]> {
-  const base = path.join(process.cwd(), "content/articles");
-  const files = (await fs.readdir(base)).filter((f) => f.endsWith(".md"));
-  const articles = await Promise.all(
-    files.map(async (f) =>
-      parseArticle(await fs.readFile(path.join(base, f), "utf8")),
-    ),
-  );
+  const articles =
+    contentSource() === "firestore"
+      ? await (await import("./content-firestore")).firestoreArticles()
+      : await gitArticles();
   const slugs = new Set<string>();
   for (const a of articles) {
     if (slugs.has(a.slug)) throw new Error("Duplicate article slug");
@@ -74,6 +78,15 @@ export async function getArticles(): Promise<Article[]> {
   return articles
     .filter((a) => a.status === "published")
     .sort((a, b) => b.publishedAt!.localeCompare(a.publishedAt!));
+}
+async function gitArticles(): Promise<Article[]> {
+  const base = path.join(process.cwd(), "content/articles");
+  const files = (await fs.readdir(base)).filter((f) => f.endsWith(".md"));
+  return Promise.all(
+    files.map(async (f) =>
+      parseArticle(await fs.readFile(path.join(base, f), "utf8")),
+    ),
+  );
 }
 export async function getArticle(slug: string) {
   return (await getArticles()).find((a) => a.slug === slug);
@@ -187,7 +200,9 @@ export async function renderArticle(body: string) {
   );
   return { html, toc };
 }
-export async function getProjects() {
+export async function getProjects(): Promise<(Project & { writeupBody?: string })[]> {
+  if (contentSource() === "firestore")
+    return (await import("./content-firestore")).firestoreProjects();
   const dir = path.join(process.cwd(), "content/projects");
   const files = (await fs.readdir(dir)).filter((f) => f.endsWith(".json"));
   return Promise.all(
@@ -197,7 +212,7 @@ export async function getProjects() {
     }),
   );
 }
-const ProjectSchema = z.object({
+export const ProjectSchema = z.object({
   id: z.number(),
   title: z.string(),
   slug: z.string().regex(/^[a-z0-9-]+$/),
@@ -217,6 +232,8 @@ const ProjectSchema = z.object({
     }),
   ),
 });
+
+export type Project = z.infer<typeof ProjectSchema>;
 
 export function articleSummary(article: Article) {
   return {

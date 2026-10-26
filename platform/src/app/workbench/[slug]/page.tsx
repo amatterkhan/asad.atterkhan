@@ -1,8 +1,9 @@
 import { ArticleControls } from "@/components/ArticleControls";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getProjects, getProjectWriteup } from "@/lib/content";
-export const dynamicParams = false;
+import { getProjects, getProjectWriteup, renderArticle } from "@/lib/content";
+// New records from the content source render on first request; unknown slugs still 404.
+export const dynamicParams = true;
 export async function generateStaticParams() {
   return (await getProjects()).map((p) => ({ slug: p.slug }));
 }
@@ -27,7 +28,11 @@ export default async function Project({
   const { slug } = await params;
   const p = (await getProjects()).find((p) => p.slug === slug);
   if (!p) notFound();
-  const writeup = p.writeup ? await getProjectWriteup(p.writeup) : null;
+  const writeup = p.writeupBody
+    ? await renderArticle(p.writeupBody)
+    : p.writeup
+      ? await getProjectWriteup(p.writeup)
+      : null;
   return (
     <>
       <div className="path">

@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getArticles, getArticle } from "@/lib/content";
 import { Article } from "@/components/Article";
-export const dynamicParams = false;
+// New articles from the content source render on first request; unknown slugs still 404.
+export const dynamicParams = true;
 export async function generateStaticParams() {
   return (await getArticles()).map((a) => ({ slug: a.slug }));
 }
