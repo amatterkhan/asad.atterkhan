@@ -7,7 +7,12 @@ import path from "node:path";
 const dist = path.resolve(import.meta.dirname, "../dist");
 const port = Number(process.env.PORT || 4191);
 const api = new URL(process.env.API_ORIGIN || "http://127.0.0.1:8081");
-const config = JSON.parse(await fs.readFile(path.resolve(import.meta.dirname, "../firebase.json"), "utf8")).hosting;
+const config = JSON.parse(
+  await fs.readFile(
+    path.resolve(import.meta.dirname, "../firebase.json"),
+    "utf8",
+  ),
+).hosting;
 const types: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
@@ -30,22 +35,59 @@ const file = async (p: string) => {
 
 createServer(async (req, res) => {
   const url = new URL(req.url || "/", "http://x");
-  const p = decodeURIComponent(url.pathname);
-  for (const r of config.redirects as { source: string; destination: string }[]) {
-    const re = new RegExp("^" + r.source.replace(/:(\w+)/g, "(?<$1>[^/]+)") + "$");
+  let p: string;
+  try {
+    p = decodeURIComponent(url.pathname);
+  } catch {
+    res.writeHead(400);
+    res.end("Invalid URL");
+    return;
+  }
+  for (const rule of config.headers as {
+    source: string;
+    headers: { key: string; value: string }[];
+  }[]) {
+    const matches =
+      rule.source === "**" ||
+      (rule.source === "/@(admin|calendar)" &&
+        /^\/(admin|calendar)$/.test(p)) ||
+      (rule.source.endsWith("/**") && p.startsWith(rule.source.slice(0, -2)));
+    if (matches) for (const h of rule.headers) res.setHeader(h.key, h.value);
+  }
+  for (const r of config.redirects as {
+    source: string;
+    destination: string;
+  }[]) {
+    const re = new RegExp(
+      "^" + r.source.replace(/:(\w+)/g, "(?<$1>[^/]+)") + "$",
+    );
     const m = p.match(re);
     if (m) {
-      res.writeHead(301, { Location: r.destination.replace(/:(\w+)/g, (_, k) => m.groups![k]) });
+      res.writeHead(301, {
+        Location: r.destination.replace(/:(\w+)/g, (_, k) => m.groups![k]),
+      });
       return res.end();
     }
   }
   if (/^\/(api|files|media)(\/|$)/.test(p)) {
-    const proxied = request({ host: api.hostname, port: api.port, path: req.url, method: req.method, headers: req.headers }, (r) => {
-      res.writeHead(r.statusCode || 502, r.headers);
-      r.pipe(res);
-    });
+    const proxied = request(
+      {
+        host: api.hostname,
+        port: api.port,
+        path: req.url,
+        method: req.method,
+        headers: req.headers,
+      },
+      (r) => {
+        res.writeHead(r.statusCode || 502, r.headers);
+        r.pipe(res);
+      },
+    );
     proxied.on("error", () => {
-      res.writeHead(502, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+      res.writeHead(502, {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+      });
       res.end(JSON.stringify({ error: "API is not running" }));
     });
     return req.pipe(proxied);
@@ -55,11 +97,15 @@ createServer(async (req, res) => {
     return res.end();
   }
   const found =
-    (await file(path.join(dist, p))) ?? (await file(path.join(dist, p + ".html"))) ?? (await file(path.join(dist, p, "index.html")));
+    (await file(path.join(dist, p))) ??
+    (await file(path.join(dist, p + ".html"))) ??
+    (await file(path.join(dist, p, "index.html")));
   const target = found ?? path.join(dist, "404.html");
   res.writeHead(found ? 200 : 404, {
     "Content-Type": types[path.extname(target)] || "application/octet-stream",
-    "Cache-Control": p.startsWith("/assets/") ? "public, max-age=31536000, immutable" : "no-cache",
+    "Cache-Control": res.getHeader("Cache-Control") || "no-cache",
   });
   res.end(await fs.readFile(target));
-}).listen(port, "127.0.0.1", () => console.log(`dist/ preview: http://127.0.0.1:${port}`));
+}).listen(port, "127.0.0.1", () =>
+  console.log(`dist/ preview: http://127.0.0.1:${port}`),
+);

@@ -9,6 +9,8 @@ import pixelmatch from "pixelmatch";
 // Writes ref/new/diff PNGs and a summary to tests/visual/out/.
 const REF = process.env.REF || "http://127.0.0.1:4180";
 const NEW = process.env.NEW || "http://127.0.0.1:4190";
+const state = process.env.STATE || "normal";
+if (!["normal", "hover", "menu"].includes(state)) throw new Error("STATE must be normal, hover or menu");
 const paths = (process.env.PATHS || "/,/lab,/workbench,/workbench/textile-sewing-services,/workbench/qrover,/experience,/achievements,/about,/calendar,/admin,/preview/reading-layout,/nope").split(",");
 const out = path.resolve(import.meta.dirname, "out");
 fs.mkdirSync(out, { recursive: true });
@@ -18,6 +20,8 @@ const shoot = async (page: Page, url: string, file: string) => {
   await page.addStyleTag({ content: ".cursor{display:none!important} *{caret-color:transparent!important}" });
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(700);
+  if (state === "hover") await page.locator('a.spot[data-label="The Lab"]').hover();
+  if (state === "menu") await page.getByRole("button", { name: "Open navigation menu" }).click();
   await page.screenshot({ path: file, fullPage: true });
 };
 
@@ -25,11 +29,12 @@ const browser = await chromium.launch({ channel: "chrome" });
 const rows: string[] = [];
 for (const [vp, size] of [["desktop", { width: 1280, height: 900 }], ["mobile", { width: 390, height: 844 }]] as const)
   for (const theme of ["dark", "light"] as const) {
+    if (state === "menu" && vp !== "mobile") continue;
     const ctx = await browser.newContext({ viewport: size, reducedMotion: "reduce", colorScheme: theme, deviceScaleFactor: 1 });
     await ctx.addInitScript((t) => localStorage.setItem("theme", t), theme);
     const page = await ctx.newPage();
     for (const p of paths) {
-      const name = `${p === "/" ? "home" : p.slice(1).replace(/\//g, "_")}-${vp}-${theme}`;
+      const name = `${state === "normal" ? "" : state + "-"}${p === "/" ? "home" : p.slice(1).replace(/\//g, "_")}-${vp}-${theme}`;
       const a = path.join(out, `${name}-ref.png`);
       const b = path.join(out, `${name}-new.png`);
       await shoot(page, REF + p, a);
@@ -53,4 +58,4 @@ for (const [vp, size] of [["desktop", { width: 1280, height: 900 }], ["mobile", 
     await ctx.close();
   }
 await browser.close();
-fs.writeFileSync(path.join(out, "summary.txt"), rows.join("\n") + "\n");
+fs.writeFileSync(path.join(out, `summary-${state}.txt`), rows.join("\n") + "\n");

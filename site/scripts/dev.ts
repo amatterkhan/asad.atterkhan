@@ -6,7 +6,7 @@ import { createServer } from "vite";
 // and component edits show on reload), islands hydrated with HMR. /api is proxied to the Go API.
 const root = path.resolve(import.meta.dirname, "..");
 const port = Number(process.env.PORT || 4190);
-const vite = await createServer({ root, server: { middlewareMode: true }, appType: "custom" });
+const vite = await createServer({ root, server: { middlewareMode: true, hmr: { port: Number(process.env.HMR_PORT || 24678) } }, appType: "custom" });
 const tags = `<link rel="stylesheet" href="/src/styles/app.css">\n    <script type="module" src="/@vite/client"></script>\n    <script type="module" src="/src/entry-client.ts"></script>`;
 
 createHttpServer((req, res) => {

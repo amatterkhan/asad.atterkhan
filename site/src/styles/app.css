@@ -589,6 +589,7 @@ html[data-motion="paused"] *::after {
 :root[data-theme="light"] .room { box-shadow: 0 0 0 3px var(--color-faint), 8px 8px 0 3px rgba(60, 45, 30, .2) !important; }
 .spot::after { border-radius: 0; box-shadow: 2px 2px 0 rgba(0,0,0,.35); }
 .current-label { border-radius: 0; }
+:root[data-theme="light"] .current-label { color: #fff; }
 
 /* ---------- cursor: a dot with a pixel ring ---------- */
 .cursor { pointer-events: none; position: fixed; inset: 0; z-index: 100; }
