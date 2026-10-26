@@ -26,7 +26,7 @@ Open `http://127.0.0.1:4190`. The site proxies `/api`, `/files`, and `/media` to
 `API_ORIGIN`, `PORT`, and `HMR_PORT` can select other local ports. The API defaults to 8081;
 set `PORT=8080` for Cloud Run. `APP_ENV=development` bypasses authentication **only for the
 calendar**. The server refuses to start with that value when `K_SERVICE` is set.
-All other owner routes still require their service flag and owner authentication.
+The development API binds to loopback. All other owner routes still require their service flag and owner authentication.
 
 For a production build with Git content:
 
