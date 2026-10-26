@@ -2,7 +2,7 @@
 
 All checks below ran locally on `frontend-redesign`. No deployment, repository dispatch, DNS
 change or Firebase/GCP resource creation was performed. The reference server on port 4180 was
-left running and `platform/` was not modified by this work.
+left running and the then-current `platform/` reference app was not modified.
 
 ## Results
 
@@ -54,7 +54,7 @@ Viewports: 1280 × 900 and 390 × 844; dark and light themes; reduced motion.
 
 Pixelmatch threshold: 0.1. Screenshots and difference images remain local under
 `site/tests/visual/out/`, excluded from Git. Earlier broad visual parity results are recorded in
-`codex-handoff.md`; this run specifically added the calendar, hover and open-menu checks above.
+the rebuild hand-off notes (now in git history); this run specifically added the calendar, hover and open-menu checks above.
 
 ## Intentional differences and external checks
 
