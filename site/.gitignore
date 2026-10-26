@@ -8,3 +8,4 @@ tests/visual/out/
 test-results/
 playwright-report/
 *-debug.log
+firebase.ci.json

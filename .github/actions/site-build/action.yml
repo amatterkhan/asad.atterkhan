@@ -1,0 +1,85 @@
+name: Build site for Firebase Hosting
+description: >
+  Optionally exports published Firestore content, checks and builds site/, and writes
+  site/firebase.ci.json (the deploy config for this run). Call after checkout, and after
+  google-github-actions/auth when content-source is firestore.
+inputs:
+  content-source:
+    description: git (content/ files) or firestore (export published content first)
+    default: git
+  index-site:
+    description: true only for the production host
+    default: 'false'
+  site-url:
+    description: Canonical URL used in links, RSS, sitemap and Open Graph tags
+    required: true
+  api-enabled:
+    description: Keep the /api, /files and /media rewrites to Cloud Run
+    default: 'false'
+  api-region:
+    description: Cloud Run region for the rewrites
+    default: europe-west1
+  hosting-site:
+    description: Hosting site ID; empty deploys to the project's default site
+    default: ''
+  project-id:
+    required: true
+  storage-bucket:
+    default: ''
+  owner-uid:
+    default: ''
+  firebase-api-key:
+    default: ''
+  firebase-auth-domain:
+    default: ''
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v7
+      with:
+        node-version: '24'
+        cache: npm
+        cache-dependency-path: site/package-lock.json
+    - if: inputs.content-source == 'firestore'
+      uses: actions/setup-go@v7
+      with:
+        go-version-file: api/go.mod
+        cache-dependency-path: api/go.sum
+    - name: Export published content
+      if: inputs.content-source == 'firestore'
+      shell: bash
+      working-directory: api
+      run: go run ./cmd/export
+      env:
+        FIREBASE_PROJECT_ID: ${{ inputs.project-id }}
+        FIREBASE_STORAGE_BUCKET: ${{ inputs.storage-bucket }}
+        FIREBASE_OWNER_UID: ${{ inputs.owner-uid }}
+    - name: Check and build
+      shell: bash
+      working-directory: site
+      run: npm ci && npm run typecheck && npm test && npm run build
+      env:
+        CONTENT_SOURCE: ${{ inputs.content-source }}
+        INDEX_SITE: ${{ inputs.index-site }}
+        SITE_URL: ${{ inputs.site-url }}
+        VITE_FIREBASE_API_KEY: ${{ inputs.firebase-api-key }}
+        VITE_FIREBASE_AUTH_DOMAIN: ${{ inputs.firebase-auth-domain }}
+        VITE_FIREBASE_PROJECT_ID: ${{ inputs.project-id }}
+    # Until the API is deployed, drop the Cloud Run rewrites: Hosting refuses to deploy rewrites
+    # to a service that does not exist, and the static pages do not need them.
+    - name: Write deploy config
+      shell: bash
+      working-directory: site
+      run: |
+        jq --arg site "$HOSTING_SITE" --arg region "$API_REGION" --argjson api "$API_ENABLED" '
+          del(.emulators)
+          | (if $site != "" then .hosting.site = $site else . end)
+          | .hosting.rewrites |= (
+              if $api then map(if .run then .run.region = $region else . end)
+              else map(select(.run == null)) end)
+        ' firebase.json > firebase.ci.json
+        jq '.hosting | {site, rewrites}' firebase.ci.json
+      env:
+        HOSTING_SITE: ${{ inputs.hosting-site }}
+        API_REGION: ${{ inputs.api-region }}
+        API_ENABLED: ${{ inputs.api-enabled == 'true' }}

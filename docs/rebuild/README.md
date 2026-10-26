@@ -155,11 +155,9 @@ Content commits happen before hook delivery. A failed hook logs `rebuild_hook_fa
 not roll back the content or report a failed save. There is no background retry queue. Operators
 must monitor those events and run a manual rebuild when delivery fails.
 
-The new `.github/workflows/site-rebuild.yml` listens only for `repository_dispatch` and
-`workflow_dispatch`. Its concurrency group cancels older builds. It exports content, checks/builds
-the site and deploys Hosting only. It deliberately checks out `frontend-redesign`. Before enabling
-it, review the target ref; GitHub must have the dispatch workflow on the repository's default
-branch. No workflow was dispatched during this rebuild.
+`.github/workflows/site-deploy.yml` handles the `content-published` dispatch: it exports content,
+checks and builds the site, and deploys Hosting from the deploy branch. GitHub delivers the dispatch
+only to workflows on the default branch. See [ci-cd.md](ci-cd.md) for the full CI/CD setup.
 
 ## Deployment reference — not executed
 
@@ -181,11 +179,8 @@ before deployment. Do not use `APP_ENV=development` in a deployed environment.
    claim and TOTP enrollment. Supply the public web configuration in the site's
    `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, and `VITE_FIREBASE_PROJECT_ID` at build time.
    Confirm `SITE_URL` and set `INDEX_SITE=true` only for the approved production host.
-5. For the workflow's `site-production` environment, configure
-   `SITE_WORKLOAD_IDENTITY_PROVIDER` and `SITE_BUILD_SERVICE_ACCOUNT` secrets for workload
-   identity, plus `FIREBASE_OWNER_UID`; configure Firebase project/bucket and web config variables
-   as named in the workflow. Scope the build identity to reading published content and deploying
-   the selected Hosting site. Review IAM separately from the API's write permissions.
+5. Set up GitHub deploys with `.github/scripts/setup-firebase-deploy.sh` (workload identity,
+   deploy and runtime identities, repository variables). See [ci-cd.md](ci-cd.md).
 6. After approval, deploy the API, review the Hosting rewrite region/service, export/build the
    static site and deploy with `firebase deploy --only hosting --config firebase.json --project
    <approved-project>` from `site/`. Do not deploy the root app or `platform/` as part of this flow.

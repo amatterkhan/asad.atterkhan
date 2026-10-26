@@ -1,0 +1,87 @@
+name: Site preview channel
+# Same-repository pull requests get a 7-day Hosting preview channel (pr-<number>) with Git content,
+# noindex, and no API rewrites, so pull request code never talks to production data.
+# The channel is deleted when the pull request closes. Fork pull requests get no credentials.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    paths: ['site/**', '.github/workflows/site-preview.yml', '.github/actions/site-build/**']
+permissions:
+  contents: read
+concurrency:
+  group: site-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+env:
+  FIREBASE_TOOLS: firebase-tools@15.34.1
+  CHANNEL: pr-${{ github.event.pull_request.number }}
+jobs:
+  preview:
+    if: >-
+      github.event.action != 'closed' && vars.DEPLOY_SERVICE_ACCOUNT != ''
+      && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.DEPLOY_SERVICE_ACCOUNT }}
+      - uses: ./.github/actions/site-build
+        with:
+          site-url: ${{ vars.SITE_URL }}
+          hosting-site: ${{ vars.FIREBASE_HOSTING_SITE }}
+          project-id: ${{ vars.FIREBASE_PROJECT_ID }}
+          firebase-api-key: ${{ vars.FIREBASE_WEB_API_KEY }}
+          firebase-auth-domain: ${{ vars.FIREBASE_AUTH_DOMAIN }}
+      - name: Deploy preview channel
+        id: deploy
+        working-directory: site
+        run: |
+          out=$(npx --yes "$FIREBASE_TOOLS" hosting:channel:deploy "$CHANNEL" --expires 7d \
+            --config firebase.ci.json --project "$PROJECT_ID" --non-interactive --json)
+          url=$(jq -r '[.result[].url][0]' <<<"$out")
+          test -n "$url" && test "$url" != null
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+        env:
+          PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+      - uses: actions/github-script@v9
+        env:
+          URL: ${{ steps.deploy.outputs.url }}
+        with:
+          script: |
+            const marker = "<!-- site-preview -->";
+            const body = `${marker}\nPreview: ${process.env.URL}\n\nCommit ${context.sha.slice(0, 7)} · Git content · noindex · no API · expires in 7 days`;
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const mine = comments.find((c) => c.user.type === "Bot" && c.body.startsWith(marker));
+            if (mine) await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body });
+            else await github.rest.issues.createComment({ owner, repo, issue_number, body });
+
+  cleanup:
+    if: >-
+      github.event.action == 'closed' && vars.DEPLOY_SERVICE_ACCOUNT != ''
+      && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.DEPLOY_SERVICE_ACCOUNT }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Delete preview channel
+        run: >
+          npx --yes "$FIREBASE_TOOLS" hosting:channel:delete "$CHANNEL" --force
+          --project "$PROJECT_ID" ${SITE:+--site "$SITE"} --non-interactive || true
+        env:
+          PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+          SITE: ${{ vars.FIREBASE_HOSTING_SITE }}
