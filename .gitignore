@@ -25,3 +25,4 @@ playwright-report/
 
 # Art pipeline
 art/scripts/__pycache__/
+art/pixellab/build/

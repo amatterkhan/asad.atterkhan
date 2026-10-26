@@ -12,7 +12,8 @@ Needs Aseprite or LibreSprite for exporting. PixelLab generation needs `PIXELLAB
 environment or in `art/.env.local` (gitignored).
 
 Layout: `ase/` Aseprite documents, `pixellab/` raw generated frames, `references/` direction and
-character references, `source/` cut-out sources, `previews/` contact sheets, `scripts/` the tools.
+character references, `previews/` the outfit contact sheet, `scripts/` the tools. `pixellab/build/`
+is regenerated intermediate output and is not committed.
 
 # Sprites and the room
 
@@ -39,7 +40,7 @@ Once you start editing an `.aseprite` file by hand in Aseprite, don't re-run
 | asad-idle | thinking | 8 |
 | asad-happy | happy (when Storm is petted) | 8 |
 | storm-standing | walk | 8 |
-| storm-idle / storm-sit | idle | 8 |
+| storm-idle | idle | 8 |
 | storm-stretch | stretch | 8 |
 | storm-sleeping | sleep, curled frames 4–7 breathing | 6 |
 

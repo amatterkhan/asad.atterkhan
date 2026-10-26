@@ -1,49 +1,10 @@
 {
-  "version": 21,
+  "version": 22,
   "logicalSize": [
     128,
     128
   ],
   "paletteColors": 128,
-  "sourceSHA256": "2d54a382e3d9d3bec91274fa48734d5f8f68b176d464e347235baefdbf3d6a9e",
-  "cropBoxes": {
-    "asad": [
-      17,
-      85,
-      111,
-      193
-    ],
-    "storm-idle": [
-      754,
-      90,
-      840,
-      187
-    ],
-    "storm-sleeping": [
-      752,
-      263,
-      858,
-      343
-    ],
-    "asad-coffee": [
-      391,
-      237,
-      474,
-      347
-    ],
-    "storm-standing": [
-      753,
-      393,
-      877,
-      497
-    ],
-    "storm-sit": [
-      1113,
-      393,
-      1207,
-      499
-    ]
-  },
   "states": {
     "asad-idle": {
       "sheet": "/sprites/asad-idle.png",
@@ -176,28 +137,6 @@
         58
       ],
       "frameMs": 110
-    },
-    "storm-sit": {
-      "sheet": "/sprites/storm-sit.png",
-      "still": "/sprites/storm-sit-still.png",
-      "frames": 8,
-      "frameWidth": 64,
-      "frameHeight": 64,
-      "durationsMs": [
-        220,
-        220,
-        220,
-        220,
-        220,
-        220,
-        220,
-        220
-      ],
-      "anchor": [
-        32,
-        58
-      ],
-      "frameMs": 220
     },
     "storm-stretch": {
       "sheet": "/sprites/storm-stretch.png",

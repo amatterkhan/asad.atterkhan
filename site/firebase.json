@@ -3,7 +3,7 @@
     "public": "dist",
     "cleanUrls": true,
     "trailingSlash": false,
-    "ignore": ["firebase.json", "firebase.ci.json", "**/.*", "sprite-review/**"],
+    "ignore": ["firebase.json", "firebase.ci.json", "**/.*"],
     "rewrites": [
       { "source": "/api/**", "run": { "serviceId": "asad-api", "region": "europe-west1" } },
       { "source": "/files/**", "run": { "serviceId": "asad-api", "region": "europe-west1" } },

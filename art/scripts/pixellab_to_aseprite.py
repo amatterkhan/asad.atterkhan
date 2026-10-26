@@ -23,7 +23,6 @@ STATES = {
     "asad-happy": ("asad", "happy", 170, [2, 3, 4, 5, 6, 7]),  # frames 0-1 had a moustache
     "storm-standing": ("storm", "walk", 110, None),
     "storm-idle": ("storm", "idle", 180, None),
-    "storm-sit": ("storm", "idle", 220, None),
     "storm-stretch": ("storm", "stretch", 140, None),
     "storm-sleeping": ("storm-curled", "sleep-ball", 300, None),          # curled into a ball (character state)
     "storm-dream": ("storm", "sleep-dream", 240, list(range(2, 16))),   # kneading paws, head shift

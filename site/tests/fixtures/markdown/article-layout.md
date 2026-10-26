@@ -43,7 +43,7 @@ flowchart LR
 
 ## Images and links
 
-![Asad and Storm, the website's approved pixel-art characters](/sprites/together.png)
+![Asad and Storm, the website's approved pixel-art characters](/sprites/asad-idle-still.png)
 
 Images should have useful descriptions and a natural aspect ratio. Follow an [internal link to Projects](/projects) without losing the site’s normal navigation.
 

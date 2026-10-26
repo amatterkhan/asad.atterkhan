@@ -33,7 +33,7 @@ export async function feeds(server: Server, dist: string, write: Write) {
   await write(
     path.join(dist, "robots.txt"),
     (index
-      ? "User-Agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin\nDisallow: /calendar\nDisallow: /preview/\nDisallow: /sprite-review/\n"
+      ? "User-Agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin\nDisallow: /calendar\nDisallow: /preview/\n"
       : "User-Agent: *\nDisallow: /\n") + `\nSitemap: ${site.url}/sitemap.xml\n`,
   );
   await write(path.join(dist, "search.json"), JSON.stringify(articles.map(server.articleSummary)));
