@@ -1,0 +1,52 @@
+{
+  "hosting": {
+    "public": "dist",
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "ignore": ["firebase.json", "**/.*"],
+    "rewrites": [
+      { "source": "/api/**", "run": { "serviceId": "asad-api", "region": "europe-west1" } },
+      { "source": "/files/**", "run": { "serviceId": "asad-api", "region": "europe-west1" } },
+      { "source": "/media/**", "run": { "serviceId": "asad-api", "region": "europe-west1" } }
+    ],
+    "redirects": [
+      { "source": "/projects", "destination": "/workbench", "type": 301 },
+      { "source": "/projects/:slug", "destination": "/workbench/:slug", "type": 301 },
+      { "source": "/blog", "destination": "/lab", "type": 301 },
+      { "source": "/resume", "destination": "/experience", "type": 301 },
+      { "source": "/project/1", "destination": "/workbench/textile-sewing-services", "type": 301 },
+      { "source": "/project/2", "destination": "/workbench/personal-website", "type": 301 },
+      { "source": "/project/3", "destination": "/workbench/qrover", "type": 301 },
+      { "source": "/project/4", "destination": "/workbench/wispi", "type": 301 },
+      { "source": "/post/0", "destination": "/about", "type": 301 }
+    ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'sha256-J80begFZKHLN9DRkQhbgD+zGRU9VUXQU0Be6Ia7rgSQ=' https://apis.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://*.googleapis.com https://*.firebaseapp.com; frame-src 'self' https://*.firebaseapp.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" },
+          { "key": "X-Content-Type-Options", "value": "nosniff" },
+          { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+          { "key": "X-Frame-Options", "value": "DENY" },
+          { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
+          { "key": "Strict-Transport-Security", "value": "max-age=31536000" }
+        ]
+      },
+      { "source": "/assets/**", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] },
+      { "source": "/sprites/**", "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }] },
+      { "source": "/room/**", "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }] },
+      { "source": "/fonts/**", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000" }] },
+      { "source": "/@(admin|calendar)", "headers": [{ "key": "Cache-Control", "value": "no-store" }, { "key": "X-Robots-Tag", "value": "noindex, nofollow" }] }
+    ]
+  },
+  "firestore": { "rules": "firebase/firestore.rules", "indexes": "firebase/firestore.indexes.json" },
+  "storage": { "rules": "firebase/storage.rules" },
+  "emulators": {
+    "auth": { "port": 9099 },
+    "firestore": { "port": 8080 },
+    "storage": { "port": 9199 },
+    "hosting": { "port": 5050 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
+}

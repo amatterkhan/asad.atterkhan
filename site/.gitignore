@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.content-export/
+.private-content/
+.env*
+!.env.example
+tests/visual/out/
+test-results/
+playwright-report/
+*-debug.log
