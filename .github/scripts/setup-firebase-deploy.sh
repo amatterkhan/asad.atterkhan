@@ -61,7 +61,7 @@ run gcloud iam service-accounts add-iam-policy-binding "$DEPLOYER" --project "$P
 # Deployer: Hosting + rules, read published content for the export, roll out the API.
 for role in roles/firebasehosting.admin roles/firebaserules.admin roles/datastore.indexAdmin \
   roles/datastore.viewer roles/run.admin roles/serviceusage.serviceUsageConsumer \
-  roles/serviceusage.apiKeysViewer; do
+  roles/serviceusage.apiKeysViewer roles/firebasestorage.viewer; do
   run gcloud projects add-iam-policy-binding "$PROJECT_ID" --member "serviceAccount:$DEPLOYER" \
     --role "$role" --condition None >/dev/null
 done
@@ -80,6 +80,9 @@ for role in roles/datastore.user roles/firebaseauth.viewer; do
     --role "$role" --condition None >/dev/null
 done
 if [ -n "$BUCKET" ]; then
+  # Firebase's default-bucket lookup also needs underlying GCS metadata access.
+  run gcloud storage buckets add-iam-policy-binding "gs://$BUCKET" \
+    --member "serviceAccount:$DEPLOYER" --role roles/storage.bucketViewer >/dev/null
   run gcloud storage buckets add-iam-policy-binding "gs://$BUCKET" \
     --member "serviceAccount:$RUNTIME" --role roles/storage.objectAdmin >/dev/null
 fi
