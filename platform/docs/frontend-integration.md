@@ -75,13 +75,25 @@ Which paths to send: a new or edited article → `/`, `/lab`, `/lab/<slug>`, `/r
 `/lab/[slug]` and `/workbench/[slug]` render unknown-at-build slugs on first request
 (`dynamicParams = true`) and still return 404 for slugs the source doesn't have.
 
-## 3. Unchanged integrations
+## 3. Private shift calendar
+
+`/calendar` is owner-only: unlinked, not in the sitemap, `noindex`. The page holds no schedule;
+it loads `GET /api/owner/calendar?year=YYYY&month=0-11` after the existing owner sign-in
+(Google + TOTP, `requireOwner` with the new `calendar` service).
+
+- Needs `ENABLE_PRIVATE_CALENDAR=true` on the host (otherwise 503), plus the existing Firebase
+  owner configuration. Response: `{ year, month, today, cells, upcoming }`, `Cache-Control: no-store`.
+- `src/lib/admin.ts` gained only the `"calendar"` service name and its env flag.
+- On the local dev server (`NODE_ENV=development`) the route skips sign-in so the page can be
+  previewed; production always requires the owner.
+
+## 4. Unchanged integrations
 
 - `/manage`, `/api/admin/*`, `/files/[id]`, `/media/[id]`: untouched by the redesign.
 - Experience reads the featured-achievement selection exactly as before.
 - No client-side Firebase in public pages.
 
-## 4. Verified locally
+## 5. Verified locally
 
 - Default (`git`) source: all public routes 200, unknown article slug 404.
 - `/api/revalidate`: 503 without a secret; with one, 401 for missing/wrong tokens, 400 for

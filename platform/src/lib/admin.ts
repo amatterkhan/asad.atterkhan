@@ -14,12 +14,14 @@ export async function requireOwner(
   {
     recent = false,
     service = "documents",
-  }: { recent?: boolean; service?: "documents" | "achievements" } = {},
+  }: { recent?: boolean; service?: "documents" | "achievements" | "calendar" } = {},
 ) {
   const enabled =
     service === "documents"
       ? process.env.ENABLE_DOCUMENT_ADMIN
-      : process.env.ENABLE_ACHIEVEMENT_ADMIN;
+      : service === "calendar"
+        ? process.env.ENABLE_PRIVATE_CALENDAR
+        : process.env.ENABLE_ACHIEVEMENT_ADMIN;
   if (enabled !== "true")
     throw new HttpError(503, "Content management is not enabled");
   const bearer = request.headers.get("authorization");

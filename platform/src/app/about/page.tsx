@@ -7,6 +7,18 @@ export default function About() {
     <>
       <p className="eyebrow">A bit about me</p>
       <h1>About</h1>
+      <RoomVignette corner="about">
+        <At x={66} y={78}>
+          <div className="asad">
+            <AsadSprite animation="coffee" size={128} />
+          </div>
+        </At>
+        <At x={156} y={146}>
+          <div className="storm">
+            <StormSprite animation="sleeping" size={64} />
+          </div>
+        </At>
+      </RoomVignette>
       <div className="about-grid">
         <div className="prose">
           <p>
@@ -31,23 +43,6 @@ export default function About() {
           <p>
             If you&apos;d like to talk about something I&apos;ve built or
             written, <a href={`mailto:${site.email}`}>say hello</a>.
-          </p>
-        </div>
-        <div>
-          <RoomVignette corner="about">
-            <At x={66} y={78}>
-              <div className="asad">
-                <AsadSprite animation="coffee" size={128} />
-              </div>
-            </At>
-            <At x={150} y={146}>
-              <div className="storm">
-                <StormSprite animation="sleeping" size={64} />
-              </div>
-            </At>
-          </RoomVignette>
-          <p className="sprite-caption">
-            Asad &amp; Storm. Good company for a long experiment.
           </p>
         </div>
       </div>

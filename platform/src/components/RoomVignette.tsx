@@ -4,11 +4,12 @@ import manifest from "../../public/sprites/manifest.json";
 // A close-up of one corner of the homepage room (same LibreSprite layers), used as the header art
 // of the page that corner leads to. Crops are in room pixels (the room is 384x216).
 const CROPS = {
-  lab: [128, 92, 162, 72],
-  bench: [196, 62, 188, 72],
-  awards: [232, 4, 144, 64],
-  cv: [244, 14, 140, 70],
-  about: [24, 40, 184, 168],
+  lab: [96, 90, 288, 72],
+  bench: [128, 62, 256, 64],
+  awards: [144, 4, 240, 60],
+  cv: [144, 20, 240, 60],
+  about: [0, 118, 384, 96],
+  calendar: [0, 8, 192, 48],
 } as const;
 
 export type Corner = keyof typeof CROPS;

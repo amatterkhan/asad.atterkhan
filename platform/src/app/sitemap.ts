@@ -10,7 +10,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       "/experience",
       "/achievements",
       "/about",
-      "/calendar",
     ].map((p) => ({
       url: site.url + p,
     })),

@@ -76,9 +76,6 @@ export function Nav() {
           ))}
         </nav>
         <div className="mobile-menu-links">
-          <Link href="/calendar" onClick={() => dialog.current?.close()}>
-            <span>Calendar</span>
-          </Link>
           <a href={site.github}>
             <span>GitHub</span>
           </a>
