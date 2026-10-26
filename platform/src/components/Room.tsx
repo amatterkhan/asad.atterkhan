@@ -10,7 +10,7 @@ const W = 384;
 const H = 216;
 const STRETCH_MS =
   manifest.states["storm-stretch"].frames * manifest.states["storm-stretch"].frameMs;
-const SIP_MS = manifest.states["asad-coffee"].frames * manifest.states["asad-coffee"].frameMs;
+const loopMs = (k: keyof typeof manifest.states) => manifest.states[k].frames * manifest.states[k].frameMs;
 // Storm's planted paws travel one stride per walk cycle, so he moves at exactly that speed.
 const WALK_SPEED = manifest.strideRoomPx / manifest.walkCycleMs;
 
@@ -58,7 +58,9 @@ export function Room() {
   const [clock, setClock] = useState("");
   const [lamp, setLamp] = useState(true);
   const [mode, setMode] = useState<StormMode>("idle");
-  const [asad, setAsad] = useState<"typing" | "coffee">("typing");
+  const [asad, setAsad] = useState<"typing" | "coffee" | "idle">("typing");
+  const [happy, setHappy] = useState(false);
+  const happyTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [said, setSaid] = useState(-1);
 
   /* eslint-disable react-hooks/set-state-in-effect -- client-only clock, theme and saved lamp state avoid hydration mismatch */
@@ -74,18 +76,19 @@ export function Room() {
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  // Asad types, and every so often takes a sip of coffee.
+  // Asad types; every so often he sips coffee, or stops to think (and hum).
   useEffect(() => {
     let t: ReturnType<typeof setTimeout>;
     const typing = () => {
       setAsad("typing");
-      t = setTimeout(sip, 14000 + Math.random() * 12000);
+      t = setTimeout(pause, 12000 + Math.random() * 12000);
     };
-    const sip = () => {
-      setAsad("coffee");
-      t = setTimeout(typing, SIP_MS);
+    const pause = () => {
+      const next = Math.random() < 0.55 ? "coffee" : "idle";
+      setAsad(next);
+      t = setTimeout(typing, next === "coffee" ? loopMs("asad-coffee") : loopMs("asad-idle"));
     };
-    t = setTimeout(sip, 9000);
+    t = setTimeout(pause, 8000);
     return () => clearTimeout(t);
   }, []);
 
@@ -186,7 +189,7 @@ export function Room() {
         {["sky-night", "stars-a", "stars-b", "sky-day", "clouds", "room", "sunbeam"].map(layer)}
 
         <div className="actor asad">
-          <AsadSprite animation={asad} size={96} />
+          <AsadSprite animation={happy ? "happy" : asad} size={96} />
         </div>
         <div className="actor storm" ref={storm} data-mode={mode}>
           <span className="storm-shadow" aria-hidden="true" />
@@ -196,6 +199,9 @@ export function Room() {
             onClick={() => {
               lastInput.current = performance.now();
               setSaid((n) => (n + 1) % mrrps.length);
+              setHappy(true);
+              clearTimeout(happyTimer.current);
+              happyTimer.current = setTimeout(() => setHappy(false), loopMs("asad-happy"));
             }}
           >
             {said >= 0 && (

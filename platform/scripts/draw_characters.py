@@ -1,4 +1,4 @@
-"""Draws Asad and Storm as rigged pixel art (reference: art/references/asad-storm-cozy-reference.png),
+"""Draws Storm as rigged pixel art (Asad comes from scripts/extract_reference.py) (reference: art/references/asad-storm-cozy-reference.png),
 at the room's pixel density. Every animation is posed from the same rig, so motion is continuous:
 Storm walks with a four-beat lateral-sequence gait whose planted paws travel exactly one stride per
 cycle (the page moves him at stride / cycle-time, so his feet never slide).
@@ -8,7 +8,6 @@ import json, math, subprocess
 from pathlib import Path
 from PIL import Image
 from pixelrig import Frame
-import asad_head as H
 from ase import write_ase
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -141,90 +140,6 @@ def storm_sleep_frame(i):
     return f.px
 storm_sleep = [storm_sleep_frame(i) for i in range(8)]
 
-# ============================================================== Asad (96x96, 3/4 view, floor y=90)
-SKIN = ["#8a4f36", "#b8714c", "#d8925f", "#ecb07d"]
-HAIR = ["#0f0a0d", "#1a1114", "#281a1a", "#3e2a24"]
-HOOD = ["#141420", "#1f1f2e", "#2c2c40", "#3b3b55"]
-PANTS = ["#121427", "#1b1f3b", "#262b52", "#323a68"]
-SOCK = ["#b8b2ac", "#e4dfd8", "#fbf8f3"]
-LID = ["#3c3f52", "#55596f", "#717690", "#8e93ad"]
-BEARD = ["#24161a", "#3a2520", "#563a2e"]
-MUG = ["#141420", "#232333", "#34344a"]
-
-def asad(hand=0, blink=False, breath=0, nod=0, sip=0.0, look=0):
-    """hand: typing finger phase; sip: 0 (typing) .. 1 (mug at mouth)."""
-    f = Frame(96, 96)
-    by = breath  # torso rises with breath (0 or -1)
-    hy = by + nod
-    # crossed legs: thighs out to the knees, shins crossing in front, one sock peeking out
-    thighs = f.capsule(34, 78, 17, 82, 7.5) | f.capsule(58, 78, 77, 81, 7.5)
-    f.shade(thighs, PANTS, 47, 76, 30, 8)
-    shin_back = f.capsule(19, 84, 50, 87, 5.6)
-    f.shade(shin_back, PANTS, 34, 84, 18, 5, bias=-0.1)
-    shin_front = f.capsule(75, 83, 42, 87, 5.8)
-    f.shade(shin_front, PANTS, 58, 84, 18, 5)
-    f.shade(f.ellipse(39, 87.5, 5.5, 3.4), SOCK, 38, 86, 5, 4)
-    # torso: hoodie with hood around the neck
-    torso = f.ellipse(44, 64 + by, 17, 18) & (f.Y < 80) | f.ellipse(44, 52 + by, 15, 9)
-    f.shade(torso, HOOD, 42, 58 + by, 18, 18)
-    f.fill(f.poly([(45, 48 + by), (55, 48 + by), (53, 72 + by), (47, 72 + by)]), HOOD[1])  # dark tee
-    hood = f.ellipse(46, 47 + by, 12.5, 5.2) & ~f.ellipse(47, 46 + by, 7.5, 3.2)
-    f.shade(hood, HOOD, 44, 45 + by, 12, 5)
-    for x in (45, 52):
-        f.line(x, 50 + by, x - (1 if x == 45 else -1), 62 + by, "#d9cfbd")
-        f.dot(x - (1 if x == 45 else -1), 63 + by, "#a89c88")
-    # neck + head (the head is hand-placed pixel art: scripts/asad_head.py)
-    f.shade(f.rect(46, 42 + hy, 53, 49 + by), SKIN, 49, 45, 4, 6, bias=-0.1)
-    eyes = H.EYES_SHUT if blink else H.EYES_UP if (sip > 0.5 or look) else H.EYES_OPEN
-    grid = [list(r) for r in H.HEAD]
-    for (x, y, ch) in eyes: grid[y][x] = ch
-    ox, oy = 32, 16 + hy
-    for y, row in enumerate(grid):
-        for x, ch in enumerate(row):
-            if ch != ".": f.dot(ox + x, oy + y, H.PAL[ch])
-
-    # laptop on the lap
-    lid = f.poly([(50, 54 + by * 0), (79, 50), (81, 75), (52, 77)])
-    f.shade(lid, LID, 60, 58, 18, 14, bias=0.05)
-    f.fill(f.poly([(52, 77), (81, 75), (82, 77), (52, 79)]), "#2a2c3c")
-    f.shade(f.ellipse(66, 63, 2.2, 2.2), ["#c8cde6", "#e6e9fa"], 66, 62, 2, 2, edge=False)
-    f.dot(65, 60, "#e6e9fa"); f.dot(67, 60, "#e6e9fa")  # tiny cat-ear logo
-    # arm + hand: typing at the keyboard edge, or lifting the mug
-    sx, sy = 33, 54 + by
-    t = sip
-    hx_, hy_ = 48 + (hand % 2) * 1.0 * (1 - t) + t * 6, 72 - t * 27 + by
-    ex_, ey_ = 34 + t * 2, 70 - t * 6 + by
-    arm = f.limb([(sx, sy), (ex_, ey_), (hx_ - 3, hy_)], 4.6)
-    f.shade(arm, HOOD, 36, 60 + by, 10, 12)
-    cuff = f.ellipse(hx_ - 3.5, hy_, 2.4, 3.6)
-    f.shade(cuff, HOOD[1:], hx_ - 3, hy_, 3, 4)
-    if t > 0.05:
-        mug = f.rect(hx_ - 1, hy_ - 6, hx_ + 6, hy_ + 3)
-        f.shade(mug, MUG, hx_ + 2, hy_ - 2, 4, 5)
-        f.dot(hx_ + 2, hy_ - 2, "#cdd6f4"); f.dot(hx_ + 1, hy_ - 3, "#cdd6f4"); f.dot(hx_ + 3, hy_ - 3, "#cdd6f4")
-        f.shade(f.ellipse(hx_ - 1, hy_, 2.6, 2.4), SKIN, hx_ - 1, hy_ - 1, 3, 3)
-        if t > 0.3:
-            for i in range(2): f.dot(hx_ + 2 + i * 2, hy_ - 9 - (hand % 2), "#ffffff80" if False else "#c9c4d8")
-    else:
-        hand_m = f.ellipse(hx_, hy_ - 0.5, 3.6, 2.6)
-        f.shade(hand_m, SKIN, hx_ - 1, hy_ - 1, 3, 3)
-        for i in range(3):
-            if (i + hand) % 3 == 0: f.dot(int(hx_) + 1 + i, int(hy_) - 2, SKIN[3])
-    f.outline("#140f1c")
-    return f.px
-
-def typing_frames():
-    out = []
-    pattern = [0, 1, 2, 1, 0, 3, 1, 2, 0, 1, 3, 2, 1, 0, 2, 1, 0, 1, 2, 3, 1, 0, 2, 1]
-    for i, h in enumerate(pattern):
-        out.append(asad(hand=h, blink=i in (7, 19), breath=-1 if (i // 4) % 2 else 0, nod=1 if i in (11, 12, 13) else 0))
-    return out
-asad_typing = typing_frames()
-ease = lambda x: 0.5 - 0.5 * math.cos(math.pi * x)
-sip_curve = [ease(i / 6) for i in range(7)] + [1] * 6 + [ease(1 - i / 6) for i in range(7)]
-asad_coffee = [asad(sip=s, breath=-1 if i % 8 < 4 else 0, blink=i == 9, hand=i) for i, s in enumerate(sip_curve)]
-asad_idle = [asad(blink=i == 5, breath=-1 if i % 6 < 3 else 0, look=1 if 8 <= i < 12 else 0) for i in range(12)]
-
 STATES = {
     # name: (frames, frame ms, w, h, anchor)
     "storm-standing": (storm_walk, 80, SW, SH, [32, 58]),
@@ -232,9 +147,6 @@ STATES = {
     "storm-stretch": (storm_stretch, 95, SW, SH, [32, 58]),
     "storm-sleeping": (storm_sleep, 380, SW, SH, [32, 58]),
     "storm-sit": (storm_idle[:8], 200, SW, SH, [32, 58]),
-    "asad-typing": (asad_typing, 120, 96, 96, [48, 90]),
-    "asad-coffee": (asad_coffee, 140, 96, 96, [48, 90]),
-    "asad-idle": (asad_idle, 260, 96, 96, [48, 90]),
 }
 
 if __name__ == "__main__":
