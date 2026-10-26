@@ -1,5 +1,5 @@
 {
-  "version": 12,
+  "version": 13,
   "logicalSize": [
     128,
     128
@@ -48,181 +48,95 @@
     "asad-idle": {
       "sheet": "/sprites/asad-idle.png",
       "still": "/sprites/asad-idle-still.png",
-      "frames": 16,
-      "frameWidth": 96,
-      "frameHeight": 96,
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
       "durationsMs": [
-        300,
-        300,
-        300,
-        300,
-        300,
-        300,
-        300,
-        300,
-        300,
-        300,
-        300,
-        300,
-        300,
-        300,
-        300,
-        300
+        220,
+        220,
+        220,
+        220,
+        220,
+        220,
+        220,
+        220
       ],
       "anchor": [
-        48,
-        92
+        64,
+        122
       ],
-      "frameMs": 300
+      "frameMs": 220
     },
     "asad-typing": {
       "sheet": "/sprites/asad-typing.png",
       "still": "/sprites/asad-typing-still.png",
-      "frames": 20,
-      "frameWidth": 96,
-      "frameHeight": 96,
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
       "durationsMs": [
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150
+        140,
+        140,
+        140,
+        140,
+        140,
+        140,
+        140,
+        140
       ],
       "anchor": [
-        48,
-        92
+        64,
+        122
       ],
-      "frameMs": 150
+      "frameMs": 140
     },
     "storm-idle": {
       "sheet": "/sprites/storm-idle.png",
       "still": "/sprites/storm-idle-still.png",
-      "frames": 24,
+      "frames": 8,
       "frameWidth": 64,
       "frameHeight": 64,
       "durationsMs": [
-        160,
-        160,
-        160,
-        160,
-        160,
-        160,
-        160,
-        160,
-        160,
-        160,
-        160,
-        160,
-        160,
-        160,
-        160,
-        160,
-        160,
-        160,
-        160,
-        160,
-        160,
-        160,
-        160,
-        160
+        180,
+        180,
+        180,
+        180,
+        180,
+        180,
+        180,
+        180
       ],
       "anchor": [
         32,
         58
       ],
-      "frameMs": 160
+      "frameMs": 180
     },
     "storm-sleeping": {
       "sheet": "/sprites/storm-sleeping.png",
       "still": "/sprites/storm-sleeping-still.png",
-      "frames": 8,
+      "frames": 6,
       "frameWidth": 64,
       "frameHeight": 64,
       "durationsMs": [
-        380,
-        380,
-        380,
-        380,
-        380,
-        380,
-        380,
-        380
+        420,
+        420,
+        420,
+        420,
+        420,
+        420
       ],
       "anchor": [
         32,
         58
       ],
-      "frameMs": 380
+      "frameMs": 420
     },
     "asad-coffee": {
       "sheet": "/sprites/asad-coffee.png",
       "still": "/sprites/asad-coffee-still.png",
-      "frames": 10,
-      "frameWidth": 96,
-      "frameHeight": 96,
-      "durationsMs": [
-        260,
-        260,
-        260,
-        260,
-        260,
-        260,
-        260,
-        260,
-        260,
-        260
-      ],
-      "anchor": [
-        48,
-        92
-      ],
-      "frameMs": 260
-    },
-    "storm-standing": {
-      "sheet": "/sprites/storm-standing.png",
-      "still": "/sprites/storm-standing-still.png",
-      "frames": 10,
-      "frameWidth": 64,
-      "frameHeight": 64,
-      "durationsMs": [
-        80,
-        80,
-        80,
-        80,
-        80,
-        80,
-        80,
-        80,
-        80,
-        80
-      ],
-      "anchor": [
-        32,
-        58
-      ],
-      "frameMs": 80
-    },
-    "storm-sit": {
-      "sheet": "/sprites/storm-sit.png",
-      "still": "/sprites/storm-sit-still.png",
       "frames": 8,
-      "frameWidth": 64,
-      "frameHeight": 64,
+      "frameWidth": 128,
+      "frameHeight": 128,
       "durationsMs": [
         200,
         200,
@@ -234,10 +148,54 @@
         200
       ],
       "anchor": [
+        64,
+        122
+      ],
+      "frameMs": 200
+    },
+    "storm-standing": {
+      "sheet": "/sprites/storm-standing.png",
+      "still": "/sprites/storm-standing-still.png",
+      "frames": 8,
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "durationsMs": [
+        110,
+        110,
+        110,
+        110,
+        110,
+        110,
+        110,
+        110
+      ],
+      "anchor": [
         32,
         58
       ],
-      "frameMs": 200
+      "frameMs": 110
+    },
+    "storm-sit": {
+      "sheet": "/sprites/storm-sit.png",
+      "still": "/sprites/storm-sit-still.png",
+      "frames": 8,
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "durationsMs": [
+        220,
+        220,
+        220,
+        220,
+        220,
+        220,
+        220,
+        220
+      ],
+      "anchor": [
+        32,
+        58
+      ],
+      "frameMs": 220
     },
     "storm-stretch": {
       "sheet": "/sprites/storm-stretch.png",
@@ -248,105 +206,42 @@
         32,
         58
       ],
-      "frames": 16,
-      "frameMs": 95,
+      "frames": 8,
+      "frameMs": 140,
       "durationsMs": [
-        95,
-        95,
-        95,
-        95,
-        95,
-        95,
-        95,
-        95,
-        95,
-        95,
-        95,
-        95,
-        95,
-        95,
-        95,
-        95
+        140,
+        140,
+        140,
+        140,
+        140,
+        140,
+        140,
+        140
       ]
     },
     "asad-happy": {
       "sheet": "/sprites/asad-happy.png",
       "still": "/sprites/asad-happy-still.png",
-      "frames": 7,
-      "frameMs": 220,
-      "frameWidth": 96,
-      "frameHeight": 96,
+      "frames": 8,
+      "frameMs": 170,
+      "frameWidth": 128,
+      "frameHeight": 128,
       "anchor": [
-        48,
-        92
+        64,
+        122
       ],
       "durationsMs": [
-        220,
-        220,
-        220,
-        220,
-        220,
-        220,
-        220
-      ]
-    },
-    "asad-stand": {
-      "sheet": "/sprites/asad-stand.png",
-      "still": "/sprites/asad-stand-still.png",
-      "frames": 4,
-      "frameMs": 380,
-      "frameWidth": 96,
-      "frameHeight": 96,
-      "anchor": [
-        48,
-        92
-      ],
-      "durationsMs": [
-        380,
-        380,
-        380,
-        380
-      ]
-    },
-    "asad-phone": {
-      "sheet": "/sprites/asad-phone.png",
-      "still": "/sprites/asad-phone-still.png",
-      "frames": 4,
-      "frameMs": 420,
-      "frameWidth": 96,
-      "frameHeight": 96,
-      "anchor": [
-        48,
-        92
-      ],
-      "durationsMs": [
-        420,
-        420,
-        420,
-        420
-      ]
-    },
-    "asad-walk": {
-      "sheet": "/sprites/asad-walk.png",
-      "still": "/sprites/asad-walk-still.png",
-      "frames": 6,
-      "frameMs": 120,
-      "frameWidth": 96,
-      "frameHeight": 96,
-      "anchor": [
-        48,
-        92
-      ],
-      "durationsMs": [
-        120,
-        120,
-        120,
-        120,
-        120,
-        120
+        170,
+        170,
+        170,
+        170,
+        170,
+        170,
+        170,
+        170
       ]
     }
   },
-  "strideRoomPx": 10.0,
-  "walkCycleMs": 800
+  "strideRoomPx": 9,
+  "walkCycleMs": 880
 }

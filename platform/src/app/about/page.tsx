@@ -35,9 +35,9 @@ export default function About() {
         </div>
         <div>
           <RoomVignette corner="about">
-            <At x={82} y={108}>
+            <At x={66} y={78}>
               <div className="asad">
-                <AsadSprite animation="coffee" size={96} />
+                <AsadSprite animation="coffee" size={128} />
               </div>
             </At>
             <At x={150} y={146}>

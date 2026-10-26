@@ -1,33 +1,42 @@
 # Sprites and the room
 
-Everything the homepage room shows is a sprite document in `art/ase/`, exported to
-`public/sprites/` (characters) and `public/room/` (room layers).
+## Characters (PixelLab → Aseprite)
 
-## Adding or replacing an animation (Aseprite / PixelLab / LibreSprite)
+Asad and Storm are PixelLab characters (Asad from `references/asad-sprite-sheet-reference.png`,
+Storm from a description), animated with PixelLab and assembled in Aseprite.
 
-1. Save the animation as `art/ase/<name>.aseprite` (or `.ase`). The file name is the animation:
-   `asad-typing`, `asad-coffee`, `asad-idle`, `asad-happy`, `asad-stand`, `asad-walk`, `asad-phone`,
-   `storm-standing` (walk), `storm-idle`, `storm-stretch`, `storm-sleeping`, `storm-sit`.
-   One layer or many, any frame size; all frames in a file share one size.
-2. Delete any older file with the same name (`.ase` vs `.aseprite`).
-3. Run `./scripts/export_ase.sh` from `platform/`. It uses Aseprite if installed, otherwise
-   LibreSprite, and updates `public/sprites/manifest.json` (frames, size, timing) from the file.
-4. Hard-refresh the site.
+- `pixellab/asad.json`, `pixellab/storm.json`: PixelLab character IDs (add animations to these).
+- `pixellab/<who>/<anim>/NN.png`: raw frames as generated.
+- `scripts/pl_animate.py <who> <name> <direction> <frames> <start.png|-> "<action>"`: generate one
+  more animation (needs `PIXELLAB_API_TOKEN` in `platform/.env.local`; the free tier runs one job at a time).
+- `scripts/pixellab_to_aseprite.py`: scales to room density (75%), shared palette per character,
+  aligns animations on the feet, writes `ase/<state>.aseprite` via Aseprite, then exports.
 
-Placement in the room is in `src/app/globals.css` (`.actor.asad`, `.actor.storm`): sizes are in room
-pixels (the room is 384×216). Asad's frames are 96×96 with feet at y=92; Storm's are 64×64 with feet
-at y=58. If new frames use another size or foot line, tell Claude, or update those two rules.
+Once you start editing an `.aseprite` file by hand in Aseprite, don't re-run
+`pixellab_to_aseprite.py` for that state (it rebuilds from the raw frames); just run
+`./scripts/export_ase.sh`.
 
-Timing: the page plays each animation at its average frame duration. Per-frame durations set in
-Aseprite are recorded in the manifest but not yet played individually.
+| State | Source | Frames |
+| --- | --- | --- |
+| asad-typing | typing | 8 |
+| asad-coffee | coffee | 8 |
+| asad-idle | thinking | 8 |
+| asad-happy | happy (when Storm is petted) | 8 |
+| storm-standing | walk | 8 |
+| storm-idle / storm-sit | idle | 8 |
+| storm-stretch | stretch | 8 |
+| storm-sleeping | sleep, curled frames 4–7 breathing | 6 |
 
-Storm's walk speed is tied to his stride (`strideRoomPx` / `walkCycleMs` in the manifest), so his
-paws don't slide. If a new walk cycle covers a different distance per loop, update those two values.
+Canvas: Asad 128×128 with feet at y=122; Storm 64×64 with feet at y=58; both face right.
+Placement lives in `src/app/globals.css` (`.actor.asad`, `.actor.storm`, `.vignette ...`).
+Storm's walking speed is `strideRoomPx / walkCycleMs` in `public/sprites/manifest.json`.
 
-## Where the current art comes from
+## Exporting
 
-- Room: `scripts/room.py` → `art/ase/room.ase` (11 layers) → `scripts/export_room.sh`.
-  Once you paint on `room.ase` by hand, stop running `room.py`; it would overwrite your edits.
-- Storm: `scripts/draw_characters.py` (pixel rig). Same caveat for `storm-*.ase`.
-- Asad (placeholder until the PixelLab/Aseprite set lands): frames taken from
-  `references/asad-sprite-sheet-reference.png` by `scripts/extract_reference.py`.
+`./scripts/export_ase.sh` exports every `art/ase/*.aseprite|*.ase` (Aseprite if installed, else
+LibreSprite) and syncs frame count, size and timing into the manifest.
+
+## Room
+
+`scripts/room.py` → `ase/room.ase` (11 layers) → `scripts/export_room.sh`. Once `room.ase` is
+painted by hand, stop running `room.py`.

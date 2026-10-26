@@ -133,7 +133,7 @@ export function Room() {
       if (Math.abs(dx) > 1) {
         x += reduce ? dx : Math.sign(dx) * Math.min(Math.abs(dx), dt * WALK_SPEED);
         set("standing");
-        storm.current?.style.setProperty("--flip", dx > 0 ? "-1" : "1");
+        storm.current?.style.setProperty("--flip", dx > 0 ? "1" : "-1"); // art faces right
       } else if (current === "standing" && idle > 6000 && Math.random() < 0.35) {
         stretch(now);
       } else if (idle > 22000) set("sleeping");
@@ -189,7 +189,7 @@ export function Room() {
         {["sky-night", "stars-a", "stars-b", "sky-day", "clouds", "room", "sunbeam"].map(layer)}
 
         <div className="actor asad">
-          <AsadSprite animation={happy ? "happy" : asad} size={96} />
+          <AsadSprite animation={happy ? "happy" : asad} size={128} />
         </div>
         <div className="actor storm" ref={storm} data-mode={mode}>
           <span className="storm-shadow" aria-hidden="true" />
