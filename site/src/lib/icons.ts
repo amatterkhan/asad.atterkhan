@@ -46,6 +46,17 @@ export const ICONS = {
   chevronRight: [
     "M16 13v-2h-2v2h2Zm-2-2V9h-2v2h2Zm0 4v-2h-2v2h2Zm-2-6V7h-2v2h2Zm0 8v-2h-2v2h2ZM10 7V5H8v2h2Zm0 12v-2H8v2h2Z",
   ],
+  close: [
+    "M7 19H5V17H7V19ZM19 19H17V17H19V19ZM9 15V17H7V15H9ZM17 17H15V15H17V17ZM11 15H9V13H11V15ZM15 15H13V13H15V15ZM13 13H11V11H13V13ZM11 11H9V9H11V11ZM15 11H13V9H15V11ZM9 9H7V7H9V9ZM17 9H15V7H17V9ZM7 7H5V5H7V7ZM19 7H17V5H19V7Z",
+  ],
+  arrowLeft: [
+    "M20 11v2H4v-2zM8 13v2H6v-2zm2 2v2H8v-2zm2 2v2h-2v-2zm-4-6V9H6v2z",
+    "M10 15V7H8v8zm2 2V5h-2v12z",
+  ],
+  arrowRight: [
+    "M4 11v2h16v-2zm12 2v2h2v-2zm-2 2v2h2v-2zm-2 2v2h2v-2zm4-6V9h2v2z",
+    "M14 15V7h2v8zm-2 2V5h2v12z",
+  ],
 } as const;
 export type IconName = keyof typeof ICONS;
 /** pixelarticons package file for each icon (for the parity test). */
@@ -65,4 +76,7 @@ export const ICON_SOURCES: Record<IconName, string> = {
   user: "user",
   chevronLeft: "chevron-left",
   chevronRight: "chevron-right",
+  close: "close",
+  arrowLeft: "arrow-left",
+  arrowRight: "arrow-right",
 };

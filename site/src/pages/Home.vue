@@ -35,7 +35,7 @@ const sections = [
   <section class="block">
     <header class="block-head">
       <h2>From The Lab</h2>
-      <a href="/lab">All notes →</a>
+      <a href="/lab">All notes <PixelIcon name="arrowRight" extra="after" /></a>
     </header>
     <ul v-if="articles.length" class="plain-list">
       <li v-for="a in articles" :key="a.slug">
@@ -52,7 +52,7 @@ const sections = [
   <section class="block">
     <header class="block-head">
       <h2>On the Workbench</h2>
-      <a href="/workbench">All projects →</a>
+      <a href="/workbench">All projects <PixelIcon name="arrowRight" extra="after" /></a>
     </header>
     <ol class="showcase">
       <li v-for="(p, i) in projects" :key="p.slug">

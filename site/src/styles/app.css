@@ -411,7 +411,7 @@ p { margin: 0 0 1em; }
   .calendar-grid td { height: 58px; padding: 4px; }
   .calendar-grid time { font-size: 13px; }
   .calendar-grid .chip { left: 3px; right: 3px; bottom: 3px; padding: 1px 2px; text-align: center; font-size: 0; }
-  .calendar-grid .chip span { font-size: 13px; }
+  .calendar-grid .chip .pixel-icon { width: 14px; height: 14px; margin: 0; }
   .calendar-toolbar h2 { font-size: 22px; min-width: 0; flex: 1; }
 }
 
@@ -667,6 +667,8 @@ html[data-cursor="box"] .cursor-dot span { background: var(--color-accent); }
 
 /* pixel icons inside links */
 .pixel-icon { width: 1.15em; height: 1.15em; fill: currentColor; vertical-align: -0.2em; margin-right: .3em; flex: none; shape-rendering: crispEdges; }
+.pixel-icon.after { margin: 0 0 0 .3em; }
+.calendar-toolbar button .pixel-icon, .mobile-menu-head button .pixel-icon { margin: 0; width: 20px; height: 20px; }
 .pixel-icon.ext { width: .85em; height: .85em; margin: 0 0 0 .15em; vertical-align: 0; opacity: .7; }
 .closing-links a, .footer-meta a, .mobile-menu-links a { display: inline-flex; align-items: center; gap: .1em; text-decoration: none; }
 .closing-links { gap: 4px 28px; max-width: none !important; }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PixelIcon from "../components/PixelIcon.vue";
 import { date } from "../lib/site";
 import type { Article } from "../lib/schemas";
 import type { TocEntry } from "../lib/markdown";
@@ -42,7 +43,7 @@ const cls = (h: TocEntry) => (h.depth === 3 ? "subheading" : undefined);
       <div v-html="html" />
       <footer class="article-end">
         <span class="tags">{{ article.tags.join(" / ") }}</span>
-        <a href="/lab">← Back to The Lab</a>
+        <a href="/lab"><PixelIcon name="arrowLeft" />Back to The Lab</a>
       </footer>
     </article>
     <aside v-if="toc.length > 0" class="toc" aria-label="On this page">
