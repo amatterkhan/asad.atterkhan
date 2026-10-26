@@ -8,49 +8,46 @@ everything from this folder; outputs are written to `../site/public/` (`sprites/
 python3 -m pip install -r requirements.txt   # Pillow, numpy
 ```
 
-Needs Aseprite or LibreSprite for exporting. PixelLab generation needs `PIXELLAB_API_TOKEN` in the
-environment or in `art/.env.local` (gitignored).
+Needs Aseprite or LibreSprite for exporting.
 
-Layout: `ase/` Aseprite documents, `pixellab/` raw generated frames, `references/` direction and
-character references, `previews/` the outfit contact sheet, `scripts/` the tools. `pixellab/build/`
-is regenerated intermediate output and is not committed.
+Layout: `ase/` the Aseprite documents (the source of truth), `pixellab/` the robot and room base
+images and the PixelLab character IDs, `previews/` the outfit contact sheet, `scripts/` the tools.
+`pixellab/build/` is regenerated intermediate output and is not committed.
 
 # Sprites and the room
 
-## Characters (PixelLab → Aseprite)
+## Characters
 
-Asad and Storm are PixelLab characters (Asad from `references/asad-sprite-sheet-reference.png`,
-Storm from a description), animated with PixelLab and assembled in Aseprite.
+The `.aseprite` files in `ase/` are the source of truth: one document per animation state, named
+after the state (`asad-typing.aseprite` is the state `asad-typing`). Edit them in Aseprite, then run
+`./scripts/export_ase.sh`. The characters were originally generated with PixelLab and assembled
+into these documents; the generation tooling and raw frames were removed (they are in git history,
+`git log -- art/pixellab`). `pixellab/asad.json`, `storm.json` and `storm-curled.json` keep the
+PixelLab character IDs in case an animation is ever generated again.
 
-- `pixellab/asad.json`, `pixellab/storm.json`: PixelLab character IDs (add animations to these).
-- `pixellab/<who>/<anim>/NN.png`: raw frames as generated.
-- `scripts/pl_animate.py <who> <name> <direction> <frames> <start.png|-> "<action>"`: generate one
-  more animation (needs `PIXELLAB_API_TOKEN` in `art/.env.local`; the free tier runs one job at a time).
-- `scripts/pixellab_to_aseprite.py`: scales to room density (75%), shared palette per character,
-  aligns animations on the feet, writes `ase/<state>.aseprite` via Aseprite, then exports.
-
-Once you start editing an `.aseprite` file by hand in Aseprite, don't re-run
-`pixellab_to_aseprite.py` for that state (it rebuilds from the raw frames); just run
-`./scripts/export_ase.sh`.
-
-| State | Source | Frames |
-| --- | --- | --- |
-| asad-typing | typing | 8 |
-| asad-coffee | coffee | 8 |
-| asad-idle | thinking | 8 |
-| asad-happy | happy (when Storm is petted) | 8 |
-| storm-standing | walk | 8 |
-| storm-idle | idle | 8 |
-| storm-stretch | stretch | 8 |
-| storm-sleeping | sleep, curled frames 4–7 breathing | 6 |
+| State | Frames |
+| --- | --- |
+| asad-typing, asad-coffee, asad-idle, asad-happy (when Storm is petted) | 8 |
+| storm-standing (walk), storm-idle, storm-stretch | 8 |
+| storm-sleeping, storm-nap (the small one on the Lab chair), storm-dream | 6–14 |
+| robot-idle | see `ase/` |
 
 Canvas: Asad 128×128 with feet at y=122; Storm 64×64 with feet at y=58; both face right.
 Placement lives in `site/src/styles/app.css` (`.actor.asad`, `.actor.storm`, `.vignette ...`).
 Storm's walking speed is `strideRoomPx / walkCycleMs` in `site/public/sprites/manifest.json`.
 
-Facial hair rule for Asad (keep in prompts and references): a short, neat dark goatee under the
-lower lip; no moustache, no cheek beard or sideburns. `scripts/paint_goatee.py` paints it into the
-references before any regeneration.
+Facial hair rule for Asad: a short, neat dark goatee under the lower lip; no moustache, no cheek
+beard or sideburns.
+
+## Making a reference image
+
+References are built from the documents, not stored. Export one with the Aseprite CLI, for example
+a frame strip or a single frame:
+
+```sh
+aseprite -b ase/asad-typing.aseprite --sheet /tmp/asad-typing.png --sheet-type horizontal
+aseprite -b ase/asad-typing.aseprite --frame-range 0,0 --save-as /tmp/asad-typing-0.png
+```
 
 ## Outfits
 
