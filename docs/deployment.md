@@ -5,9 +5,8 @@ How the production environment is put together. CI/CD that automates this is des
 
 ## Reference sequence
 
-Region `europe-west1` and service name `asad-api` in `site/firebase.json` are placeholders to
-confirm before deployment. Firestore and the bucket are in `us-central1`; running Cloud Run in the
-same region avoids cross-region latency on every API call. Do not use `APP_ENV=development` in a deployed environment.
+Cloud Run service `asad-api` and Hosting rewrites use `us-central1`, alongside Firestore and
+the Storage bucket, to avoid cross-region latency on API calls. Do not use `APP_ENV=development` in a deployed environment.
 
 1. Select an existing approved Firebase/GCP project, Hosting site and private Storage bucket.
    Review `site/firebase/{firestore.rules,storage.rules}` and the index file. Client access to

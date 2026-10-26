@@ -5,9 +5,9 @@
     "trailingSlash": false,
     "ignore": ["firebase.json", "firebase.ci.json", "**/.*"],
     "rewrites": [
-      { "source": "/api/**", "run": { "serviceId": "asad-api", "region": "europe-west1" } },
-      { "source": "/files/**", "run": { "serviceId": "asad-api", "region": "europe-west1" } },
-      { "source": "/media/**", "run": { "serviceId": "asad-api", "region": "europe-west1" } }
+      { "source": "/api/**", "run": { "serviceId": "asad-api", "region": "us-central1" } },
+      { "source": "/files/**", "run": { "serviceId": "asad-api", "region": "us-central1" } },
+      { "source": "/media/**", "run": { "serviceId": "asad-api", "region": "us-central1" } }
     ],
     "redirects": [
       { "source": "/projects", "destination": "/workbench", "type": 301 },

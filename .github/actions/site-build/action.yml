@@ -18,7 +18,7 @@ inputs:
     default: 'false'
   api-region:
     description: Cloud Run region for the rewrites
-    default: europe-west1
+    default: us-central1
   hosting-site:
     description: Hosting site ID; empty deploys to the project's default site
     default: ''

@@ -28,7 +28,7 @@ env:
   DEPLOY_BRANCH: ${{ vars.SITE_DEPLOY_BRANCH || 'frontend-redesign' }}
   # Pushes deploy the pushed commit; dispatches and manual runs deploy the deploy branch head.
   DEPLOY_REF: ${{ github.event_name == 'push' && github.sha || vars.SITE_DEPLOY_BRANCH || 'frontend-redesign' }}
-  REGION: ${{ vars.API_REGION || 'europe-west1' }}
+  REGION: ${{ vars.API_REGION || 'us-central1' }}
 jobs:
   changes:
     runs-on: ubuntu-latest
@@ -116,7 +116,7 @@ jobs:
             APP_ENV=production
             FIREBASE_PROJECT_ID=${{ vars.FIREBASE_PROJECT_ID }}
             FIREBASE_STORAGE_BUCKET=${{ vars.FIREBASE_STORAGE_BUCKET }}
-            FIREBASE_OWNER_UID=${{ vars.FIREBASE_OWNER_UID }}
+            FIREBASE_OWNER_UID=${{ secrets.FIREBASE_OWNER_UID }}
             ENABLE_CONTENT_ADMIN=${{ vars.ENABLE_CONTENT_ADMIN || 'false' }}
             ENABLE_DOCUMENT_ADMIN=${{ vars.ENABLE_DOCUMENT_ADMIN || 'false' }}
             ENABLE_ACHIEVEMENT_ADMIN=${{ vars.ENABLE_ACHIEVEMENT_ADMIN || 'false' }}
@@ -159,8 +159,8 @@ jobs:
           hosting-site: ${{ vars.FIREBASE_HOSTING_SITE }}
           project-id: ${{ vars.FIREBASE_PROJECT_ID }}
           storage-bucket: ${{ vars.FIREBASE_STORAGE_BUCKET }}
-          owner-uid: ${{ vars.FIREBASE_OWNER_UID }}
-          firebase-api-key: ${{ vars.FIREBASE_WEB_API_KEY }}
+          owner-uid: ${{ secrets.FIREBASE_OWNER_UID }}
+          firebase-api-key: ${{ secrets.FIREBASE_WEB_API_KEY }}
           firebase-auth-domain: ${{ vars.FIREBASE_AUTH_DOMAIN }}
       - name: Deploy Hosting and security rules
         working-directory: site
