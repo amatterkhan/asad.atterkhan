@@ -5,7 +5,7 @@
 # configuration as GitHub repository variables. Safe to re-run. Needs gcloud and gh, signed in
 # as the project owner. Review before running: it changes IAM on the project.
 #
-#   PROJECT_ID=asad-atterkhan REPO=amatterkhan/amatterkhan.github.io \
+#   PROJECT_ID=asad-atterkhan REPO=amatterkhan/asad.atterkhan \
 #     .github/scripts/setup-firebase-deploy.sh
 set -euo pipefail
 

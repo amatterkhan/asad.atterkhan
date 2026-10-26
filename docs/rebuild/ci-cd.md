@@ -40,12 +40,12 @@ owner publishes in /admin -> API sends repository_dispatch -> export -> build ->
 
 Needs `gcloud` and `gh`, signed in as the project owner. Read the script first, because it changes IAM.
 
-1. Push this branch: `git remote add origin https://github.com/amatterkhan/amatterkhan.github.io.git`,
+1. Push this branch: `git remote add origin https://github.com/amatterkhan/asad.atterkhan.git`,
    then `git push -u origin frontend-redesign`.
 2. Run the setup:
 
    ```bash
-   PROJECT_ID=asad-atterkhan REPO=amatterkhan/amatterkhan.github.io .github/scripts/setup-firebase-deploy.sh
+   PROJECT_ID=asad-atterkhan REPO=amatterkhan/asad.atterkhan .github/scripts/setup-firebase-deploy.sh
    ```
 
    It creates:
