@@ -263,6 +263,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/healthz", endpoint(func(w http.ResponseWriter, r *http.Request) { jsonResponse(w, 200, map[string]any{"ok": true}) }))
 	for _, method := range []string{"GET", "PUT"} {
 		mux.HandleFunc(method+" /api/admin/site", endpoint(s.site))
+		mux.HandleFunc(method+" /api/admin/wardrobe", endpoint(s.wardrobe))
 	}
 	for _, method := range []string{"GET", "PATCH"} {
 		mux.HandleFunc(method+" /api/admin/achievements", endpoint(s.achievements))

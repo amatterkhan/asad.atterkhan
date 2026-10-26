@@ -73,7 +73,7 @@ type route struct{ method, path string }
 
 func protectedRoutes() []route {
 	id := "12345678-1234-4234-8234-123456789012"
-	return []route{{"GET", "/api/admin/site"}, {"PUT", "/api/admin/site"}, {"GET", "/api/admin/articles"}, {"POST", "/api/admin/articles"}, {"GET", "/api/admin/articles/test"}, {"PUT", "/api/admin/articles/test"}, {"DELETE", "/api/admin/articles/test"}, {"POST", "/api/admin/articles/test/publish"}, {"POST", "/api/admin/articles/test/unpublish"}, {"POST", "/api/admin/preview"}, {"GET", "/api/admin/achievements"}, {"PATCH", "/api/admin/achievements"}, {"GET", "/api/admin/documents"}, {"POST", "/api/admin/documents"}, {"PATCH", "/api/admin/documents/" + id}, {"DELETE", "/api/admin/documents/" + id}, {"POST", "/api/admin/documents/" + id + "/publish"}, {"GET", "/api/admin/documents/" + id + "/download"}, {"GET", "/api/owner/calendar"}}
+	return []route{{"GET", "/api/admin/site"}, {"PUT", "/api/admin/site"}, {"GET", "/api/admin/wardrobe"}, {"PUT", "/api/admin/wardrobe"}, {"GET", "/api/admin/articles"}, {"POST", "/api/admin/articles"}, {"GET", "/api/admin/articles/test"}, {"PUT", "/api/admin/articles/test"}, {"DELETE", "/api/admin/articles/test"}, {"POST", "/api/admin/articles/test/publish"}, {"POST", "/api/admin/articles/test/unpublish"}, {"POST", "/api/admin/preview"}, {"GET", "/api/admin/achievements"}, {"PATCH", "/api/admin/achievements"}, {"GET", "/api/admin/documents"}, {"POST", "/api/admin/documents"}, {"PATCH", "/api/admin/documents/" + id}, {"DELETE", "/api/admin/documents/" + id}, {"POST", "/api/admin/documents/" + id + "/publish"}, {"GET", "/api/admin/documents/" + id + "/download"}, {"GET", "/api/owner/calendar"}}
 }
 func TestShiftRotation(t *testing.T) {
 	for date, want := range map[string]string{"2025-11-24": "night", "2025-11-26": "off", "2025-12-03": "night", "2025-12-05": "off", "2025-12-22": "day", "2025-11-19": "day"} {
@@ -242,6 +242,15 @@ func TestEmulatorRoutes(t *testing.T) {
 	check("POST", "/api/admin/preview", map[string]any{"body": 3}, 400)
 	check("POST", "/api/admin/preview", map[string]any{"body": "ok", "unknown": 1}, 400)
 	check("POST", "/api/admin/preview", map[string]any{"body": strings.Repeat("x", 801025)}, 413)
+	if got := check("GET", "/api/admin/wardrobe", nil, 200); got["activeOutfit"] != got["defaultOutfit"] {
+		t.Fatalf("wardrobe before any save: %v", got)
+	}
+	check("PUT", "/api/admin/wardrobe", map[string]any{"activeOutfit": "../sprites"}, 400)
+	check("PUT", "/api/admin/wardrobe", map[string]any{"activeOutfit": "classic", "extra": 1}, 400)
+	check("PUT", "/api/admin/wardrobe", map[string]any{"activeOutfit": "classic"}, 200)
+	if got := check("GET", "/api/admin/wardrobe", nil, 200); got["activeOutfit"] != "classic" {
+		t.Fatalf("wardrobe after save: %v", got)
+	}
 	check("GET", "/api/admin/achievements", nil, 200)
 	check("PATCH", "/api/admin/achievements", map[string]any{"featuredIds": []string{"unknown"}}, 400)
 	check("PATCH", "/api/admin/achievements", map[string]any{"featuredIds": []string{"4", "4"}}, 400)
@@ -379,8 +388,8 @@ func TestEmulatorRoutes(t *testing.T) {
 	if code != 401 {
 		t.Fatal("stale auth allowed", code)
 	}
-	if hooks.Load() != 4 {
-		t.Errorf("rebuild hook calls got %d want 4", hooks.Load())
+	if hooks.Load() != 5 {
+		t.Errorf("rebuild hook calls got %d want 5", hooks.Load())
 	}
 	if _, err = services.Auth.UpdateUser(ctx, uid, (&auth.UserToUpdate{}).Disabled(true)); err != nil {
 		t.Fatal(err)

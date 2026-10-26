@@ -29,3 +29,21 @@ func Achievements() []map[string]any {
 	}
 	return v
 }
+
+// Outfits lists Asad's outfit ids (data/outfits.json, a copy of site/public/art/outfits/index.json
+// written by platform/scripts/outfits.py) and the default one.
+func Outfits() (ids []string, def string) {
+	var v struct {
+		Default string `json:"default"`
+		Outfits []struct {
+			ID string `json:"id"`
+		} `json:"outfits"`
+	}
+	if err := json.Unmarshal(Read("outfits"), &v); err != nil {
+		panic(err)
+	}
+	for _, o := range v.Outfits {
+		ids = append(ids, o.ID)
+	}
+	return ids, v.Default
+}

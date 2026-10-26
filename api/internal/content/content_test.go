@@ -17,3 +17,21 @@ func TestEmbeddedSeedsMatchSite(t *testing.T) {
 		}
 	}
 }
+
+func TestEmbeddedOutfitsMatchSite(t *testing.T) {
+	want, err := os.ReadFile("../../../site/public/art/outfits/index.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(Read("outfits"), want) {
+		t.Error("embedded outfits.json differs from site/public/art/outfits/index.json")
+	}
+	ids, def := Outfits()
+	found := false
+	for _, id := range ids {
+		found = found || id == def
+	}
+	if !found {
+		t.Errorf("default outfit %q is not in the index", def)
+	}
+}

@@ -155,6 +155,46 @@ func (s *Server) achievements(w http.ResponseWriter, r *http.Request) {
 	s.rebuild(ctx, "achievements")
 	jsonResponse(w, 200, v)
 }
+
+// wardrobe picks Asad's outfit (siteSettings/wardrobe). Outfits are files in the site; an id that
+// is missing or no longer in the index reads as the default.
+func (s *Server) wardrobe(w http.ResponseWriter, r *http.Request) {
+	uid := s.owner(r, "content", false)
+	ctx := r.Context()
+	ids, def := content.Outfits()
+	known := func(id any) bool {
+		for _, o := range ids {
+			if id == o {
+				return true
+			}
+		}
+		return false
+	}
+	if r.Method == "GET" {
+		s.quota(ctx, uid+":content-read", 1000, 1)
+		stored := s.get(ctx, "siteSettings", "wardrobe")
+		out := map[string]any{"outfits": content.Object("outfits")["outfits"], "defaultOutfit": def, "activeOutfit": def}
+		if known(stored["activeOutfit"]) {
+			out["activeOutfit"] = stored["activeOutfit"]
+		}
+		if v, ok := stored["updatedAt"].(string); ok {
+			out["updatedAt"] = v
+		}
+		jsonResponse(w, 200, out)
+		return
+	}
+	v := input(w, r, 4096, "activeOutfit", "updatedAt")
+	if !known(v["activeOutfit"]) {
+		fail(400, "Invalid input")
+	}
+	s.quota(ctx, uid+":content-write", 500, 1)
+	stored := map[string]any{"activeOutfit": v["activeOutfit"], "ownerUid": uid, "updatedAt": stamp()}
+	_, err := s.services.DB.Collection("siteSettings").Doc("wardrobe").Set(ctx, stored)
+	must(err)
+	audit("wardrobe_outfit_selected", v["activeOutfit"].(string))
+	s.rebuild(ctx, "wardrobe")
+	jsonResponse(w, 200, map[string]any{"activeOutfit": stored["activeOutfit"], "updatedAt": stored["updatedAt"]})
+}
 func validateFeatured(v map[string]any) {
 	ids := tags(v, "featuredIds", true, 6)
 	known := map[string]bool{}

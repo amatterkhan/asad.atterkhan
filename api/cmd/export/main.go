@@ -66,7 +66,7 @@ func run() error {
 			}
 		}
 	}
-	for id, name := range map[string]string{"public": "site.json", "achievements": "achievements.json"} {
+	for id, name := range map[string]string{"public": "site.json", "achievements": "achievements.json", "wardrobe": "wardrobe.json"} {
 		doc, err := services.DB.Collection("siteSettings").Doc(id).Get(ctx)
 		if status.Code(err) == codes.NotFound {
 			continue
