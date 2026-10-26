@@ -1,5 +1,5 @@
 {
-  "version": 10,
+  "version": 11,
   "logicalSize": [
     128,
     128
@@ -49,65 +49,61 @@
       "sheet": "/sprites/asad-idle.png",
       "still": "/sprites/asad-idle-still.png",
       "frames": 16,
-      "frameWidth": 96,
-      "frameHeight": 96,
+      "frameWidth": 48,
+      "frameHeight": 48,
       "durationsMs": [
-        300,
-        300,
-        300,
-        300,
-        300,
-        300,
-        300,
-        300,
-        300,
-        300,
-        300,
-        300,
-        300,
-        300,
-        300,
-        300
+        260,
+        260,
+        260,
+        260,
+        260,
+        260,
+        260,
+        260,
+        260,
+        260,
+        260,
+        260,
+        260,
+        260,
+        260,
+        260
       ],
       "anchor": [
-        48,
-        92
+        24,
+        45
       ],
-      "frameMs": 300
+      "frameMs": 260
     },
     "asad-typing": {
       "sheet": "/sprites/asad-typing.png",
       "still": "/sprites/asad-typing-still.png",
-      "frames": 20,
-      "frameWidth": 96,
-      "frameHeight": 96,
+      "frames": 16,
+      "frameWidth": 48,
+      "frameHeight": 48,
       "durationsMs": [
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150,
-        150
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130
       ],
       "anchor": [
-        48,
-        92
+        24,
+        45
       ],
-      "frameMs": 150
+      "frameMs": 130
     },
     "storm-idle": {
       "sheet": "/sprites/storm-idle.png",
@@ -172,26 +168,27 @@
     "asad-coffee": {
       "sheet": "/sprites/asad-coffee.png",
       "still": "/sprites/asad-coffee-still.png",
-      "frames": 10,
-      "frameWidth": 96,
-      "frameHeight": 96,
+      "frames": 11,
+      "frameWidth": 48,
+      "frameHeight": 48,
       "durationsMs": [
-        260,
-        260,
-        260,
-        260,
-        260,
-        260,
-        260,
-        260,
-        260,
-        260
+        230,
+        230,
+        230,
+        230,
+        230,
+        230,
+        230,
+        230,
+        230,
+        230,
+        230
       ],
       "anchor": [
-        48,
-        92
+        24,
+        45
       ],
-      "frameMs": 260
+      "frameMs": 230
     },
     "storm-standing": {
       "sheet": "/sprites/storm-standing.png",
@@ -273,77 +270,21 @@
       "sheet": "/sprites/asad-happy.png",
       "still": "/sprites/asad-happy-still.png",
       "frames": 7,
-      "frameMs": 220,
-      "frameWidth": 96,
-      "frameHeight": 96,
+      "frameMs": 200,
+      "frameWidth": 48,
+      "frameHeight": 48,
       "anchor": [
-        48,
-        92
+        24,
+        45
       ],
       "durationsMs": [
-        220,
-        220,
-        220,
-        220,
-        220,
-        220,
-        220
-      ]
-    },
-    "asad-stand": {
-      "sheet": "/sprites/asad-stand.png",
-      "still": "/sprites/asad-stand-still.png",
-      "frames": 4,
-      "frameMs": 380,
-      "frameWidth": 96,
-      "frameHeight": 96,
-      "anchor": [
-        48,
-        92
-      ],
-      "durationsMs": [
-        380,
-        380,
-        380,
-        380
-      ]
-    },
-    "asad-phone": {
-      "sheet": "/sprites/asad-phone.png",
-      "still": "/sprites/asad-phone-still.png",
-      "frames": 4,
-      "frameMs": 420,
-      "frameWidth": 96,
-      "frameHeight": 96,
-      "anchor": [
-        48,
-        92
-      ],
-      "durationsMs": [
-        420,
-        420,
-        420,
-        420
-      ]
-    },
-    "asad-walk": {
-      "sheet": "/sprites/asad-walk.png",
-      "still": "/sprites/asad-walk-still.png",
-      "frames": 6,
-      "frameMs": 120,
-      "frameWidth": 96,
-      "frameHeight": 96,
-      "anchor": [
-        48,
-        92
-      ],
-      "durationsMs": [
-        120,
-        120,
-        120,
-        120,
-        120,
-        120
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
       ]
     }
   },
