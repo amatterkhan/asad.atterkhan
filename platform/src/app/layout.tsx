@@ -2,6 +2,7 @@ import { ViewportProbe } from "@/components/ViewportProbe";
 import type { Metadata } from "next";
 import { Cursor } from "@/components/Cursor";
 import { TabVisibility } from "@/components/MotionControl";
+import { PixelIcon } from "@/components/PixelIcon";
 import { Nav, Brand } from "@/components/Nav";
 import { site } from "@/lib/site";
 import "./globals.css";
@@ -58,9 +59,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <footer className="site-footer">
             <p>© {new Date().getFullYear()} Asad Atterkhan</p>
             <div className="footer-meta">
-              <a href={`mailto:${site.email}`}>Email</a>
-              <a href={site.github}>GitHub ↗</a>
-              <a href={site.linkedin}>LinkedIn ↗</a>
+              <a href={`mailto:${site.email}`}>
+                <PixelIcon name="mail" /> Email
+              </a>
+              <a href={site.github}>
+                <PixelIcon name="github" /> GitHub
+              </a>
+              <a href={site.linkedin}>
+                <PixelIcon name="linkedin" /> LinkedIn
+              </a>
             </div>
           </footer>
         </div>

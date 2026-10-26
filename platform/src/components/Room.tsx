@@ -55,7 +55,7 @@ const clip = ([x, y, w, h]: Box) =>
 
 type StormMode = "idle" | "standing" | "sleeping" | "dream" | "stretch";
 
-export function Room() {
+export function Room({ hint }: { hint: string }) {
   const root = useRef<HTMLDivElement>(null);
   const storm = useRef<HTMLDivElement>(null);
   const target = useRef(230);
@@ -296,7 +296,7 @@ export function Room() {
       </div>
       <figcaption className="room-caption">
         <span>It&apos;s {clock || "--:--"} in Mauritius.</span>
-        <span className="hint">Poke around. Everything on the desk leads somewhere.</span>
+        <span className="hint">{hint}</span>
       </figcaption>
     </figure>
   );

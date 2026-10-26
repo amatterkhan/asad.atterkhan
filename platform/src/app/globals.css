@@ -36,9 +36,6 @@
   background: radial-gradient(circle, var(--dot) 1px, transparent 1.4px) 0 0 / 24px 24px, var(--bg);
 }
 ::selection { background: var(--paper-hl); color: #1d1915; }
-.prose a, .hero-sub a, .closing a { background: linear-gradient(transparent 62%, var(--paper-hl) 62%) 0 0 / 0% 100% no-repeat; transition: background-size .25s; text-decoration: none; }
-.prose a:hover, .hero-sub a:hover, .closing a:hover { background-size: 100% 100%; color: var(--ink-strong); }
-:root[data-theme="light"] .prose a:hover, :root[data-theme="light"] .closing a:hover { color: #1d1915; }
 .prose mark, mark { background: linear-gradient(transparent 20%, var(--paper-hl) 20%); color: inherit; padding: 0 .15em; }
 :root[data-theme="light"] .room { box-shadow: 0 0 0 4px var(--faint), 0 30px 50px -24px rgba(60,45,30,.3); }
 
@@ -53,7 +50,8 @@ body {
   color: var(--ink);
   font: 17px/1.7 var(--sans);
 }
-a { color: var(--sky); text-underline-offset: 4px; text-decoration-thickness: 1px; }
+a { color: var(--sky); text-underline-offset: 4px; text-decoration-thickness: 1px; text-decoration-color: color-mix(in srgb, currentColor 45%, transparent); }
+a:hover { text-decoration-color: currentColor; }
 a:hover { color: var(--ink-strong); }
 a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible {
   outline: 2px solid var(--accent);
@@ -597,6 +595,23 @@ html[data-cursor="link"] .cursor-ring svg { transform: scale(1.35); opacity: 1; 
 html[data-cursor="link"] .cursor-dot span { transform: scale(1.5); background: var(--accent); }
 html[data-press] .cursor-ring svg { transform: scale(.75); }
 html[data-cursor="text"] .cursor, html[data-cursor="out"] .cursor { opacity: 0; }
+/* over a link or button the cursor becomes a pixel bracket box around it */
+.cursor-box {
+  position: fixed; left: 0; top: 0; width: 0; height: 0; opacity: 0; --c: 7px; --t: 2px; --hl: var(--accent);
+  transition: left .14s ease-out, top .14s ease-out, width .14s ease-out, height .14s ease-out, opacity .12s;
+  background:
+    linear-gradient(var(--hl), var(--hl)) left top / var(--c) var(--t) no-repeat,
+    linear-gradient(var(--hl), var(--hl)) left top / var(--t) var(--c) no-repeat,
+    linear-gradient(var(--hl), var(--hl)) right top / var(--c) var(--t) no-repeat,
+    linear-gradient(var(--hl), var(--hl)) right top / var(--t) var(--c) no-repeat,
+    linear-gradient(var(--hl), var(--hl)) left bottom / var(--c) var(--t) no-repeat,
+    linear-gradient(var(--hl), var(--hl)) left bottom / var(--t) var(--c) no-repeat,
+    linear-gradient(var(--hl), var(--hl)) right bottom / var(--c) var(--t) no-repeat,
+    linear-gradient(var(--hl), var(--hl)) right bottom / var(--t) var(--c) no-repeat;
+}
+html[data-cursor="box"] .cursor-box { opacity: 1; }
+html[data-cursor="box"] .cursor-ring svg { opacity: 0; transform: scale(.5); }
+html[data-cursor="box"] .cursor-dot span { background: var(--accent); }
 
 /* ---------- room vignettes: page headers cropped from the homepage room ---------- */
 .vignette {
@@ -625,3 +640,15 @@ html[data-cursor="text"] .cursor, html[data-cursor="out"] .cursor { opacity: 0; 
 .actor.robot .sprite { --sprite-size: calc(var(--u) * 48) !important; display: block; }
 @keyframes robot-drive { 0%, 20% { translate: 0 0; } 45%, 60% { translate: calc(var(--u) * 14) 0; } 85%, 100% { translate: 0 0; } }
 .room[data-lamp="off"][data-sky="night"] .actor.robot { animation-play-state: paused; }
+
+/* pixel icons inside links */
+.pixel-icon { height: .95em; width: auto; fill: currentColor; vertical-align: -0.1em; margin-right: .3em; flex: none; }
+.pixel-icon.ext { height: .6em; margin: 0 0 0 .15em; vertical-align: .15em; opacity: .7; }
+.closing-links a, .footer-meta a, .mobile-menu-links a { display: inline-flex; align-items: center; gap: .1em; text-decoration: none; }
+.closing-links { gap: 4px 28px; max-width: none !important; }
+
+/* mermaid diagrams (```mermaid): source shown until the browser renders the SVG */
+.mermaid-diagram { margin: 1.8em 0; padding: 20px; border: 2px solid var(--faint); box-shadow: 6px 6px 0 var(--faint); overflow-x: auto; text-align: center; }
+.mermaid-diagram .mermaid-src { font: 13px/1.5 var(--mono); color: var(--muted); text-align: left; margin: 0; white-space: pre-wrap; }
+.mermaid-diagram svg { max-width: 100%; height: auto; }
+.mermaid-diagram.is-error::before { content: "Diagram could not be rendered"; display: block; font: 11px var(--mono); color: var(--peach); margin-bottom: 8px; }

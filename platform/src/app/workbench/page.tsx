@@ -1,3 +1,4 @@
+import { getSiteCopy } from "@/lib/content";
 import { WorkbenchSearch } from "@/components/WorkbenchSearch";
 import { getProjects } from "@/lib/content";
 import { RoomVignette, At } from "@/components/RoomVignette";
@@ -7,6 +8,7 @@ export const metadata = {
   alternates: { canonical: "/workbench" },
 };
 export default async function Projects() {
+  const copy = await getSiteCopy();
   const projects = (await getProjects()).sort((a, b) =>
     b.date.localeCompare(a.date),
   );
@@ -14,10 +16,7 @@ export default async function Projects() {
     <>
       <p className="eyebrow">Things I&apos;ve built</p>
       <h1>Workbench</h1>
-      <p className="page-intro">
-        Websites, tools and the occasional piece of hardware. Some were built
-        for other people; some just to see whether I could.
-      </p>
+      <p className="page-intro">{copy.workbenchIntro}</p>
       <RoomVignette corner="bench">
         <At x={286} y={80}>
           <div className="robot">

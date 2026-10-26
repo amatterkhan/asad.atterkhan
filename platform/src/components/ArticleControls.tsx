@@ -46,6 +46,48 @@ export function ArticleControls() {
       cleanups.push(() => wrapper.replaceWith(table));
     });
 
+    // effects can run twice in development: keep the source and render each diagram once
+    const diagrams = [...document.querySelectorAll<HTMLElement>("[data-article] .mermaid-diagram:not([data-state])")];
+    diagrams.forEach((fig) => {
+      fig.dataset.state = "pending";
+      fig.dataset.src = fig.querySelector(".mermaid-src")?.textContent || "";
+    });
+    if (diagrams.length) {
+      import("mermaid").then(async ({ default: mermaid }) => {
+        const css = getComputedStyle(document.documentElement);
+        const v = (name: string) => css.getPropertyValue(name).trim();
+        mermaid.initialize({
+          startOnLoad: false,
+          securityLevel: "strict",
+          theme: "base",
+          fontFamily: "Departure, ui-monospace, monospace",
+          themeVariables: {
+            background: "transparent",
+            primaryColor: v("--bg-2"),
+            primaryTextColor: v("--ink-strong"),
+            primaryBorderColor: v("--accent"),
+            lineColor: v("--accent"),
+            secondaryColor: v("--bg"),
+            tertiaryColor: v("--bg"),
+            textColor: v("--ink"),
+            noteBkgColor: v("--bg-2"),
+            noteTextColor: v("--ink"),
+          },
+        });
+        for (const [i, fig] of diagrams.entries()) {
+          const src = fig.dataset.src || "";
+          try {
+            const { svg } = await mermaid.render(`mermaid-${Date.now().toString(36)}-${i}`, src);
+            fig.innerHTML = svg;
+            fig.dataset.state = "done";
+            fig.classList.add("is-rendered");
+          } catch {
+            fig.classList.add("is-error");
+          }
+        }
+      });
+    }
+
     const bar = document.querySelector<HTMLElement>(".read-progress");
     const article = document.querySelector<HTMLElement>("[data-article]");
     const onScroll = () => {

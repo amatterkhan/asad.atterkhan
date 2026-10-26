@@ -154,6 +154,20 @@ function enhance() {
             };
           }
         }
+        if (
+          child.tagName === "pre" &&
+          String(child.children?.[0]?.properties?.className).includes("language-mermaid")
+        ) {
+          // rendered in the browser by ArticleControls (strict mode, site palette)
+          const src = text(child).trim();
+          if (src.length <= 8000)
+            return {
+              type: "element",
+              tagName: "figure",
+              properties: { className: ["mermaid-diagram"], ariaLabel: "Diagram" },
+              children: [{ type: "element", tagName: "pre", properties: { className: ["mermaid-src"] }, children: [{ type: "text", value: src }] }],
+            };
+        }
         if (child.tagName === "img") {
           child.properties = {
             ...child.properties,
@@ -259,4 +273,25 @@ export async function getProjectWriteup(file: string) {
       "utf8",
     ),
   );
+}
+
+/** Editable site copy (docs/admin-contract.md §1): Firestore `siteSettings/public` when
+ *  CONTENT_SOURCE=firestore, otherwise content/site.json. Missing fields fall back to the file. */
+export const SiteCopySchema = z.object({
+  role: z.string().max(600), company: z.string().max(600), location: z.string().max(600),
+  heroTitle: z.string().max(600), heroLede: z.string().max(600), heroBody: z.string().max(600),
+  roomHint: z.string().max(600), closingTitle: z.string().max(600), closingBody: z.string().max(600),
+  labIntro: z.string().max(600), workbenchIntro: z.string().max(600), experienceIntro: z.string().max(600),
+  achievementsIntro: z.string().max(600), aboutBody: z.string().max(8000),
+});
+export type SiteCopy = z.infer<typeof SiteCopySchema>;
+export async function getSiteCopy(): Promise<SiteCopy> {
+  const fallback = SiteCopySchema.parse(
+    JSON.parse(await fs.readFile(path.join(process.cwd(), "content/site.json"), "utf8")),
+  );
+  if (contentSource() !== "firestore") return fallback;
+  const mod = (await import("./content-firestore")) as Record<string, unknown>;
+  const read = mod.firestoreSiteCopy as (() => Promise<Partial<SiteCopy> | null>) | undefined;
+  const stored = read ? await read() : null;
+  return SiteCopySchema.parse({ ...fallback, ...(stored || {}) });
 }

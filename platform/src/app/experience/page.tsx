@@ -1,3 +1,4 @@
+import { getSiteCopy } from "@/lib/content";
 import Link from "next/link";
 import { PrintButton } from "@/components/PrintButton";
 import { RoomVignette } from "@/components/RoomVignette";
@@ -15,6 +16,7 @@ export const metadata = {
   alternates: { canonical: "/experience" },
 };
 export default async function Experience() {
+  const copy = await getSiteCopy();
   const featured = selectFeatured((await getAchievementSettings()).featuredIds);
   return (
     <>
@@ -23,10 +25,7 @@ export default async function Experience() {
         <h1>Experience</h1>
         <PrintButton />
       </div>
-      <p className="page-intro">
-        From the service desk to security operations. Each role taught me
-        something the next one needed.
-      </p>
+      <p className="page-intro">{copy.experienceIntro}</p>
       <RoomVignette corner="cv" />
       <section className="career-section">
         <h2>Where I’ve worked</h2>

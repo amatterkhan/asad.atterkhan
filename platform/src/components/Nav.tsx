@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef } from "react";
 import { site } from "@/lib/site";
+import { PixelIcon } from "./PixelIcon";
 const links = [
     ["/lab", "The Lab"],
   ["/workbench", "Workbench"],
@@ -77,13 +78,13 @@ export function Nav() {
         </nav>
         <div className="mobile-menu-links">
           <a href={site.github}>
-            <span>GitHub</span>
+            <PixelIcon name="github" /> <span>GitHub</span>
           </a>
           <a href={site.linkedin}>
-            <span>LinkedIn</span>
+            <PixelIcon name="linkedin" /> <span>LinkedIn</span>
           </a>
           <a href={`mailto:${site.email}`}>
-            <span>Email</span>
+            <PixelIcon name="mail" /> <span>Email</span>
           </a>
         </div>
       </dialog>

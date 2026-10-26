@@ -40,7 +40,15 @@ Code should scroll inside its container, rather than pushing the whole page side
 Private draft -> Local preview -> Review -> Publish -> Public page
 ```
 
-A plain text diagram can sometimes explain a boundary better than a complicated illustration.
+A plain text diagram can sometimes explain a boundary better than a complicated illustration. When it can't, Mermaid works too:
+
+```mermaid
+flowchart LR
+  A[Alert] --> B{Real?}
+  B -- yes --> C[Investigate]
+  B -- no --> D[Tune the rule]
+  C --> E[Write it up]
+```
 
 ## Images and links
 

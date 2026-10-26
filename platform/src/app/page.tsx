@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { getArticles, getProjects } from "@/lib/content";
+import { getArticles, getProjects, getSiteCopy } from "@/lib/content";
 import { Room } from "@/components/Room";
+import { PixelIcon } from "@/components/PixelIcon";
 import { site, date } from "@/lib/site";
-import work from "../../content/workExpData.json";
 import type { Metadata } from "next";
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 export default async function Home() {
@@ -10,30 +10,26 @@ export default async function Home() {
   const projects = (await getProjects())
     .filter((p) => p.featured)
     .sort((a, b) => b.date.localeCompare(a.date));
-  const current = work.find((w) => w.isCurrent);
+  const copy = await getSiteCopy();
   return (
     <>
       <section className="hero">
         <div>
-          <p className="eyebrow">Security analyst · Mauritius</p>
+          <p className="eyebrow">
+            {copy.role} · {copy.location}
+          </p>
           <h1>
-            Hey, I&apos;m <em>Asad.</em>
+            {copy.heroTitle.replace(/Asad\.?$/, "")}
+            <em>{copy.heroTitle.match(/Asad\.?$/)?.[0]}</em>
           </h1>
         </div>
         <div>
-          <p className="lede">
-            I build things, break things, and try to understand how they work.
-          </p>
-          <p className="hero-sub">
-            By day I&apos;m a {current?.title} at {current?.company}, chasing
-            alerts until they make sense. Off the clock it&apos;s small tools,
-            half-finished experiments and a CS master&apos;s at Georgia Tech.
-            Storm supervises all of it.
-          </p>
+          <p className="lede">{copy.heroLede}</p>
+          <p className="hero-sub">{copy.heroBody}</p>
         </div>
       </section>
 
-      <Room />
+      <Room hint={copy.roomHint} />
 
       <ul className="room-index" aria-label="Site sections">
         {[
@@ -95,17 +91,24 @@ export default async function Home() {
       </section>
 
       <section className="block closing">
-        <h2>Say hello</h2>
+        <h2>{copy.closingTitle}</h2>
         <p>
-          Got a question about something here, or just want to talk shop?
-          Write to me at{" "}
+          {copy.closingBody}{" "}
           <a href={`mailto:${site.email}`}>{site.email}</a>
         </p>
         <p className="closing-links">
-          <a href={site.github}>GitHub ↗</a>
-          <a href={site.linkedin}>LinkedIn ↗</a>
-          <Link href="/experience">Experience</Link>
-          <Link href="/achievements">Achievements</Link>
+          <a href={site.github}>
+            <PixelIcon name="github" /> GitHub <PixelIcon name="external" className="ext" />
+          </a>
+          <a href={site.linkedin}>
+            <PixelIcon name="linkedin" /> LinkedIn <PixelIcon name="external" className="ext" />
+          </a>
+          <Link href="/experience">
+            <PixelIcon name="briefcase" /> Experience
+          </Link>
+          <Link href="/achievements">
+            <PixelIcon name="medal" /> Achievements
+          </Link>
         </p>
       </section>
       <script

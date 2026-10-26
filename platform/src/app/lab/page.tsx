@@ -1,3 +1,4 @@
+import { getSiteCopy } from "@/lib/content";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getArticles, articleSummary } from "@/lib/content";
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/lab" },
 };
 export default async function Lab() {
+  const copy = await getSiteCopy();
   const articles = await getArticles();
   return (
     <>
@@ -17,10 +19,7 @@ export default async function Lab() {
         <div>
           <p className="eyebrow">Technical journal</p>
           <h1>The Lab</h1>
-          <p>
-            Experiments, useful notes, and things I&apos;m figuring out. A
-            technical journal, with room for the unfinished questions.
-          </p>
+          <p>{copy.labIntro}</p>
         </div>
       </div>
       <RoomVignette corner="lab">
