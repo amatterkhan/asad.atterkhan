@@ -31,7 +31,7 @@ const current = (href: string) =>
   <dialog aria-label="Navigation menu" class="mobile-menu" data-menu>
     <div class="mobile-menu-head">
       <Brand />
-      <button aria-label="Close navigation menu" data-menu-close>×</button>
+      <button aria-label="Close navigation menu" data-menu-close><PixelIcon name="close" /></button>
     </div>
     <nav aria-label="Mobile navigation">
       <a v-for="[href, label] in links" :key="href" :href="href" :aria-current="current(href)">{{ label }}</a>

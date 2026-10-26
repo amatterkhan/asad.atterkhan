@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PixelIcon from "../components/PixelIcon.vue";
 import { computed, ref } from "vue";
 import { date } from "../lib/site";
 type Entry = {
@@ -57,7 +58,7 @@ const clear = () => {
         <small>Markdown</small>
       </div>
       <div>
-        <h2><a href="/preview/reading-layout">A notebook needs room for the details →</a></h2>
+        <h2><a href="/preview/reading-layout">A notebook needs room for the details <PixelIcon name="arrowRight" extra="after" /></a></h2>
         <p>An unpublished layout sample with code, tables, diagrams, and technical notes.</p>
         <div class="tag-list">
           <span>Draft</span>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PixelIcon from "../components/PixelIcon.vue";
 import type { Project } from "../lib/schemas";
 const { project: p, writeup } = defineProps<{ project: Project; writeup: string | null }>();
 </script>
@@ -26,5 +27,5 @@ const { project: p, writeup } = defineProps<{ project: Project; writeup: string 
   <article v-if="writeup" class="prose project-writeup" data-article>
     <div v-html="writeup" />
   </article>
-  <a href="/workbench">← Back to the Workbench</a>
+  <a href="/workbench"><PixelIcon name="arrowLeft" />Back to the Workbench</a>
 </template>

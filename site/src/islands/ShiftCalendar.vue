@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PixelIcon from "../components/PixelIcon.vue";
 import { computed, onMounted, ref, shallowRef, watch } from "vue";
 
 // Public but unlinked shift calendar. The rotation lives on the server: data comes from GET /api/calendar.
@@ -13,7 +14,7 @@ type Data = {
 };
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const LABEL: Record<Shift, string> = { night: "Night", day: "Day", off: "Off" };
-const ICON: Record<Shift, string> = { night: "☾", day: "☀", off: "·" };
+const ICON = { night: "moon", day: "sun", off: null } as const;
 const fmt = (iso: string, opts: Intl.DateTimeFormatOptions) =>
   new Intl.DateTimeFormat("en-GB", { ...opts, timeZone: "UTC" }).format(new Date(iso + "T00:00:00Z"));
 
@@ -72,7 +73,7 @@ const goToday = () => (view.value = { year: data.value!.today.year, month: data.
         <li v-for="(u, i) in data.upcoming" :key="u.iso" :class="`shift-${u.shift}${i === 0 ? ' is-today' : ''}`">
           <span class="d">{{ i === 0 ? "Today" : fmt(u.iso, { weekday: "short" }) }}</span>
           <span class="n">{{ fmt(u.iso, { day: "numeric" }) }}</span>
-          <span class="s" :aria-label="LABEL[u.shift]">{{ ICON[u.shift] }}</span>
+          <span class="s" :aria-label="LABEL[u.shift]"><PixelIcon v-if="ICON[u.shift]" :name="ICON[u.shift]!" /><template v-else>·</template></span>
         </li>
       </ol>
       <p v-if="next" class="calendar-note">
@@ -81,9 +82,9 @@ const goToday = () => (view.value = { year: data.value!.today.year, month: data.
     </div>
 
     <div class="calendar-toolbar">
-      <button aria-label="Previous month" @click="move(-1)">←</button>
+      <button aria-label="Previous month" @click="move(-1)"><PixelIcon name="chevronLeft" /></button>
       <h2 aria-live="polite">{{ monthName }}</h2>
-      <button aria-label="Next month" @click="move(1)">→</button>
+      <button aria-label="Next month" @click="move(1)"><PixelIcon name="chevronRight" /></button>
       <button class="calendar-today" @click="goToday">Today</button>
     </div>
 
@@ -118,7 +119,7 @@ const goToday = () => (view.value = { year: data.value!.today.year, month: data.
           <td v-for="(c, i) in week" :key="i" :class="c ? `shift-${c.shift}${isToday(c) ? ' is-today' : ''}` : 'calendar-blank'">
             <template v-if="c">
               <time :datetime="c.iso" :aria-current="isToday(c) ? 'date' : undefined">{{ c.day }}</time>
-              <span v-if="c.shift !== 'off'" class="chip"><span aria-hidden="true">{{ ICON[c.shift] }}</span> {{ LABEL[c.shift] }}</span>
+              <span v-if="c.shift !== 'off'" class="chip"><PixelIcon :name="ICON[c.shift]!" /> {{ LABEL[c.shift] }}</span>
             </template>
           </td>
         </tr>

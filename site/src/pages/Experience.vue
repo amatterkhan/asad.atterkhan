@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PixelIcon from "../components/PixelIcon.vue";
 import RoomVignette from "../components/RoomVignette.vue";
 import { groupExperience } from "../lib/experience";
 import type { Achievement, Education, Role } from "../lib/schemas";
@@ -62,7 +63,7 @@ const groups = groupExperience(work);
   <section class="resume-section">
     <div class="section-head">
       <h2>Certifications</h2>
-      <a href="/achievements">All achievements →</a>
+      <a href="/achievements">All achievements <PixelIcon name="arrowRight" extra="after" /></a>
     </div>
     <ul v-if="featured.length" class="featured-credentials">
       <li v-for="c in featured" :key="c.id">
