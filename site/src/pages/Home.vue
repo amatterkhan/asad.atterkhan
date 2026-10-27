@@ -63,7 +63,6 @@ const name = copy.heroTitle.match(/Asad\.?$/)?.[0];
       <a :href="site.github"><PixelIcon name="github" /> GitHub <PixelIcon name="external" extra="ext" /></a>
       <a :href="site.linkedin"><PixelIcon name="linkedin" /> LinkedIn <PixelIcon name="external" extra="ext" /></a>
       <a href="/experience"><PixelIcon name="briefcase" /> Experience</a>
-      <a href="/achievements"><PixelIcon name="medal" /> Achievements</a>
     </p>
   </section>
 </template>

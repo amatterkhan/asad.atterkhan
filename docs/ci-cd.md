@@ -94,6 +94,10 @@ through `repository_dispatch` on `main`), PR preview channels and the custom dom
 verified. `main` has deployed since pull request 3. Pull requests from forks get no
 credentials: they run checks only.
 
+`CONTENT_SOURCE=firestore`, `INDEX_SITE=true` and all four `ENABLE_*` flags are set, so production builds
+from Firestore: `site/content/` and the API's embedded `site.json` are only fallbacks, and site-copy
+changes go live by saving them in `/admin`, not by editing those files.
+
 Configuration names set during launch (values of UID/key omitted):
 `WIF_PROVIDER`, `DEPLOY_SERVICE_ACCOUNT`, `API_SERVICE_ACCOUNT`, `FIREBASE_PROJECT_ID`,
 `FIREBASE_AUTH_DOMAIN`, `FIREBASE_STORAGE_BUCKET`, `FIREBASE_OWNER_UID`, `API_REGION`,
