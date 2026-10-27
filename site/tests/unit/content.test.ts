@@ -7,6 +7,7 @@ import {
   LabSchema,
   ProjectSchema,
   SiteCopySchema,
+  ThoughtsSchema,
   featuredSchema,
 } from "../../src/lib/schemas";
 import { groupExperience } from "../../src/lib/experience";
@@ -17,6 +18,7 @@ import {
   getFeaturedAchievements,
   getActiveOutfit,
   getLab,
+  getThoughts,
   parseArticle,
   resolveShelf,
 } from "../../src/lib/content.server";
@@ -276,5 +278,42 @@ describe("the Lab map", () => {
     expect(prompt).toContain("Shelf: Writeups / Hack The Box.");
     expect(prompt).toContain("wireframe cube");
     expect(thumbnailPrompt({ title: "x", description: "y", tags: [] })).toContain("Scene idea: A single object");
+  });
+});
+
+describe("Thoughts", () => {
+  const line = (id: string, enabled = true, context = "general") => ({ id, text: "A line.", enabled, context });
+  it("validates ids, text, contexts and the featured line", () => {
+    expect(ThoughtsSchema.safeParse({ thoughts: [line("a")], featured: null }).success).toBe(true);
+    expect(ThoughtsSchema.safeParse({ thoughts: [line("a"), line("a")], featured: null }).success).toBe(false);
+    expect(ThoughtsSchema.safeParse({ thoughts: [line("a", true, "lab-coat")], featured: null }).success).toBe(false);
+    expect(ThoughtsSchema.safeParse({ thoughts: [{ ...line("a"), text: "x".repeat(81) }], featured: null }).success).toBe(false);
+    expect(ThoughtsSchema.safeParse({ thoughts: [line("a")], featured: "b" }).success).toBe(false);
+  });
+  it("ships the brief's sixteen lines, nothing featured", async () => {
+    const { thoughts, featured } = await getThoughts();
+    expect(thoughts).toHaveLength(16);
+    expect(thoughts.filter((t) => t.context === "general")).toHaveLength(12);
+    expect(thoughts[0]).toEqual({ id: "human-allegedly", text: "Human, allegedly.", context: "general" });
+    expect(featured).toBeNull();
+  });
+  it("gives the page only enabled lines, and drops a disabled featured line", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "asad-thoughts-"));
+    try {
+      await fs.writeFile(
+        path.join(dir, "thoughts.json"),
+        JSON.stringify({ thoughts: [line("on"), line("off", false), line("night", true, "night")], featured: "off" }),
+      );
+      process.env.CONTENT_SOURCE = "firestore";
+      process.env.CONTENT_EXPORT_DIR = dir;
+      const { thoughts, featured } = await getThoughts();
+      expect(thoughts.map((t) => t.id)).toEqual(["on", "night"]);
+      expect(thoughts[0]).not.toHaveProperty("enabled");
+      expect(featured).toBeNull();
+      await fs.writeFile(path.join(dir, "thoughts.json"), JSON.stringify({ thoughts: [], featured: null }));
+      expect((await getThoughts()).thoughts).toEqual([]);
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true });
+    }
   });
 });

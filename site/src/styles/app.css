@@ -1095,6 +1095,28 @@ body:has(.console) main { padding: 0; min-height: 100vh; animation: none; }
 .admin-lab-add { display: flex; gap: 6px; }
 .admin-lab-add input { padding: 6px 10px !important; font-size: 14px !important; }
 .admin-lab-new { margin: 0 0 20px; min-height: 44px; padding: 0 18px; }
+/* Thoughts: one row per line (on, words, when, featured, preview, remove) */
+.admin-thoughts legend small { opacity: .75; margin-left: 6px; }
+.admin-check { display: inline-flex !important; align-items: center; gap: 8px; min-height: 34px; cursor: pointer; }
+.admin-check .pixel-icon { width: 16px; height: 16px; margin: 0; color: var(--color-muted); }
+.admin-check:has(input:checked) .pixel-icon { color: var(--color-accent); }
+.admin-thought-list { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 6px; }
+.admin-thought-list li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto auto auto; gap: 6px; align-items: center; }
+.admin-thought-list li.is-off > input { opacity: .55; }
+.admin-thought-list input:not([type]), .admin-thought-list select, .admin-thoughts .admin-lab-add select {
+  padding: 6px 10px !important; font-size: 14px !important; min-height: 34px;
+}
+.admin-thought-list select, .admin-thoughts .admin-lab-add select { border: 2px solid var(--color-faint); background: var(--color-bg); color: var(--color-ink); font: 12px var(--font-mono); }
+.admin-thought-list li > button {
+  min-height: 34px; min-width: 34px; padding: 4px 10px; border: 2px solid var(--color-faint); background: var(--color-bg); color: var(--color-ink); font: 12px var(--font-mono);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.admin-thought-list li > button:hover, .admin-thought-list li > button[aria-pressed="true"] { border-color: var(--color-accent); }
+.admin-thought-list li > button .pixel-icon { width: 14px; height: 14px; margin: 0; }
+.admin-thought-preview { grid-column: 1 / -1; margin: 4px 0 10px; padding: 18px 16px 14px; background: #2b2730; }
+/* the room's bubble look: square, Departure Mono, ink on cream, an offset pixel shadow */
+.thought-preview { display: inline-block; max-width: 30ch; font: 12px/1.35 var(--font-mono); padding: 5px 8px; background: #fff2d2; color: #1b1d33; box-shadow: 3px 3px 0 rgba(0, 0, 0, .35); }
+.admin-thoughts .admin-lab-add input { flex: 1; }
 .admin-list-shelf { font: 10px var(--font-mono) !important; color: var(--color-peach) !important; text-transform: uppercase; letter-spacing: .06em; }
 .admin-thumb { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 18px; align-items: start; padding: 14px; border: 2px solid var(--color-faint); background: var(--color-bg-2); }
 .admin-thumb-frame { aspect-ratio: 16 / 9; display: grid; place-items: center; background: var(--color-bg); border: 2px solid var(--color-faint); overflow: hidden; color: var(--color-muted); font: 11px var(--font-mono); }
@@ -1113,4 +1135,7 @@ body:has(.console) main { padding: 0; min-height: 100vh; animation: none; }
   .admin-lab-order { position: static; justify-content: flex-end; padding: 0; background: none; }
   .admin-lab-cats li { grid-template-columns: minmax(0, 1fr) auto auto auto; }
   .admin-lab-cats li small { grid-column: 1 / -1; grid-row: 2; }
+  .admin-thought-list li { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+  .admin-thought-list li > select { grid-column: 2; }
+  .admin-thoughts .admin-lab-add { flex-wrap: wrap; }
 }

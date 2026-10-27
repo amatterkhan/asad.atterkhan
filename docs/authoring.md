@@ -23,6 +23,15 @@ one of these is a prerendered page, and the search on each covers that shelf.
   category that is no longer in its section is ignored. Nothing breaks the build either way.
 - **Thumbnails**: see [lab-thumbnails.md](lab-thumbnails.md).
 
+### Thoughts
+
+Now and then Asad says a one-liner in a speech bubble in the homepage room. **Thoughts** (admin
+tab) adds, edits, removes and switches lines on or off, previews them, and sets when each may come
+up: any time, at night, with Storm nearby, or in the Steins Gate worldline. One line can be
+**featured**: it is the first Thought of each visit when its context fits; after that the room picks
+at random. Switched-off lines never reach the page; with every line off, Asad says nothing. Saving
+rebuilds the site. The starting set is `site/content/thoughts.json`.
+
 ## In Git (fallback and the default content source)
 
 With `CONTENT_SOURCE=git` (the default) the site builds from `site/content/`. Articles are Markdown

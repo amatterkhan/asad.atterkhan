@@ -30,3 +30,6 @@ export const slugify = (s: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 80);
+export type ThoughtContext = "general" | "night" | "storm" | "steins-gate";
+export type ThoughtLine = { id: string; text: string; enabled: boolean; context: ThoughtContext };
+export type ThoughtsState = { thoughts: ThoughtLine[]; featured: string | null; updatedAt?: string };
