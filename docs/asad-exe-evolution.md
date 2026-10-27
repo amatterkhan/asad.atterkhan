@@ -33,7 +33,7 @@ Keep commits small and grouped by logic. Intermediate PRs into this branch are f
 | [Build: Thoughts in the room](https://github.com/amatterkhan/asad.atterkhan/issues/24) | done (414f18c) |
 | [Build: lab coat outfit art](https://github.com/amatterkhan/asad.atterkhan/issues/26) | done, approved (2b2a013) |
 | [Build: Steins Gate lab coat override](https://github.com/amatterkhan/asad.atterkhan/issues/27) | done |
-| [Build: night-room share image and metadata](https://github.com/amatterkhan/asad.atterkhan/issues/28) | ready |
+| [Build: night-room share image and metadata](https://github.com/amatterkhan/asad.atterkhan/issues/28) | done |
 | [Integration, verification and release PR](https://github.com/amatterkhan/asad.atterkhan/issues/29) | blocked by everything above |
 
 ## Test results
@@ -102,6 +102,16 @@ Keep commits small and grouped by logic. Intermediate PRs into this branch are f
 | `make check` | pass, 44 vitest tests (new: the room can show `labcoat` sheets for all six states, but `isOutfit`, `resolveOutfit` and the export refuse it) |
 | `npx playwright test` | 78 passed, 2 skipped. The meter test now checks the coat is on in Steins Gate with the sprite still animating, nothing written to storage, and his own outfit back in Normal |
 | Visual check (production build, desktop and phone) | the coat appears with the Steins Gate note |
+
+### Share image and metadata: 28 Oct 2026
+
+| Check | Result |
+| --- | --- |
+| `make check` | pass, 45 vitest tests (new: the image URL carries its content hash; og:url comes from the canonical or the page's path; no og:url on 404) |
+| `npx playwright test` | 78 passed, 2 skipped |
+| Static HTML (`/`, `/about`, `/lab`, a Lab article; curl against the production build) | titles `Asad.exe — Asad Atterkhan` / `<Page> · Asad.exe`, description = motto (Lab keeps its own), `og:site_name` Asad.exe, `og:type` website, `og:url`, absolute HTTPS `og:image?v=<hash>`, alt text, `twitter:card` summary_large_image with matching image |
+| `/opengraph-image.png` | 200, image/png, 1200×630, RGB with no alpha (`sips hasAlpha: no`), about 56 KB |
+| In-app previews (WhatsApp, Discord, LinkedIn, X, iMessage, Slack) | **not possible before deploy** (preview builds use the production URL and block the preview bots; decided in #21). After deploy: run the Facebook Sharing Debugger and LinkedIn Post Inspector on https://asad.atterkhan.com, then paste the link into each app |
 
 ## Known issues
 
