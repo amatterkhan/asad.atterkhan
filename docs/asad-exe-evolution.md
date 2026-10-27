@@ -30,7 +30,7 @@ Keep commits small and grouped by logic. Intermediate PRs into this branch are f
 | [Build: Thought content and admin Thoughts tab](https://github.com/amatterkhan/asad.atterkhan/issues/23) | done (3e02649, fc88a7b) |
 | [Build: worldline engine and divergence meter](https://github.com/amatterkhan/asad.atterkhan/issues/25) | done (588852f, c5e4e76) |
 | [Build: Asad's seated stretch and look animations](https://github.com/amatterkhan/asad.atterkhan/issues/31) | not started |
-| [Build: Thoughts in the room](https://github.com/amatterkhan/asad.atterkhan/issues/24) | ready |
+| [Build: Thoughts in the room](https://github.com/amatterkhan/asad.atterkhan/issues/24) | done (414f18c) |
 | [Build: lab coat outfit art](https://github.com/amatterkhan/asad.atterkhan/issues/26) | blocked by #31 |
 | [Build: Steins Gate lab coat override](https://github.com/amatterkhan/asad.atterkhan/issues/27) | blocked by #26 |
 | [Build: night-room share image and metadata](https://github.com/amatterkhan/asad.atterkhan/issues/28) | ready |
@@ -74,9 +74,19 @@ Keep commits small and grouped by logic. Intermediate PRs into this branch are f
 | `npx playwright test` | 70 passed, 2 skipped |
 | Admin tab in a real browser | **not checked**: sign-in needs Google and TOTP. Covered by the component test only |
 
+### Thoughts in the room: 27 Oct 2026, 414f18c
+
+| Check | Result |
+| --- | --- |
+| `make check` | pass, 40 vitest tests. New: `pickThought` (context gating, featured first only while eligible, no repeat unless alone, silence), `readMs`, `nextWait` |
+| `npx playwright test` | 78 passed, 2 skipped (about 3 minutes). New, on a fake clock: the first Thought at 20-43 s, gone after its read time, the next 56-153 s later and a different line, `aria-hidden`, inside the room, no controls; petting Storm hides it; a worldline shift hides it and nothing comes during the shift or its note; a hidden tab gives no Thought for 200 s |
+| Visual check (production build): night desktop, day desktop, phone | the bubble is over Asad's head with its tail pointing at him; on the phone it grows left over the wall, clear of the meter |
+| Steins Gate lines in a real browser | not shot (one of 14 lines at random); covered by the `pickThought` context tests |
+
 ## Known issues
 
 - **Production copy comes from Firestore.** The deploy builds with `CONTENT_SOURCE=firestore`, and the saved `siteSettings/public` overrides the Git defaults field by field. So the new **headline, eyebrow role, lede, body, room hint, closing, Lab, Workbench and About copy** go live only once the same text is saved in `/admin` → Site copy (the owner does this; it triggers a rebuild). The motto, subtitles, titles, footer and 404 text are code and ship with the release. The text to paste is in `site/content/site.json`. Add this to the release PR's deploy steps.
+- The Thoughts browser tests step a fake clock through a few simulated minutes of the room, so they are the slowest in the suite (about 2.5 minutes over four workers).
 - On phones the new hero (lede plus three paragraphs) pushes the room about two screens down. It's the approved copy; raise it at review if it matters.
 - No Java runtime on this machine, so the emulator suite in `docs/development.md` can't run here. CI runs it.
 - Only WebKit is installed for Playwright locally. The suite itself uses system Chrome (`channel: "chrome"`).
@@ -84,6 +94,7 @@ Keep commits small and grouped by logic. Intermediate PRs into this branch are f
 ## Session log
 
 - **27 Oct 2026**: cut the branch, recorded the baseline, captured the room baselines, added `GLOSSARY.md` and this file.
+- **27 Oct 2026**: built Thoughts in the room (#24). The bubble follows `asadX` (66 today): if Asad ever moves, set it and the bubble follows. Context `storm` is Storm within 56 room px of Asad's middle.
 - **27 Oct 2026**: built Thought content and the admin tab (#23). For #24: `getThoughts()` in `lib/content.server.ts` returns `{ thoughts: {id, text, context}[], featured }` ready for the homepage route to pass to the room; `.thought-preview` in app.css is the admin preview's copy of the bubble look, so share one class once `.asad-thought` exists.
 - **27 Oct 2026**: built the worldline engine (#25). For later tickets: `Room.vue` exposes `worldline` (ref) and `shifting` (computed: a shift or its note is on screen). Thoughts must wait on `shifting`, and the coat override hangs off `worldline === "steins-gate"`. A live test found a race (a second press in the same tick slipped past the lock); the first phase now starts synchronously in the click.
 - **27 Oct 2026**: built identity and copy (#22). The headline and "Say hello." stay admin-editable copy with new defaults; only the motto and the four subtitles are fixed in code.
