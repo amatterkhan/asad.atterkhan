@@ -1,19 +1,25 @@
 // The Nixie clock under the bookshelf, a Steins;Gate divergence meter telling the time: HH.MM.SS
 // across eight tubes, digit tubes 5px wide, the dot tubes 3px, 1px apart, on a dark plinth. Drawn on
 // the room's own 384x216 grid, but each SVG covers only the clock's box, so the lit digits repaint a
-// few pixels a second rather than the whole room.
+// few pixels a second rather than the whole room. In another worldline the same eight tubes read a
+// divergence, "d.dddddd", like the meter in the show (2px wider; the SVG's overflow shows it).
 export const NIXIE_X = 157;
 export const NIXIE_Y = 67;
 
-export const tubes = (() => {
+export type Tube = { kind: string; x: number; w: number };
+const layout = (kinds: string[]): Tube[] => {
   let x = NIXIE_X + 2;
-  return ["d", "d", ".", "d", "d", ".", "d", "d"].map((kind) => {
+  return kinds.map((kind) => {
     const t = { kind, x, w: kind === "d" ? 5 : 3 };
     x += t.w + 1;
     return t;
   });
-})();
-export const NIXIE_W = tubes.at(-1)!.x + 5 + 2 - NIXIE_X;
+};
+export const clockTubes = layout(["d", "d", ".", "d", "d", ".", "d", "d"]);
+export const divergenceTubes = layout(["d", ".", "d", "d", "d", "d", "d", "d"]);
+/** The plinth's width for a layout. */
+export const plinthWidth = (t: Tube[]) => t.at(-1)!.x + t.at(-1)!.w + 2 - NIXIE_X;
+export const NIXIE_W = plinthWidth(clockTubes);
 export const NIXIE_H = 15;
 /** The clock's box in room pixels: x, y, width, height. */
 export const NIXIE_BOX = [NIXIE_X, NIXIE_Y, NIXIE_W, NIXIE_H] as const;
@@ -37,15 +43,20 @@ export const glyph = (ch: string, x: number, y: number, font: Record<string, str
     .flatMap((row, dy) => [...row].map((on, dx) => (on === "1" ? `M${x + dx} ${y + dy}h1v1h-1z` : "")))
     .join("");
 
-const digitTubes = tubes.filter((t) => t.kind === "d");
-export const unlitPath = digitTubes.map((t) => glyph("8", t.x + 1, NIXIE_Y + 2)).join("");
-const dots = tubes
-  .filter((t) => t.kind === ".")
-  .map((t) => `M${t.x + 1} ${NIXIE_Y + 8}h1v1h-1z`)
-  .join("");
+const digits = (t: Tube[]) => t.filter((x) => x.kind === "d");
+const dotsOf = (t: Tube[]) =>
+  t
+    .filter((x) => x.kind === ".")
+    .map((x) => `M${x.x + 1} ${NIXIE_Y + 8}h1v1h-1z`)
+    .join("");
+/** The unlit 8s behind the glass for a layout. */
+export const unlitFor = (t: Tube[]) => digits(t).map((x) => glyph("8", x.x + 1, NIXIE_Y + 2)).join("");
+export const unlitPath = unlitFor(clockTubes);
+const lit = (t: Tube[], chars: string) => digits(t).map((x, i) => glyph(chars[i], x.x + 1, NIXIE_Y + 2)).join("") + dotsOf(t);
 /** The lit digits for "HHMMSS"; empty until the client knows the time. */
-export const litPath = (time: string) =>
-  time ? digitTubes.map((t, i) => glyph(time[i], t.x + 1, NIXIE_Y + 2)).join("") + dots : "";
+export const litPath = (time: string) => (time ? lit(clockTubes, time) : "");
+/** The lit digits for a divergence such as "1.048596". */
+export const readingPath = (value: string) => (value ? lit(divergenceTubes, value.replace(".", "")) : "");
 
 /** "HHMMSS" in Mauritius. */
 export const mauritiusTime = () =>
