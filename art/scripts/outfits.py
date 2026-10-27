@@ -198,6 +198,35 @@ def recolour(frame, region, palette, lo, hi):
     return out
 
 
+def coat_tail(frame, palette):
+    """The lab coat's tail, spread on the floor behind him: from his waist down his back's left edge
+    it widens to about 7px at the floor. Drawn only on transparent pixels, so it sits behind him."""
+    out = frame.copy()
+    alpha = out[:, :, 3] > 0
+    ramp = [hexrgb(h) for h in palette["hoodie"]]
+    edge = hexrgb(palette.get("coatEdge", "#3a3238"))
+    rows = [y for y in range(98, 123) if alpha[y].any()]
+    if not rows:
+        return out
+    floor = max(rows)
+    for y in range(98, floor + 1):
+        xs = np.nonzero(alpha[y])[0]
+        if not len(xs):
+            continue
+        left = xs[0]
+        w = round(7 * (y - 98) / max(1, floor - 98))
+        for k in range(1, w + 1):
+            x = left - k
+            if x < 0 or alpha[y, x]:
+                continue
+            # the outermost pixel and the hem are the outline; the cloth shades darker toward the floor
+            if k == w or y == floor:
+                out[y, x] = (*edge, 255)
+            else:
+                out[y, x] = (*ramp_at(ramp, 0.85 - 0.45 * (y - 98) / max(1, floor - 98) - 0.08 * (k % 3 == 0)), 255)
+    return out
+
+
 def cloth_range():
     """Luma range of the classic hoodie across every frame, so all outfits share one mapping."""
     vals = []
@@ -229,6 +258,8 @@ def build():
                 for i in range(sheet.shape[1] // 128):
                     sl = slice(i * 128, (i + 1) * 128)
                     sheet[:, sl] = recolour(sheet[:, sl], region_mask(state, i), meta["palette"], lo, hi)
+                    if meta.get("coat"):
+                        sheet[:, sl] = coat_tail(sheet[:, sl], meta["palette"])
                 Image.fromarray(sheet).save(folder / f"{state}.png", optimize=True)
             else:
                 shutil.copyfile(src, folder / f"{state}.png")
@@ -242,7 +273,9 @@ def build():
         Image.open(folder / "asad-typing-still.png").crop((32, 48, 96, 124)).save(folder / "preview.png", optimize=True)
         manifest = {"version": base["version"], "outfit": meta["id"], "logicalSize": base["logicalSize"], "states": states}
         (folder / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
-        entries.append({k: meta[k] for k in ("id", "name", "description", "createdAt")} | {"preview": f"/art/outfits/{meta['id']}/preview.png"})
+        # a hidden outfit (the Steins Gate lab coat) is built but never offered in the wardrobe
+        if not meta.get("hidden"):
+            entries.append({k: meta[k] for k in ("id", "name", "description", "createdAt")} | {"preview": f"/art/outfits/{meta['id']}/preview.png"})
     ids = [e["id"] for e in entries]
     if DEFAULT not in ids or "classic" not in ids:
         raise ValueError("The wardrobe needs a classic outfit and the default outfit")

@@ -73,6 +73,11 @@ pose moves the sleeves out of that region (the stretch's raised arms), `FRAME_RE
 for those frames, traced beside the hair, never over it. The hoodie's brightness range is measured
 on the original four states only, so a new state never shifts existing outfits.
 
+`labcoat/` is the Steins Gate lab coat: `"hidden": true` keeps it out of `index.json` (so the admin
+wardrobe and the API never offer it), and `"coat": true` adds the coat's tail, spread on the floor
+behind him (`coat_tail`, drawn only on transparent pixels, so it sits behind him). The room swaps it in
+while the Steins Gate worldline lasts; the saved outfit never changes.
+
 To add one: make `site/public/art/outfits/<id>/outfit.json` (copy `forest/`; `palette.hoodie` is five
 colours from shadow to highlight, `rim` tints the lamp-lit edge, `drawstring` is light/dark), run
 `python3 scripts/outfits.py --preview`, check `art/previews/outfits.png`, commit the folder. The
