@@ -21,6 +21,8 @@ const types: Record<string, string> = {
   ".xml": "application/xml",
   ".txt": "text/plain; charset=utf-8",
   ".png": "image/png",
+  ".webp": "image/webp",
+  ".jpg": "image/jpeg",
   ".svg": "image/svg+xml",
   ".woff2": "font/woff2",
 };

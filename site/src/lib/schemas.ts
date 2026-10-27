@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SECTION_ICONS } from "./icons";
 
 // Content schemas. Every record from Git or from a Firestore export passes these before it reaches a page.
 
@@ -11,7 +12,15 @@ export const ArticleSchema = z
     publishedAt: z.iso.date().optional(),
     updatedAt: z.iso.date().optional(),
     tags: z.array(z.string().min(1).max(40)).max(12).default([]),
+    // A Lab section id and a category id inside it (content/lab.json). Unknown ids fall back at build
+    // time (see resolveShelf), so editing the Lab map never breaks a rebuild.
+    section: z.string().max(50).optional(),
     category: z.string().max(50).optional(),
+    // A 16:9 image file: content/thumbnails/<file> from Git, or a thumbnails/<sha256>.<ext> export.
+    thumbnail: z
+      .string()
+      .regex(/^[a-z0-9][a-z0-9-]*\.(webp|png|jpg)$/)
+      .optional(),
     featured: z.boolean().default(false),
   })
   .superRefine((a, ctx) => {
@@ -21,7 +30,42 @@ export const ArticleSchema = z
       ctx.addIssue({ code: "custom", message: "Update cannot precede publication" });
   });
 export type ArticleMeta = z.infer<typeof ArticleSchema>;
-export type Article = ArticleMeta & { body: string; readingMinutes: number; searchText: string };
+export type Article = ArticleMeta & {
+  body: string;
+  readingMinutes: number;
+  searchText: string;
+  /** Set by getArticles: the resolved Lab section/category and the public thumbnail URL. */
+  shelf?: { section: string; sectionName: string; icon: LabSection["icon"]; category?: string; categoryName?: string };
+  thumb?: string;
+};
+
+const slugId = z
+  .string()
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+  .max(40);
+const unique = (ids: string[]) => new Set(ids).size === ids.length;
+/** The Lab map: sections (Writeups, Tooling…) and the categories inside each. The last section also
+ *  holds articles whose section is missing or no longer exists. */
+export const LabSchema = z.object({
+  sections: z
+    .array(
+      z.object({
+        id: slugId,
+        name: z.string().min(1).max(40),
+        blurb: z.string().max(200),
+        icon: z.enum(SECTION_ICONS),
+        categories: z
+          .array(z.object({ id: slugId, name: z.string().min(1).max(40) }))
+          .max(24)
+          .refine((c) => unique(c.map((x) => x.id)), "Category ids must be unique within a section"),
+      }),
+    )
+    .min(1)
+    .max(12)
+    .refine((s) => unique(s.map((x) => x.id)), "Section ids must be unique"),
+});
+export type Lab = z.infer<typeof LabSchema>;
+export type LabSection = Lab["sections"][number];
 
 export const ProjectSchema = z.object({
   id: z.number(),

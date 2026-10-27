@@ -1,8 +1,13 @@
 import path from "node:path";
 import { site, xml } from "../src/lib/site";
-import type { Article, Project } from "../src/lib/schemas";
+import type { Article, Lab, Project } from "../src/lib/schemas";
 
-type Server = { getArticles(): Promise<Article[]>; getProjects(): Promise<Project[]>; articleSummary(a: Article): unknown };
+type Server = {
+  getArticles(): Promise<Article[]>;
+  getProjects(): Promise<Project[]>;
+  getLab(): Promise<Lab>;
+  articleSummary(a: Article): unknown;
+};
 type Write = (file: string, body: string) => Promise<void>;
 
 /** RSS, sitemap, robots and the search index, as the Next.js routes produced them. */
@@ -14,12 +19,16 @@ export async function feeds(server: Server, dist: string, write: Write) {
     `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>${xml(site.name)} — The Lab</title><link>${site.url}/lab</link><description>${xml(site.description)}</description><language>en</language><atom:link href="${site.url}/rss.xml" rel="self" type="application/rss+xml"/>${articles
       .map(
         (a) =>
-          `<item><title>${xml(a.title)}</title><link>${site.url}/lab/${a.slug}</link><guid isPermaLink="true">${site.url}/lab/${a.slug}</guid><description>${xml(a.description)}</description><pubDate>${new Date(a.publishedAt!).toUTCString()}</pubDate>${a.tags.map((t) => `<category>${xml(t)}</category>`).join("")}</item>`,
+          `<item><title>${xml(a.title)}</title><link>${site.url}/lab/${a.slug}</link><guid isPermaLink="true">${site.url}/lab/${a.slug}</guid><description>${xml(a.description)}</description><pubDate>${new Date(a.publishedAt!).toUTCString()}</pubDate>${[a.shelf!.sectionName, ...(a.shelf!.categoryName ? [a.shelf!.categoryName] : []), ...a.tags].map((t) => `<category>${xml(t)}</category>`).join("")}</item>`,
       )
       .join("")}</channel></rss>`,
   );
   const urls: { loc: string; lastmod?: string }[] = [
     ...["", "/lab", "/workbench", "/experience", "/achievements", "/about"].map((p) => ({ loc: site.url + p })),
+    ...(await server.getLab()).sections.flatMap((s) => [
+      { loc: `${site.url}/lab/section/${s.id}` },
+      ...s.categories.map((c) => ({ loc: `${site.url}/lab/section/${s.id}/${c.id}` })),
+    ]),
     ...articles.map((a) => ({ loc: `${site.url}/lab/${a.slug}`, lastmod: a.updatedAt || a.publishedAt })),
     ...projects.map((p) => ({ loc: `${site.url}/workbench/${p.slug}` })),
   ];

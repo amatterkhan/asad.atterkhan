@@ -7,6 +7,8 @@ test.beforeEach(async ({ page }, info) => {
 for (const path of [
   "/",
   "/lab",
+  "/lab/section/writeups",
+  "/lab/section/writeups/hackthebox",
   "/workbench",
   "/experience",
   "/achievements",

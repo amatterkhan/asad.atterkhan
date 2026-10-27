@@ -31,10 +31,12 @@ The owner UID, `admin` claim and TOTP enrollment are already set up for `dev@asa
 | --- | --- | --- |
 | `siteSettings/public` | `PUT /api/admin/site` | Hero, role, company, location, intros, `aboutBody`; `ownerUid`, `updatedAt` |
 | `siteSettings/achievements`, `siteSettings/wardrobe` | achievements and wardrobe routes | Featured achievements; Asad's active outfit |
+| `siteSettings/lab` | `PUT /api/admin/lab` | The Lab map: sections and their categories |
 | `articles/{slug}` | `/api/admin/articles…` | Owner drafts with `version` (optimistic concurrency) |
 | `publicArticles/{slug}` | publish / unpublish | Validated snapshot + `body`, written in the same transaction that marks the draft published |
 | `publicProjects/{slug}` | (read-only for now) | Same pattern, not yet editable |
 | `documents/{id}` | `/api/admin/documents…` | Private upload metadata; files are in Storage |
+| Storage `thumbnails/<sha256>.<ext>` | `POST /api/admin/thumbnails` | Private Lab thumbnails; the exporter copies the published ones into the build |
 | `_quotas/{hash}` | API | Daily operation counters |
 
 Rules (`site/firebase/`) keep everything default-deny: browsers never read or write these collections, only the API does. No composite index beyond the one in `firestore.indexes.json`. The site reads published content only when built with `CONTENT_SOURCE=firestore`.

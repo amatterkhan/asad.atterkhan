@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
@@ -6,6 +7,7 @@ import {
   AchievementSchema,
   ArticleSchema,
   EducationSchema,
+  LabSchema,
   ProjectSchema,
   RoleSchema,
   SiteCopySchema,
@@ -13,6 +15,7 @@ import {
   featuredSchema,
   type Article,
   type ArticleMeta,
+  type Lab,
   type Project,
   type SiteCopy,
 } from "./schemas";
@@ -22,7 +25,7 @@ import { DEFAULT_OUTFIT, resolveOutfit } from "./outfits";
 // Build-time content gateway (Node only). CONTENT_SOURCE=git (default) reads reviewed files in
 // content/; CONTENT_SOURCE=firestore reads the snapshot written by `go run ./cmd/export` (published
 // articles, projects, site copy, the Experience selection and Asad's outfit) and falls back to
-// content/ for the rest. Both go through the same zod schemas, so a bad record fails the build.
+// content/ for the rest, and the Lab map. Both go through the same zod schemas, so a bad record fails the build.
 
 const root = process.env.SITE_ROOT || process.cwd();
 const dir = (...p: string[]) => path.join(root, ...p);
@@ -78,25 +81,64 @@ export async function getArticles(): Promise<Article[]> {
     if (slugs.has(a.slug)) throw new Error("Duplicate article slug");
     slugs.add(a.slug);
   }
-  return articles
+  const lab = await getLab();
+  const published = articles
     .filter((a) => a.status === "published")
     .sort((a, b) => b.publishedAt!.localeCompare(a.publishedAt!));
+  return Promise.all(published.map(async (a) => ({ ...a, shelf: resolveShelf(lab, a), thumb: await thumbnailUrl(a.thumbnail) })));
 }
 
+/** The Lab map: the exported siteSettings/lab when CONTENT_SOURCE=firestore, else content/lab.json. */
+export async function getLab(): Promise<Lab> {
+  const exported = path.join(exportDir(), "lab.json");
+  const file = contentSource() === "firestore" && (await exists(exported)) ? exported : dir("content/lab.json");
+  return LabSchema.parse(await readJson(file));
+}
+/** Where an article sits on the Lab map. A missing or removed section falls back to the last one;
+ *  a category that is not in the section is dropped. */
+export function resolveShelf(lab: Lab, a: { section?: string; category?: string }) {
+  const section = lab.sections.find((s) => s.id === a.section) ?? lab.sections.at(-1)!;
+  const category = section.categories.find((c) => c.id === a.category);
+  return { section: section.id, sectionName: section.name, icon: section.icon, category: category?.id, categoryName: category?.name };
+}
+export type Shelf = ReturnType<typeof resolveShelf>;
+
+// Thumbnails are published under a content hash (/lab-media/<16 hex>.<ext>) so Hosting can cache
+// them for a year; the build copies each one from its source (thumbnailSources) into dist/.
+const thumbDir = () => (contentSource() === "firestore" ? path.join(exportDir(), "thumbnails") : dir("content/thumbnails"));
+const thumbs = new Map<string, string>();
+export async function thumbnailUrl(file?: string): Promise<string | undefined> {
+  if (!file) return undefined;
+  const source = path.join(thumbDir(), file);
+  const bytes = await fs.readFile(source).catch(() => {
+    throw new Error(`Thumbnail ${file} is missing from ${thumbDir()}`);
+  });
+  const name = createHash("sha256").update(bytes).digest("hex").slice(0, 16) + path.extname(file);
+  thumbs.set(name, source);
+  return `/lab-media/${name}`;
+}
+/** Public thumbnail name to source file, for every thumbnail resolved so far. */
+export const thumbnailSources = () => thumbs;
+
 export function articleSummary(article: Article) {
+  return { ...articleCard(article), updatedAt: article.updatedAt, searchText: article.searchText };
+}
+export type ArticleSummary = ReturnType<typeof articleSummary>;
+/** What a Lab card needs. No body text: the search island fetches /search.json for that. */
+export function articleCard(article: Article) {
   return {
     title: article.title,
     description: article.description,
     slug: article.slug,
     tags: article.tags,
-    category: article.category,
+    shelf: article.shelf!,
+    thumb: article.thumb,
+    featured: article.featured,
     publishedAt: article.publishedAt,
-    updatedAt: article.updatedAt,
     readingMinutes: article.readingMinutes,
-    searchText: article.searchText,
   };
 }
-export type ArticleSummary = ReturnType<typeof articleSummary>;
+export type ArticleCard = ReturnType<typeof articleCard>;
 
 export async function getProjects(): Promise<Project[]> {
   const base = contentSource() === "firestore" ? path.join(exportDir(), "projects") : dir("content/projects");

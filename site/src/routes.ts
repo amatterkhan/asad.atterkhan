@@ -3,12 +3,14 @@ import type { RouteRecordRaw } from "vue-router";
 import type { Head } from "./head";
 import { site } from "./lib/site";
 import {
+  articleCard,
   articleSummary,
   getAchievements,
   getArticles,
   getExperience,
   getActiveOutfit,
   getFeaturedAchievements,
+  getLab,
   getProjects,
   getSiteCopy,
   parseArticle,
@@ -39,6 +41,51 @@ declare module "vue-router" {
 
 const strip = <T extends { body: string; searchText: string }>({ body: _b, searchText: _s, ...rest }: T) => rest;
 
+/** A Lab section with how many published articles it (and each category) holds. */
+export type LabMapSection = Awaited<ReturnType<typeof labMap>>["sections"][number];
+async function labMap() {
+  const [lab, articles] = await Promise.all([getLab(), getArticles()]);
+  const sections = lab.sections.map((s) => {
+    const inSection = articles.filter((a) => a.shelf!.section === s.id);
+    return {
+      ...s,
+      count: inSection.length,
+      categories: s.categories.map((c) => ({ ...c, count: inSection.filter((a) => a.shelf!.category === c.id).length })),
+    };
+  });
+  return { sections, articles };
+}
+/** /lab, /lab/section/:section and /lab/section/:section/:category. */
+const labPage =
+  (scope: "all" | "section" | "category"): Loader =>
+  async ({ section: sectionId, category: categoryId }, ctx) => {
+    const { sections, articles } = await labMap();
+    const intro = (await getSiteCopy()).labIntro;
+    if (scope === "all")
+      return {
+        props: { intro, sections, articles: articles.map(articleCard), devPreview: ctx.dev },
+        head: { title: "The Lab", description: "Writeups, tooling, experiments, technical notes, and things Asad is figuring out.", canonical: "/lab" },
+      };
+    const section = sections.find((s) => s.id === sectionId);
+    const category = scope === "category" ? section?.categories.find((c) => c.id === categoryId) : undefined;
+    if (!section || (scope === "category" && !category)) return null;
+    const path = `/lab/section/${section.id}${category ? `/${category.id}` : ""}`;
+    return {
+      props: {
+        intro,
+        sections,
+        active: { section: section.id, category: category?.id },
+        articles: articles.filter((a) => a.shelf!.section === section.id && (!category || a.shelf!.category === category.id)).map(articleCard),
+        devPreview: ctx.dev,
+      },
+      head: {
+        title: category ? `${category.name} · ${section.name}` : `${section.name} · The Lab`,
+        description: section.blurb || `${section.name} in Asad's Lab.`,
+        canonical: path,
+      },
+    };
+  };
+
 export const routes: RouteRecordRaw[] = [
   {
     path: "/",
@@ -58,16 +105,9 @@ export const routes: RouteRecordRaw[] = [
       }),
     },
   },
-  {
-    path: "/lab",
-    component: Lab,
-    meta: {
-      load: async (_, ctx) => ({
-        props: { intro: (await getSiteCopy()).labIntro, articles: (await getArticles()).map(articleSummary), devPreview: ctx.dev },
-        head: { title: "The Lab", description: "Experiments, technical notes, and things Asad is figuring out.", canonical: "/lab" },
-      }),
-    },
-  },
+  { path: "/lab", component: Lab, meta: { load: labPage("all") } },
+  { path: "/lab/section/:section", component: Lab, meta: { load: labPage("section") } },
+  { path: "/lab/section/:section/:category", component: Lab, meta: { load: labPage("category") } },
   {
     path: "/lab/:slug",
     component: ArticlePage,
@@ -77,10 +117,16 @@ export const routes: RouteRecordRaw[] = [
         const article = articles.find((a) => a.slug === slug);
         if (!article) return null;
         const { html, toc } = await renderMarkdown(article.body);
+        // Nearby: the same category first, then the same section, then shared tags.
+        const score = (a: (typeof articles)[number]) =>
+          (article.shelf!.category && a.shelf!.category === article.shelf!.category ? 4 : 0) +
+          (a.shelf!.section === article.shelf!.section ? 2 : 0) +
+          (a.tags.some((t) => article.tags.includes(t)) ? 1 : 0);
         const related = articles
-          .filter((a) => a.slug !== slug && a.tags.some((t) => article.tags.includes(t)))
+          .filter((a) => a.slug !== slug && score(a) > 0)
+          .sort((a, b) => score(b) - score(a))
           .slice(0, 3)
-          .map((a) => ({ slug: a.slug, title: a.title }));
+          .map((a) => ({ slug: a.slug, title: a.title, thumb: a.thumb, shelf: a.shelf! }));
         return {
           props: { article: strip(article), html, toc, related },
           head: {

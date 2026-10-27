@@ -210,7 +210,7 @@ func validateFeatured(v map[string]any) {
 
 func draft(v map[string]any) map[string]any {
 	n := map[string]any{}
-	for _, k := range []string{"slug", "title", "description", "body", "tags", "category", "featured", "status", "publishedAt", "updatedAt", "version", "modifiedAt", "publishedVersion"} {
+	for _, k := range []string{"slug", "title", "description", "body", "tags", "section", "category", "thumbnail", "featured", "status", "publishedAt", "updatedAt", "version", "modifiedAt", "publishedVersion"} {
 		if x, ok := v[k]; ok && x != nil {
 			n[k] = x
 		}
@@ -303,8 +303,17 @@ func validateArticle(v map[string]any) {
 	if !ok || n < 1 || n != float64(int64(n)) {
 		fail(400, "Invalid input")
 	}
-	if _, ok := v["category"]; ok {
-		stringField(v, "category", 0, 50, true)
+	for _, k := range []string{"section", "category"} {
+		if _, ok := v[k]; ok {
+			if id := stringField(v, k, 0, 50, true); id != "" && !slugPattern.MatchString(id) {
+				fail(400, "Invalid input")
+			}
+		}
+	}
+	if _, ok := v["thumbnail"]; ok {
+		if name := stringField(v, "thumbnail", 0, 100, false); name != "" && !thumbnailPattern.MatchString(name) {
+			fail(400, "Invalid input")
+		}
 	}
 	if st, ok := v["status"]; ok && st != "draft" && st != "published" {
 		fail(400, "Invalid input")
@@ -344,10 +353,13 @@ func (s *Server) article(w http.ResponseWriter, r *http.Request) {
 	}
 	var v map[string]any
 	if r.Method == "PUT" {
-		v = input(w, r, 200000*4+8192, "slug", "title", "description", "body", "tags", "category", "featured", "version", "status", "publishedAt", "updatedAt", "modifiedAt", "publishedVersion")
+		v = input(w, r, 200000*4+8192, "slug", "title", "description", "body", "tags", "section", "category", "thumbnail", "featured", "version", "status", "publishedAt", "updatedAt", "modifiedAt", "publishedVersion")
 		validateArticle(v)
 		if v["slug"] != slug {
 			fail(400, "The slug cannot be changed")
+		}
+		if name := str(v["thumbnail"]); name != "" {
+			s.requireThumbnail(r, name)
 		}
 	}
 	s.quota(ctx, uid+":"+op, limit, 1)
@@ -380,9 +392,11 @@ func (s *Server) article(w http.ResponseWriter, r *http.Request) {
 			for _, key := range []string{"title", "description", "body", "tags", "featured"} {
 				current[key] = v[key]
 			}
-			delete(current, "category")
-			if str(v["category"]) != "" {
-				current["category"] = v["category"]
+			for _, key := range []string{"section", "category", "thumbnail"} {
+				delete(current, key)
+				if str(v[key]) != "" {
+					current[key] = v[key]
+				}
 			}
 		}
 		if action == "publish" {
@@ -473,8 +487,13 @@ func validatePublicSnapshot(v map[string]any) (err error) {
 	if _, ok := v["featured"].(bool); !ok {
 		fail(400, "Invalid input")
 	}
-	if _, ok := v["category"]; ok {
-		stringField(v, "category", 0, 50, false)
+	for _, k := range []string{"section", "category"} {
+		if _, ok := v[k]; ok {
+			stringField(v, k, 0, 50, false)
+		}
+	}
+	if _, ok := v["thumbnail"]; ok && !thumbnailPattern.MatchString(str(v["thumbnail"])) {
+		fail(400, "Invalid input")
 	}
 	return nil
 }
