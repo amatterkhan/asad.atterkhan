@@ -26,14 +26,14 @@ Keep commits small and grouped by logic. Intermediate PRs into this branch are f
 | Build ticket | State |
 | --- | --- |
 | [Feature branch, baseline tests and progress doc](https://github.com/amatterkhan/asad.atterkhan/issues/20) | done |
-| [Build: refreshed identity and copy](https://github.com/amatterkhan/asad.atterkhan/issues/22) | not started |
+| [Build: refreshed identity and copy](https://github.com/amatterkhan/asad.atterkhan/issues/22) | done (7d66bee, 32ff2a3) |
 | [Build: Thought content and admin Thoughts tab](https://github.com/amatterkhan/asad.atterkhan/issues/23) | not started |
 | [Build: worldline engine and divergence meter](https://github.com/amatterkhan/asad.atterkhan/issues/25) | not started |
 | [Build: Asad's seated stretch and look animations](https://github.com/amatterkhan/asad.atterkhan/issues/31) | not started |
 | [Build: Thoughts in the room](https://github.com/amatterkhan/asad.atterkhan/issues/24) | blocked by #23, #25 |
 | [Build: lab coat outfit art](https://github.com/amatterkhan/asad.atterkhan/issues/26) | blocked by #31 |
 | [Build: Steins Gate lab coat override](https://github.com/amatterkhan/asad.atterkhan/issues/27) | blocked by #25, #26 |
-| [Build: night-room share image and metadata](https://github.com/amatterkhan/asad.atterkhan/issues/28) | blocked by #22, #25 |
+| [Build: night-room share image and metadata](https://github.com/amatterkhan/asad.atterkhan/issues/28) | blocked by #25 |
 | [Integration, verification and release PR](https://github.com/amatterkhan/asad.atterkhan/issues/29) | blocked by everything above |
 
 ## Test results
@@ -48,7 +48,18 @@ Keep commits small and grouped by logic. Intermediate PRs into this branch are f
 | `npx playwright test` (system Chrome; desktop and mobile × dark and light) | 62 passed, 2 skipped |
 | Firestore/Storage emulator suite | **not run**: no Java runtime on this machine |
 
+### Identity and copy: 27 Oct 2026, 32ff2a3
+
+| Check | Result |
+| --- | --- |
+| `make check` | pass, 18 vitest tests (a new one pins the titles, `og:site_name`, the motto description and the four subtitles) |
+| `npx playwright test` | 62 passed, 2 skipped |
+| Visual check of the production build (system Chrome, 1280 and 390 wide, dark): Home, About, The Lab, 404, footer | subtitles, eyebrow, hero paragraphs and footer motto render; titles read `Asad.exe — Asad Atterkhan`; no horizontal overflow |
+
 ## Known issues
+
+- **Production copy comes from Firestore.** The deploy builds with `CONTENT_SOURCE=firestore`, and the saved `siteSettings/public` overrides the Git defaults field by field. So the new **headline, eyebrow role, lede, body, room hint, closing, Lab, Workbench and About copy** go live only once the same text is saved in `/admin` → Site copy (the owner does this; it triggers a rebuild). The motto, subtitles, titles, footer and 404 text are code and ship with the release. The text to paste is in `site/content/site.json`. Add this to the release PR's deploy steps.
+- On phones the new hero (lede plus three paragraphs) pushes the room about two screens down. It's the approved copy; raise it at review if it matters.
 
 - No Java runtime on this machine, so the emulator suite in `docs/development.md` can't run here. CI runs it.
 - Only WebKit is installed for Playwright locally. The suite itself uses system Chrome (`channel: "chrome"`).
@@ -56,3 +67,4 @@ Keep commits small and grouped by logic. Intermediate PRs into this branch are f
 ## Session log
 
 - **27 Oct 2026**: cut the branch, recorded the baseline, captured the room baselines, added `GLOSSARY.md` and this file.
+- **27 Oct 2026**: built identity and copy (#22). The headline and "Say hello." stay admin-editable copy with new defaults; only the motto and the four subtitles are fixed in code.
