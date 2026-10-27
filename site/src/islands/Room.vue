@@ -6,6 +6,7 @@ import { NIXIE_X, NIXIE_Y, divergenceTubes, glyph, plinthWidth } from "../lib/ni
 import { loopMs, manifest, type SpriteState } from "../lib/manifest";
 import { spriteSheet } from "../lib/outfits";
 import { site } from "../lib/site";
+import { nextPause, type Pause } from "../lib/pose";
 import { nextWait, pickThought, readMs, type PublicThought } from "../lib/thoughts";
 import type { ThoughtContext } from "../lib/schemas";
 import { DIVERGENCE, nextWorldline, scramble, shiftTimeline, worldlineLabel, type ShiftPhase, type Worldline } from "../lib/worldline";
@@ -70,7 +71,7 @@ let poke = () => {};
 const sky = ref<"day" | "night">("night");
 const lamp = ref(true);
 const mode = ref<StormMode>("idle");
-const asad = ref<"typing" | "coffee" | "idle">("typing");
+const asad = ref<"typing" | Pause>("typing");
 const happy = ref(false);
 const said = ref(-1);
 // the bubble fades by CSS, but is also taken away after it, so it can never stay on screen
@@ -145,16 +146,21 @@ onMounted(() => {
     if (localStorage.getItem("lamp") === "off") lamp.value = false;
   } catch {}
 
-  // Asad types; every so often he sips coffee, or stops to think (and hum).
+  // Asad types; every so often he sips coffee or stops to think (and hum), now and then glances
+  // toward the window (more often when Storm is napping over there), and rarely stretches.
   let t: ReturnType<typeof setTimeout>;
+  let stretchedAt = performance.now();
   const typing = () => {
     asad.value = "typing";
     t = setTimeout(pause, 12000 + Math.random() * 12000);
   };
   const pause = () => {
-    const next = Math.random() < 0.55 ? "coffee" : "idle";
+    const now = performance.now();
+    // Storm is "over by the window" when he's well left of Asad (his middle is about x 130)
+    const next = nextPause(Math.random(), now - stretchedAt, position() < asadX.value + 40);
+    if (next === "stretch") stretchedAt = now;
     asad.value = next;
-    t = setTimeout(typing, next === "coffee" ? loopMs("asad-coffee") : loopMs("asad-idle"));
+    t = setTimeout(typing, loopMs(`asad-${next}`));
   };
   t = setTimeout(pause, 8000);
   stops.push(() => clearTimeout(t));
@@ -297,8 +303,9 @@ onMounted(() => {
     thought.value = null;
   }
   const speak = () => {
-    // Storm has the room (the visitor petted him): one bubble at a time, so try again shortly
-    if (saying.value) {
+    // Storm has the room (the visitor petted him: one bubble at a time), or Asad's arms are up in a
+    // stretch where the bubble goes: try again shortly
+    if (saying.value || asad.value === "stretch") {
       thoughtTimer = setTimeout(speak, 3000 + Math.random() * 3000);
       return;
     }
