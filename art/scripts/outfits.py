@@ -198,105 +198,6 @@ def recolour(frame, region, palette, lo, hi):
     return out
 
 
-# Where the lab coat's front opens, per state: the drawstring's usual column and top row in that
-# state's frames (the hoodie's zip line). Each frame follows the string when it is visible near
-# here and otherwise keeps the previous frame's place, so the coat's details never jump or flicker.
-COAT_FRONT = {
-    "asad-typing": (56, 96), "asad-idle": (55, 96), "asad-coffee": (57, 96),
-    "asad-happy": (53, 95), "asad-look": (57, 96), "asad-stretch": (64, 95),
-}
-# Frames where the body turns enough that the opening moves: the stretch's arms-up frames face us,
-# so the zip line is in the middle of the chest there.
-COAT_FRONT_FRAMES = {"asad-stretch": {2: (53, 92), 3: (53, 92), 4: (53, 92), 5: (53, 92)}}
-
-
-def coat_anchors(state, frames, regions):
-    base_x, base_y = COAT_FRONT[state]
-    out, prev = [], (base_x, base_y)
-    for i, (frame, region) in enumerate(zip(frames, regions)):
-        if i in COAT_FRONT_FRAMES.get(state, {}):
-            prev = COAT_FRONT_FRAMES[state][i]
-            out.append(prev)
-            continue
-        _, strings = hoodie_pixels(frame, region)
-        ys, xs = np.nonzero(strings)
-        near = [(x, y) for x, y in zip(xs, ys) if abs(x - base_x) <= 3]
-        if near:
-            x = min(x for x, _ in near)
-            prev = (x, min(y for xx, y in near if xx == x))
-        out.append(prev)
-    return out
-
-
-def coat_front(frame, coat, anchor, palette):
-    """An open lab coat over the dark tee: a strip of tee down the zip line that widens into a V at
-    the collar, soft grey lapel folds beside it, and a breast pocket with a pen. Only pixels that are
-    coat change, so hands, laptop, mug, face and hair stay."""
-    out = frame.copy()
-    a, top = anchor
-    tee = hexrgb(palette.get("tee", "#17121e"))
-    fold = hexrgb(palette.get("fold", "#8d8780"))
-    stitch = hexrgb(palette.get("stitch", "#a39d95"))
-    pen, cap = hexrgb(palette.get("pen", "#3f5a9c")), hexrgb(palette.get("penCap", "#d9dde6"))
-
-    def put(x, y, c):
-        if 0 <= x < 128 and 0 <= y < 128 and coat[y, x]:
-            out[y, x, :3] = c
-
-    # the V at the collar, narrowing to the strip
-    for k, y in enumerate(range(top - 5, top)):
-        for x in range(a - 3 + k // 2, a + 7 - k // 2):
-            put(x, y, tee)
-        put(a - 4 + k // 2, y, fold)
-        put(a + 7 - k // 2, y, fold)
-    # the open front down to the waist, with a fold line along each side
-    for y in range(top, top + 14):
-        for x in range(a, a + 4):
-            put(x, y, tee)
-        put(a - 1, y, fold)
-        put(a + 4, y, fold)
-    # breast pocket on the chest, a pen clipped in it
-    px, py = a - 11, top + 1
-    for x in range(px, px + 5):
-        put(x, py, stitch)
-    for y in range(py, py + 4):
-        put(px, y, stitch)
-        put(px + 4, y, stitch)
-    put(px + 2, py - 1, cap)
-    put(px + 2, py, pen)
-    put(px + 2, py + 1, pen)
-    return out
-
-
-def coat_tail(frame, palette):
-    """The lab coat's tail, spread on the floor behind him: from his waist down his back's left edge
-    it widens to about 7px at the floor. Drawn only on transparent pixels, so it sits behind him."""
-    out = frame.copy()
-    alpha = out[:, :, 3] > 0
-    ramp = [hexrgb(h) for h in palette["hoodie"]]
-    edge = hexrgb(palette.get("coatEdge", "#3a3238"))
-    rows = [y for y in range(98, 123) if alpha[y].any()]
-    if not rows:
-        return out
-    floor = max(rows)
-    for y in range(98, floor + 1):
-        xs = np.nonzero(alpha[y])[0]
-        if not len(xs):
-            continue
-        left = xs[0]
-        w = round(7 * (y - 98) / max(1, floor - 98))
-        for k in range(1, w + 1):
-            x = left - k
-            if x < 0 or alpha[y, x]:
-                continue
-            # the outermost pixel and the hem are the outline; the cloth shades darker toward the floor
-            if k == w or y == floor:
-                out[y, x] = (*edge, 255)
-            else:
-                out[y, x] = (*ramp_at(ramp, 0.85 - 0.45 * (y - 98) / max(1, floor - 98) - 0.08 * (k % 3 == 0)), 255)
-    return out
-
-
 def cloth_range():
     """Luma range of the classic hoodie across every frame, so all outfits share one mapping."""
     vals = []
@@ -323,20 +224,16 @@ def build():
         states = {}
         for state in STATES:
             src = SPRITES / f"{state}.png"
-            if meta.get("palette"):
+            if meta.get("prebuilt"):
+                # drawn rather than recoloured: art/ase/<id>/<state>.aseprite, exported by export_ase.sh
+                have = Image.open(folder / f"{state}.png").width // 128
+                if have != base["states"][state]["frames"]:
+                    raise ValueError(f"{folder.name}/{state}.png has {have} frames, the base has {base['states'][state]['frames']}")
+            elif meta.get("palette"):
                 sheet = np.array(Image.open(src).convert("RGBA"))
-                n = sheet.shape[1] // 128
-                source = [sheet[:, i * 128 : (i + 1) * 128].copy() for i in range(n)]
-                regions = [region_mask(state, i) for i in range(n)]
-                anchors = coat_anchors(state, source, regions) if meta.get("coat") else None
-                for i in range(n):
+                for i in range(sheet.shape[1] // 128):
                     sl = slice(i * 128, (i + 1) * 128)
-                    sheet[:, sl] = recolour(source[i], regions[i], meta["palette"], lo, hi)
-                    if meta.get("coat"):
-                        hood, strings = hoodie_pixels(source[i], regions[i])
-                        coat = sheet[:, sl].copy()
-                        coat = coat_front(coat, hood | strings, anchors[i], meta["palette"])
-                        sheet[:, sl] = coat_tail(coat, meta["palette"])
+                    sheet[:, sl] = recolour(sheet[:, sl], region_mask(state, i), meta["palette"], lo, hi)
                 Image.fromarray(sheet).save(folder / f"{state}.png", optimize=True)
             else:
                 shutil.copyfile(src, folder / f"{state}.png")

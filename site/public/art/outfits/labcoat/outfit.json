@@ -1,28 +1,8 @@
 {
   "id": "labcoat",
   "name": "Lab coat",
-  "description": "Off-white lab coat, open over the dark tee, with a pen in the pocket: for the Steins Gate worldline only.",
+  "description": "An open white lab coat over his dark tee, for the Steins Gate worldline only.",
   "hidden": true,
-  "coat": true,
-  "palette": {
-    "hoodie": [
-      "#aaa59d",
-      "#cfcac2",
-      "#e4e0d8",
-      "#f2efe8",
-      "#fdfbf6"
-    ],
-    "rim": "#d6b48c",
-    "drawstring": [
-      "#eeeae2",
-      "#c4bfb7"
-    ],
-    "coatEdge": "#3a3238",
-    "tee": "#17121e",
-    "fold": "#8d8780",
-    "stitch": "#a39d95",
-    "pen": "#3f5a9c",
-    "penCap": "#d9dde6"
-  },
+  "prebuilt": true,
   "createdAt": "2026-10-28"
 }

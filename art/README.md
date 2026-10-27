@@ -73,14 +73,16 @@ pose moves the sleeves out of that region (the stretch's raised arms), `FRAME_RE
 for those frames, traced beside the hair, never over it. The hoodie's brightness range is measured
 on the original four states only, so a new state never shifts existing outfits.
 
-`labcoat/` is the Steins Gate lab coat: `"hidden": true` keeps it out of `index.json` (so the admin
-wardrobe and the API never offer it), and `"coat": true` turns the hoodie into an open lab coat:
-`coat_front` opens it over the dark tee along the zip line, with lapel folds and a breast pocket
-holding a pen, and `coat_tail` spreads its tail on the floor behind him (drawn only on transparent
-pixels). The opening is placed from `COAT_FRONT` (each state's usual drawstring column), follows the
-string where a frame shows it and holds its place where not, so nothing flickers; `COAT_FRONT_FRAMES`
-pins frames where the body turns (the stretch's arms-up frames face us). The room swaps it in
-while the Steins Gate worldline lasts; the saved outfit never changes.
+`labcoat/` is the Steins Gate lab coat. `"hidden": true` keeps it out of `index.json`, so the admin
+wardrobe and the API never offer it; the room swaps it in while the Steins Gate worldline lasts and the
+saved outfit never changes. It is `"prebuilt"`: drawn, not recoloured. Its source is
+`ase/labcoat/<state>.aseprite` (exported by `export_ase.sh`), one document for each of Asad's six states
+with the same frames and timing. Made October 2026 with PixelLab's *Edit images* on his real frames
+("an open white lab coat with collar and lapels over his dark tee"), one request per state so its
+frames match; each result was aligned back onto the original frame (PixelLab redraws a few pixels off)
+and only clothing was taken from it (hoodie pixels, the hood around his neck, and the coat's tail on
+the floor, kept still across each animation); face, glasses, goatee, hair, hands, laptop, mug and
+jeans are the original pixels. About 56 cents of PixelLab credit.
 
 To add one: make `site/public/art/outfits/<id>/outfit.json` (copy `forest/`; `palette.hoodie` is five
 colours from shadow to highlight, `rim` tints the lamp-lit edge, `drawstring` is light/dark), run
