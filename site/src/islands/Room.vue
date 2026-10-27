@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, useTemplateRef, type CSSProperties } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, type CSSProperties } from "vue";
 import Sprite from "../components/Sprite.vue";
 import NixieClock from "../components/NixieClock.vue";
-import { glyph } from "../lib/nixie";
+import { NIXIE_X, NIXIE_Y, divergenceTubes, glyph, plinthWidth } from "../lib/nixie";
 import { loopMs, manifest, type SpriteState } from "../lib/manifest";
 import { spriteSheet } from "../lib/outfits";
 import { site } from "../lib/site";
+import { DIVERGENCE, nextWorldline, scramble, shiftTimeline, worldlineLabel, type ShiftPhase, type Worldline } from "../lib/worldline";
 
 // The room is a 384x216 pixel-art scene drawn in LibreSprite (art/ase/room.ase), one PNG per layer.
 const W = 384;
@@ -43,6 +44,11 @@ const at = ([x, y, w, h]: Box): CSSProperties => ({
 });
 const layer = (name: string) => ({ backgroundImage: `url(/room/${name}.png?v=${manifest.version})` });
 const MUG: Box = [332, 110, 17, 14];
+// The divergence meter's box (its wider, divergence layout) and the window's glass, in room px.
+const METER: Box = [NIXIE_X, NIXIE_Y, plinthWidth(divergenceTubes), 15];
+const GLASS: Box = [39, 26, 77, 70];
+// Steins Gate's few sparkles: by the window, the shelf and the lamp.
+const SPARKS: Box[] = [[52, 34, 1, 1], [104, 58, 1, 1], [226, 56, 1, 1], [318, 92, 1, 1], [364, 104, 1, 1]];
 const clip = ([x, y, w, h]: Box) =>
   `inset(${(y / H) * 100}% ${100 - ((x + w) / W) * 100}% ${100 - ((y + h) / H) * 100}% ${(x / W) * 100}%)`;
 
@@ -65,6 +71,41 @@ const saying = ref(false);
 let sayTimer: ReturnType<typeof setTimeout> | undefined;
 let happyTimer: ReturnType<typeof setTimeout> | undefined;
 const stops: (() => void)[] = [];
+
+// Worldlines (lib/worldline.ts): pressing the divergence meter shifts the room. Never saved.
+const worldline = ref<Worldline>("normal");
+const shift = ref<ShiftPhase>("idle");
+// what the tubes read: undefined is the live clock
+const reading = ref<string>();
+const note = ref<Exclude<Worldline, "normal"> | null>(null);
+// one polite announcement per shift, written when it settles (outside the button, never moving focus)
+const announce = ref("");
+/** A shift or its note is on screen: Thoughts and other bubbles wait. */
+const shifting = computed(() => shift.value !== "idle");
+let shiftTimers: ReturnType<typeof setTimeout>[] = [];
+let cycle: ReturnType<typeof setInterval> | undefined;
+const pressMeter = () => {
+  if (shifting.value) return; // one shift at a time; presses during one are ignored
+  const to = nextWorldline(worldline.value);
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.dataset.motion === "paused";
+  announce.value = "";
+  const enter = (phase: ShiftPhase) => {
+    shift.value = phase;
+    if (phase === "cycle") cycle = setInterval(() => (reading.value = scramble()), 70);
+    if (phase === "settle") {
+      clearInterval(cycle);
+      worldline.value = to;
+      reading.value = to === "normal" ? undefined : DIVERGENCE[to];
+      announce.value = `${worldlineLabel(to)}.`;
+    }
+    if (phase === "note" && to !== "normal") note.value = to;
+    if (phase === "idle") note.value = null;
+  };
+  // the first phase starts now, in this click, so a second press in the same instant is already locked out
+  const [first, ...rest] = shiftTimeline(to, reduced);
+  enter(first.phase);
+  shiftTimers = rest.map(({ at, phase }) => setTimeout(() => enter(phase), at));
+};
 
 onMounted(() => {
   // Fetch and decode every sheet Asad and Storm switch between once the page is idle, so a new state
@@ -226,6 +267,8 @@ onBeforeUnmount(() => {
   stops.forEach((stop) => stop());
   clearTimeout(happyTimer);
   clearTimeout(sayTimer);
+  shiftTimers.forEach(clearTimeout);
+  clearInterval(cycle);
 });
 
 const lure = (e: PointerEvent) => {
@@ -274,6 +317,8 @@ const toggleTheme = () => {
       class="room"
       :data-sky="sky"
       :data-lamp="lamp ? 'on' : 'off'"
+      :data-worldline="worldline"
+      :data-shift="shift"
       @pointermove="lure"
       @pointerdown="lure"
     >
@@ -283,18 +328,23 @@ const toggleTheme = () => {
         and a lamp.
       </p>
       <div
-        v-for="name in ['sky-night', 'stars-a', 'stars-b', 'sky-day', 'clouds', 'room', 'sunbeam']"
+        v-for="name in ['sky-night', 'stars-a', 'stars-b', 'sky-day', 'clouds']"
         :key="name"
         :class="`layer layer-${name}`"
         :style="layer(name)"
       />
+      <!-- Alpha's rain falls behind the window frame, so it only shows through the glass -->
+      <div v-if="worldline === 'alpha'" class="wl-rain" :style="at(GLASS)">
+        <span :style="{ backgroundImage: `url(/room/rain.png?v=${manifest.version})` }" />
+      </div>
+      <div v-for="name in ['room', 'sunbeam']" :key="name" :class="`layer layer-${name}`" :style="layer(name)" />
       <!-- drawn on the wall, so the night and lamp layers darken them with the rest of the room -->
       <svg class="wall-art" :viewBox="`0 0 ${W} ${H}`" preserveAspectRatio="none" aria-hidden="true">
         <!-- initials pressed into two hardcover spines -->
         <path class="initial initial-a" :d="glyph('A', 165, 26, GLYPHS)" />
         <path class="initial initial-s" :d="glyph('S', 194, 29, GLYPHS)" />
       </svg>
-      <NixieClock part="glass" />
+      <NixieClock part="glass" :reading="reading" />
 
       <div class="actor asad">
         <Sprite :state="happy ? 'asad-happy' : `asad-${asad}`" :outfit="outfit" :size="128" />
@@ -314,14 +364,46 @@ const toggleTheme = () => {
       </div>
 
       <div v-for="name in ['night', 'dark', 'glow', 'bulb']" :key="name" :class="`layer layer-${name}`" :style="layer(name)" />
+      <!-- a worldline's light over the whole room (Normal has none, so it stays exactly as drawn) -->
+      <Transition name="wl">
+        <div v-if="worldline !== 'normal'" :key="worldline" class="layer wl-tint" aria-hidden="true" />
+      </Transition>
+      <template v-if="worldline === 'steins-gate'">
+        <div class="layer wl-gold" aria-hidden="true" />
+        <span v-for="(b, i) in SPARKS" :key="i" class="wl-spark" :style="{ ...at(b), animationDelay: `${i * -0.9}s` }" />
+      </template>
       <!-- the lit digits glow over the dark, like the LEDs; blank until the client knows the time -->
-      <NixieClock part="lit" live />
+      <NixieClock part="lit" live :reading="reading" />
       <span class="fx fx-led" :style="at([286, 119, 2, 1])" />
       <span class="fx fx-router a" :style="at([238, 42, 1, 1])" />
       <span class="fx fx-router b" :style="at([242, 42, 1, 1])" />
       <span class="fx fx-router c" :style="at([246, 42, 1, 1])" />
       <span class="fx fx-steam" :style="at([338, 106, 1, 3])" />
       <span class="fx fx-steam two" :style="at([342, 104, 1, 3])" />
+
+      <!-- the Easter egg: no label, just a faint glow on hover or focus -->
+      <button
+        type="button"
+        class="meter"
+        :style="at(METER)"
+        aria-label="Divergence meter"
+        aria-describedby="meter-state"
+        @click="pressMeter"
+      />
+      <span id="meter-state" hidden>{{ worldlineLabel(worldline) }}. Activate to shift to the next worldline.</span>
+      <Transition name="wl-note">
+        <div v-if="note" :class="`wl-note wl-note-${note}`" aria-hidden="true">
+          <template v-if="note === 'steins-gate'">
+            <span>WORLDLINE <b>{{ DIVERGENCE[note] }}</b></span>
+            <span>EL PSY KONGROO.</span>
+            <small>STEINS GATE REACHED</small>
+          </template>
+          <template v-else>
+            <span>{{ note === "alpha" ? "α" : "β" }} WORLDLINE</span>
+            <b>{{ DIVERGENCE[note] }}</b>
+          </template>
+        </div>
+      </Transition>
 
       <template v-for="s in spots" :key="s.id">
         <a v-if="s.href" :href="s.href" :class="`spot${s.below ? ' below' : ''}`" :data-label="s.label" :style="at(s.box)">
@@ -351,6 +433,7 @@ const toggleTheme = () => {
         <span class="sr-only">Switch between light and dark mode</span>
       </button>
     </div>
+    <p class="sr-only" role="status">{{ announce }}</p>
     <figcaption class="room-caption">
       <span class="hint">{{ hint }}</span>
     </figcaption>

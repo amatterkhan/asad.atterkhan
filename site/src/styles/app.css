@@ -567,6 +567,77 @@ html[data-motion="paused"] *::after {
   .nixie-lit path { fill: #ff9a3c; }
 }
 
+/* ---------- worldlines (islands/Room.vue, lib/worldline.ts) ---------- */
+/* the meter: an unlabelled button over the clock, never shorter than 24px however small the room */
+.meter {
+  position: absolute; z-index: 5; padding: 0; border: 0; background: none; cursor: pointer;
+  min-height: 24px; margin-top: min(0px, calc((var(--u) * 15 - 24px) / 2));
+  transition: box-shadow .2s steps(2);
+}
+.meter:hover, .meter:focus-visible { box-shadow: 0 0 calc(var(--u) * 4) rgba(255, 160, 74, .35); }
+.meter:focus-visible { outline: 2px solid rgba(255, 160, 74, .85); outline-offset: 2px; }
+/* a shift: one dip of the digits, then a brief spatial jolt of the room (never a flash of light) */
+.room[data-shift="flicker"] .nixie-lit { animation: meter-flicker .24s steps(1) both; }
+@keyframes meter-flicker { 35% { opacity: .25; } 70% { opacity: 1; } }
+.room[data-shift="glitch"] .layer:not(.layer-clouds, .wl-tint) { animation: wl-glitch .3s steps(1) both; }
+/* percentages of each full-room layer: .52% is 2 room px */
+@keyframes wl-glitch {
+  25% { transform: translate3d(.52%, 0, 0); }
+  50% { transform: translate3d(-.26%, .46%, 0); }
+  75% { transform: translate3d(.26%, 0, 0); }
+  100% { transform: none; }
+}
+/* each worldline's light, over the whole room; Normal has no layer at all */
+.wl-enter-active, .wl-leave-active { transition: opacity .3s steps(4); }
+.wl-enter-from, .wl-leave-to { opacity: 0; }
+.room[data-worldline="alpha"] .wl-tint { background: rgba(26, 44, 92, .22); }
+.room[data-worldline="alpha"][data-sky="day"] .wl-tint { background: rgba(58, 88, 140, .22); }
+.room[data-worldline="beta"] .wl-tint { background: rgba(150, 58, 18, .15); }
+.room[data-worldline="beta"][data-sky="day"] .wl-tint { background: rgba(190, 96, 36, .11); }
+.room[data-worldline="steins-gate"] .wl-tint { background: rgba(255, 196, 96, .08); }
+.wl-gold {
+  background:
+    radial-gradient(ellipse at 88% 46%, rgba(255, 200, 110, .2), transparent 30%),
+    radial-gradient(ellipse at 20% 28%, rgba(255, 214, 140, .12), transparent 28%);
+}
+/* Alpha: pixel rain behind the window frame, a 24px tile sliding one tile per loop */
+.wl-rain { position: absolute; overflow: hidden; pointer-events: none; }
+.wl-rain span {
+  position: absolute; left: 0; top: -100%; width: 100%; height: 200%;
+  background-size: calc(var(--u) * 24) calc(var(--u) * 24); image-rendering: pixelated;
+  opacity: .75; animation: rain .5s steps(6) infinite; will-change: transform;
+}
+.room[data-sky="night"] .wl-rain span { opacity: .45; }
+/* the span is 140 room px tall: 17.142857% is one 24px tile */
+@keyframes rain { to { transform: translate3d(0, 17.142857%, 0); } }
+/* Beta: the lamp, only if it's on, dips now and then (gently, twice in five seconds) */
+.room[data-worldline="beta"][data-lamp="on"] .layer-bulb,
+.room[data-worldline="beta"][data-lamp="on"][data-sky="night"] .layer-glow { animation: lamp-flicker 5.3s steps(1) infinite; }
+@keyframes lamp-flicker { 37% { opacity: .72; } 38% { opacity: 1; } 71% { opacity: .84; } 72% { opacity: 1; } }
+/* Steins Gate: a few slow sparkles */
+.wl-spark {
+  position: absolute; pointer-events: none; background: #ffe6a6; opacity: 0;
+  box-shadow: 0 0 calc(var(--u) * 1.5) rgba(255, 220, 140, .8); animation: spark 2.7s steps(1) infinite;
+}
+@keyframes spark { 45%, 60% { opacity: .9; } 65% { opacity: 0; } }
+/* the note: just above the meter on wide rooms, just below it where a note above would reach the shelf */
+.wl-note {
+  position: absolute; z-index: 6; pointer-events: none; translate: -50% 0;
+  left: calc(var(--u) * 182); bottom: calc(var(--u) * (216 - 64));
+  display: grid; justify-items: center; gap: 2px; white-space: nowrap;
+  font: 10px/1.25 var(--font-mono); letter-spacing: .06em; padding: 5px 9px;
+  background: #18241d; color: #e8e2c6; border: 1px solid #4f6e58; box-shadow: 2px 2px 0 rgba(0, 0, 0, .35);
+}
+.wl-note b { color: #ffa04a; font-weight: normal; }
+.wl-note small { font-size: 8px; letter-spacing: .1em; color: #9fb8a4; }
+@container (max-width: 899px) {
+  .wl-note { bottom: auto; top: calc(var(--u) * 86); font-size: 9px; padding: 4px 7px; }
+  .wl-note small { font-size: 7px; }
+}
+.wl-note-enter-active { transition: opacity .25s steps(3); }
+.wl-note-leave-active { transition: opacity .4s steps(4); }
+.wl-note-enter-from, .wl-note-leave-to { opacity: 0; }
+
 .spot {
   --hl: #fff2d2; --c: calc(var(--u) * 4); --t: max(2px, calc(var(--u) * .9));
   position: absolute; display: block; cursor: pointer; outline: none; z-index: 5;

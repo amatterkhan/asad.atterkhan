@@ -57,6 +57,72 @@ test("mobile navigation Escape and focus return", async ({
   await menu.getByRole("link", { name: "The Lab", exact: true }).click();
   await expect(page).toHaveURL(/\/lab$/);
 });
+test("the divergence meter shifts worldlines and back", async ({ page }) => {
+  await page.goto("/");
+  const room = page.locator(".room");
+  const meter = page.getByRole("button", { name: "Divergence meter" });
+  const tubes = page.locator(".room .nixie-lit");
+  const status = page.locator(".room-wrap > [role=status]");
+  const idle = () => expect(room).toHaveAttribute("data-shift", "idle", { timeout: 6000 });
+  await expect(room).toHaveAttribute("data-worldline", "normal");
+  await expect(tubes).toHaveAttribute("aria-label", /Nixie tube clock reading/);
+  await expect(meter).toHaveAccessibleDescription(/Normal worldline/);
+
+  // the keyboard works, and presses during a shift are ignored
+  await meter.focus();
+  await meter.press("Enter");
+  await meter.press("Enter");
+  await meter.press("Enter");
+  await expect(room).toHaveAttribute("data-worldline", "alpha");
+  await expect(tubes).toHaveAttribute("aria-label", "A divergence meter reading 0.571024");
+  await expect(page.locator(".wl-note")).toContainText("α WORLDLINE");
+  await expect(status).toHaveText("Alpha worldline, divergence 0.571024.");
+  await expect(page.locator(".wl-rain")).toBeAttached();
+  await expect(meter).toBeFocused();
+  await idle();
+  await expect(room).toHaveAttribute("data-worldline", "alpha");
+  await expect(page.locator(".wl-note")).toHaveCount(0);
+
+  for (const [w, value] of [["beta", "1.130238"], ["steins-gate", "1.048596"]]) {
+    await meter.click();
+    await expect(room).toHaveAttribute("data-worldline", w);
+    await expect(tubes).toHaveAttribute("aria-label", `A divergence meter reading ${value}`);
+    await idle();
+  }
+  await expect(page.locator(".wl-rain")).toHaveCount(0);
+  await expect(page.locator(".wl-spark").first()).toBeAttached();
+
+  // back to Normal: the live clock, and no worldline layer left behind
+  await meter.click();
+  await expect(room).toHaveAttribute("data-worldline", "normal");
+  await expect(tubes).toHaveAttribute("aria-label", /Nixie tube clock reading/);
+  await expect(page.locator(".wl-tint, .wl-gold, .wl-spark, .wl-rain")).toHaveCount(0);
+  await expect(page.locator(".initial-a, .initial-s")).toHaveCount(2);
+});
+test("reduced motion shifts without the glitch, and Steins Gate says El Psy Kongroo", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  const room = page.locator(".room");
+  const meter = page.getByRole("button", { name: "Divergence meter" });
+  for (let i = 0; i < 2; i++) {
+    await meter.click();
+    await expect(room).toHaveAttribute("data-shift", "idle", { timeout: 6000 });
+  }
+  await room.evaluate((el) => {
+    (window as never as { phases: string[] }).phases = [];
+    new MutationObserver(() => (window as never as { phases: string[] }).phases.push(el.dataset.shift!)).observe(el, {
+      attributeFilter: ["data-shift"],
+    });
+  });
+  await meter.click();
+  const note = page.locator(".wl-note");
+  await expect(note).toContainText("WORLDLINE 1.048596");
+  await expect(note).toContainText("EL PSY KONGROO.");
+  await expect(note.locator("small")).toHaveText("STEINS GATE REACHED");
+  await expect(room).toHaveAttribute("data-shift", "idle", { timeout: 6000 });
+  const phases = await page.evaluate(() => (window as never as { phases: string[] }).phases);
+  expect(phases).toEqual(["settle", "note", "idle"]);
+});
 test("room pet, lamp and theme interactions", async ({ page }) => {
   await page.goto("/");
   const pet = page.getByRole("button", { name: "Pet Storm" });
