@@ -3,7 +3,7 @@ export const site = {
   title: "ASAD.EXE",
   url: (import.meta.env?.SITE_URL as string | undefined) || globalThis.process?.env?.SITE_URL || "https://asad.atterkhan.com",
   description:
-    "Security, software, cloud, and the notes along the way. A personal technical journal by Asad Atterkhan.",
+    "Programmer, hacker and security person. I build things, break them, and write down what I learn.",
   email: "contact@asad.atterkhan.com",
   github: "https://github.com/amatterkhan",
   linkedin: "https://linkedin.com/in/amatterkhan",

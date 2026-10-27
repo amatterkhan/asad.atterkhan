@@ -67,4 +67,4 @@ export async function prerenderPaths(): Promise<string[]> {
     "/admin",
   ];
 }
-export { getArticles, getProjects, articleSummary } from "./lib/content.server";
+export { getArticles, getProjects, getActiveOutfit, articleSummary } from "./lib/content.server";
