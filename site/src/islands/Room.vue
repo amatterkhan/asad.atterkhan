@@ -60,6 +60,9 @@ const mode = ref<StormMode>("idle");
 const asad = ref<"typing" | "coffee" | "idle">("typing");
 const happy = ref(false);
 const said = ref(-1);
+// the bubble fades by CSS, but is also taken away after it, so it can never stay on screen
+const saying = ref(false);
+let sayTimer: ReturnType<typeof setTimeout> | undefined;
 let happyTimer: ReturnType<typeof setTimeout> | undefined;
 const stops: (() => void)[] = [];
 
@@ -223,6 +226,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   stops.forEach((stop) => stop());
   clearTimeout(happyTimer);
+  clearTimeout(sayTimer);
 });
 
 const lure = (e: PointerEvent) => {
@@ -238,6 +242,9 @@ const pet = () => {
   lastInput = performance.now();
   poke();
   said.value = (said.value + 1) % mrrps.length;
+  saying.value = true;
+  clearTimeout(sayTimer);
+  sayTimer = setTimeout(() => (saying.value = false), 2200);
   happy.value = true;
   clearTimeout(happyTimer);
   happyTimer = setTimeout(() => (happy.value = false), loopMs("asad-happy"));
@@ -301,7 +308,7 @@ const toggleTheme = () => {
       <div ref="storm" class="actor storm" :data-mode="mode">
         <span class="storm-shadow" aria-hidden="true" />
         <button type="button" aria-label="Pet Storm" data-cursor="plain" @click="pet">
-          <span v-if="said >= 0" :key="said" class="storm-says" role="status">{{ mrrps[said] }}</span>
+          <span v-if="saying" :key="said" class="storm-says" role="status">{{ mrrps[said] }}</span>
           <span v-if="mode === 'sleeping'" class="zzz" aria-hidden="true">z Z</span>
           <Sprite :state="`storm-${mode}`" :size="64" />
         </button>
