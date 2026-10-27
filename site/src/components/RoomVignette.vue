@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { manifest } from "../lib/manifest";
+import { NIXIE_BOX } from "../lib/nixie";
+import NixieClock from "./NixieClock.vue";
 // A close-up of one corner of the homepage room (same LibreSprite layers), used as the header art of
 // the page that corner leads to. Crops are in room pixels (the room is 384x216). `front` re-draws
 // parts of the room (x, y, w, h) over the children, for depth.
@@ -15,6 +17,9 @@ export type Corner = keyof typeof CROPS;
 type Rect = [number, number, number, number];
 const { corner, front = [] } = defineProps<{ corner: Corner; front?: Rect[] }>();
 const [x, y, w, h] = CROPS[corner];
+// the Nixie clock under the bookshelf is drawn in code, not in the room's PNGs, so add it where the crop shows it
+const [nx, ny, nw, nh] = NIXIE_BOX;
+const clock = nx < x + w && nx + nw > x && ny < y + h && ny + nh > y;
 const v = manifest.version;
 const bg = (n: string) => ({ backgroundImage: `url(/room/${n}.png?v=${v})` });
 const clip = ([fx, fy, fw, fh]: Rect) =>
@@ -24,6 +29,7 @@ const clip = ([fx, fy, fw, fh]: Rect) =>
   <div class="vignette" aria-hidden="true" :style="{ '--cw': w, '--ch': h, '--cx': x, '--cy': y }">
     <div class="vignette-room">
       <div v-for="n in ['sky-night', 'sky-day', 'room', 'sunbeam']" :key="n" :class="`layer layer-${n}`" :style="bg(n)" />
+      <NixieClock v-if="clock" part="glass" />
       <slot />
       <div
         v-for="r in front"
@@ -32,6 +38,7 @@ const clip = ([fx, fy, fw, fh]: Rect) =>
         :style="{ ...bg('room'), clipPath: clip(r) }"
       />
       <div v-for="n in ['night', 'glow', 'bulb']" :key="n" :class="`layer layer-${n}`" :style="bg(n)" />
+      <NixieClock v-if="clock" part="lit" />
     </div>
   </div>
 </template>

@@ -536,7 +536,9 @@ html[data-motion="paused"] *::after {
 @keyframes steam { 0% { opacity: 0; transform: translateY(0); } 30% { opacity: .8; } 100% { opacity: 0; transform: translateY(calc(var(--u) * -8)) translateX(calc(var(--u) * 1)); } }
 
 /* SVG drawn on the room's own 384x216 grid: book initials and the Nixie clock under the shelf */
-:is(.wall-art, .nixie-lit) { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; shape-rendering: crispEdges; }
+.wall-art { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; shape-rendering: crispEdges; }
+/* the clock's SVGs cover only its own box (components/NixieClock.vue) */
+.nixie { position: absolute; pointer-events: none; overflow: visible; shape-rendering: crispEdges; }
 .initial-a { fill: #b27a50; }
 .initial-s { fill: #559e86; }
 .nixie-plinth { fill: #2a2130; }
@@ -547,6 +549,14 @@ html[data-motion="paused"] *::after {
 .nixie-unlit { fill: rgba(150, 80, 40, .35); }
 .nixie-lit { filter: drop-shadow(0 0 calc(var(--u) * 1.2) rgba(255, 110, 20, .9)); }
 .nixie-lit path { fill: #ffa04a; }
+/* by day the pale wall shows through clear glass and washes the digits out: smoked tubes, brighter digits */
+:is(.room[data-sky="day"], :root[data-theme="light"] .vignette) {
+  .nixie-glass { fill: rgba(70, 52, 60, .4); }
+  .nixie-shine { fill: rgba(255, 255, 255, .3); }
+  .nixie-unlit { fill: rgba(150, 80, 40, .18); }
+  .nixie-lit { filter: drop-shadow(0 0 calc(var(--u) * .8) rgba(255, 120, 30, .8)); }
+  .nixie-lit path { fill: #ff9a3c; }
+}
 
 .spot {
   --hl: #fff2d2; --c: calc(var(--u) * 4); --t: max(2px, calc(var(--u) * .9));
@@ -577,7 +587,7 @@ html[data-motion="paused"] *::after {
 .actor { position: absolute; pointer-events: none; }
 .actor.asad { left: calc(var(--u) * 66); top: calc(var(--u) * 78); }
 .actor.asad .sprite { --sprite-size: calc(var(--u) * 128) !important; }
-.actor.storm { --x: 230; --flip: 1; left: 0; top: calc(var(--u) * 146); translate: calc(var(--u) * 198) 0; z-index: 2; will-change: translate; }
+.actor.storm { --x: 230; --flip: 1; left: 0; top: calc(var(--u) * 146); transform: translate3d(calc(var(--u) * 198), 0, 0); z-index: 2; will-change: transform; }
 .actor.storm .sprite { --sprite-size: calc(var(--u) * 64) !important; display: block; }
 .actor.storm .sprite { transform: scaleX(var(--flip)); }
 .actor.storm button { pointer-events: auto; position: relative; display: block; cursor: pointer; }

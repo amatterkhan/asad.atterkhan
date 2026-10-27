@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, type CSSProperties } from "vue";
+import { onBeforeUnmount, onMounted, ref, useTemplateRef, type CSSProperties } from "vue";
 import Sprite from "../components/Sprite.vue";
+import NixieClock from "../components/NixieClock.vue";
+import { glyph, mauritiusTime } from "../lib/nixie";
 import { loopMs, manifest } from "../lib/manifest";
 import { site } from "../lib/site";
 
@@ -15,60 +17,11 @@ const BEDS = [60, 188] as const;
 
 const { hint, outfit } = defineProps<{ hint: string; outfit?: string }>();
 
-// "HHMMSS" in Mauritius, for the Nixie clock under the bookshelf
-const mauritiusTime = () =>
-  new Intl.DateTimeFormat("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hourCycle: "h23",
-    timeZone: "Indian/Mauritius",
-  })
-    .format(new Date())
-    .replace(/\D/g, "");
-
 // Pixel glyphs, 3x5 (the book initials), drawn straight onto the room's 384x216 grid as SVG paths.
 const GLYPHS: Record<string, string[]> = {
   A: ["010", "101", "111", "101", "101"],
   S: ["011", "100", "010", "001", "110"],
 };
-// The clock's digits are taller, 3x7, narrow like real Nixie numerals.
-const DIGITS: Record<string, string[]> = {
-  "0": ["111", "101", "101", "101", "101", "101", "111"],
-  "1": ["010", "110", "010", "010", "010", "010", "111"],
-  "2": ["111", "001", "001", "111", "100", "100", "111"],
-  "3": ["111", "001", "001", "111", "001", "001", "111"],
-  "4": ["101", "101", "101", "111", "001", "001", "001"],
-  "5": ["111", "100", "100", "111", "001", "001", "111"],
-  "6": ["111", "100", "100", "111", "101", "101", "111"],
-  "7": ["111", "001", "001", "001", "001", "001", "001"],
-  "8": ["111", "101", "101", "111", "101", "101", "111"],
-  "9": ["111", "101", "101", "111", "001", "001", "111"],
-};
-const glyph = (ch: string, x: number, y: number, font = GLYPHS) =>
-  (font[ch] ?? [])
-    .flatMap((row, dy) => [...row].map((on, dx) => (on === "1" ? `M${x + dx} ${y + dy}h1v1h-1z` : "")))
-    .join("");
-
-// The Nixie clock, a Steins;Gate divergence meter telling the time: HH.MM.SS across eight tubes,
-// digit tubes 5px wide, the dot tubes 3px, 1px apart, standing on a dark plinth.
-const NIXIE_X = 157;
-const NIXIE_Y = 67;
-const tubes = (() => {
-  let x = NIXIE_X + 2;
-  return ["d", "d", ".", "d", "d", ".", "d", "d"].map((kind) => {
-    const t = { kind, x, w: kind === "d" ? 5 : 3 };
-    x += t.w + 1;
-    return t;
-  });
-})();
-const NIXIE_W = tubes.at(-1)!.x + 5 + 2 - NIXIE_X;
-const digitTubes = tubes.filter((t) => t.kind === "d");
-const unlit = digitTubes.map((t) => glyph("8", t.x + 1, NIXIE_Y + 2, DIGITS)).join("");
-const dots = tubes
-  .filter((t) => t.kind === ".")
-  .map((t) => `M${t.x + 1} ${NIXIE_Y + 8}h1v1h-1z`)
-  .join("");
 
 const mrrps = ["mrrp?", "*purr*", "mew.", "…supervising", "prrrt!", "(blink)"];
 
@@ -100,9 +53,6 @@ let target = 230;
 let lastInput = 0;
 const sky = ref<"day" | "night">("night");
 const clock = ref("");
-const lit = computed(() =>
-  clock.value ? digitTubes.map((t, i) => glyph(clock.value[i], t.x + 1, NIXIE_Y + 2, DIGITS)).join("") + dots : "",
-);
 const lamp = ref(true);
 const mode = ref<StormMode>("idle");
 const asad = ref<"typing" | "coffee" | "idle">("typing");
@@ -144,7 +94,9 @@ onMounted(() => {
   // Storm follows your pointer along the floor, wanders when ignored, naps, and stretches on waking.
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   let x = 230;
-  let raf = 0;
+  let decide: ReturnType<typeof setTimeout> | undefined;
+  // he decides ten times a second; the compositor does the walking in between
+  const next = () => (decide = setTimeout(() => loop(performance.now()), 100));
   let current: StormMode = "idle";
   let wander = 0;
   let busyUntil = 0;
@@ -159,7 +111,7 @@ onMounted(() => {
   let from = x;
   let heading = x;
   let walk: Animation | undefined;
-  const px = (at: number) => `${((at - 32) / W) * roomW}px 0`;
+  const px = (at: number) => `translate3d(${((at - 32) / W) * roomW}px, 0, 0)`;
   // where he is now, read off the running walk, so the logic and the picture never disagree
   const position = () => {
     if (!walk) return x;
@@ -170,7 +122,7 @@ onMounted(() => {
     x = from = position();
     heading = to;
     walk?.cancel();
-    walk = storm.value!.animate([{ translate: px(x) }, { translate: px(to) }], {
+    walk = storm.value!.animate([{ transform: px(x) }, { transform: px(to) }], {
       duration: reduce ? 0 : Math.abs(to - x) / WALK_SPEED,
       easing: "linear",
       fill: "forwards",
@@ -186,8 +138,8 @@ onMounted(() => {
   let shown = true;
   const io = new IntersectionObserver(([e]) => {
     shown = e.isIntersecting;
-    cancelAnimationFrame(raf);
-    if (shown) raf = requestAnimationFrame(loop);
+    clearTimeout(decide);
+    if (shown) next();
   });
   io.observe(root.value!);
   stops.push(() => io.disconnect());
@@ -207,7 +159,7 @@ onMounted(() => {
     if (!shown) return;
     const idle = now - lastInput;
     if (now < busyUntil) {
-      raf = requestAnimationFrame(loop);
+      next();
       return;
     }
     if (current === "sleeping" || current === "dream") {
@@ -217,7 +169,7 @@ onMounted(() => {
         set(current === "sleeping" ? "dream" : "sleeping");
         dreamAt = now + (current === "dream" ? 4500 : 12000 + Math.random() * 10000);
       }
-      raf = requestAnimationFrame(loop);
+      next();
       return;
     }
     if (idle > 22000) {
@@ -245,11 +197,11 @@ onMounted(() => {
       set("sleeping");
       dreamAt = now + 12000 + Math.random() * 10000;
     } else set("idle");
-    raf = requestAnimationFrame(loop);
+    next();
   };
-  raf = requestAnimationFrame(loop);
+  next();
   stops.push(() => {
-    cancelAnimationFrame(raf);
+    clearTimeout(decide);
     walk?.cancel();
   });
 });
@@ -316,18 +268,10 @@ const toggleTheme = () => {
       <!-- drawn on the wall, so the night and lamp layers darken them with the rest of the room -->
       <svg class="wall-art" :viewBox="`0 0 ${W} ${H}`" preserveAspectRatio="none" aria-hidden="true">
         <!-- initials pressed into two hardcover spines -->
-        <path class="initial initial-a" :d="glyph('A', 165, 26)" />
-        <path class="initial initial-s" :d="glyph('S', 194, 29)" />
-        <rect class="nixie-plinth" :x="NIXIE_X" :y="NIXIE_Y + 12" :width="NIXIE_W" height="3" />
-        <rect class="nixie-plinth-top" :x="NIXIE_X" :y="NIXIE_Y + 12" :width="NIXIE_W" height="1" />
-        <g v-for="t in tubes" :key="t.x">
-          <rect class="nixie-glass" :x="t.x" :y="NIXIE_Y + 1" :width="t.w" height="9" />
-          <rect class="nixie-glass" :x="t.x + 1" :y="NIXIE_Y" :width="t.w - 2" height="1" />
-          <rect class="nixie-shine" :x="t.x" :y="NIXIE_Y + 1" width="1" height="8" />
-          <rect class="nixie-socket" :x="t.x" :y="NIXIE_Y + 10" :width="t.w" height="2" />
-        </g>
-        <path class="nixie-unlit" :d="unlit" />
+        <path class="initial initial-a" :d="glyph('A', 165, 26, GLYPHS)" />
+        <path class="initial initial-s" :d="glyph('S', 194, 29, GLYPHS)" />
       </svg>
+      <NixieClock part="glass" />
 
       <div class="actor asad">
         <Sprite :state="happy ? 'asad-happy' : `asad-${asad}`" :outfit="outfit" :size="128" />
@@ -348,9 +292,7 @@ const toggleTheme = () => {
 
       <div v-for="name in ['night', 'dark', 'glow', 'bulb']" :key="name" :class="`layer layer-${name}`" :style="layer(name)" />
       <!-- the lit digits glow over the dark, like the LEDs; blank until the client knows the time -->
-      <svg class="nixie-lit" :viewBox="`0 0 ${W} ${H}`" preserveAspectRatio="none" role="img" :aria-label="clock ? `A Nixie tube clock reading ${clock.slice(0, 2)}:${clock.slice(2, 4)} in Mauritius` : 'A Nixie tube clock'">
-        <path :d="lit" />
-      </svg>
+      <NixieClock part="lit" :time="clock" />
       <span class="fx fx-led" :style="at([286, 119, 2, 1])" />
       <span class="fx fx-router a" :style="at([238, 42, 1, 1])" />
       <span class="fx fx-router b" :style="at([242, 42, 1, 1])" />
