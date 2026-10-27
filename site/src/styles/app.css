@@ -480,10 +480,13 @@ html[data-motion="paused"] *::after {
   transition: none !important;
   scroll-behavior: auto !important;
 }
+/* Reduce Motion stills the site, except the pixel-art room, its vignettes and the sprites: their
+   motion is small and in place (a cat's legs, blinking LEDs, slow clouds), and without it the room
+   looks broken (Storm glides with frozen legs). */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  :not(:is(.room, .vignette, .sprite) *),
+  :not(:is(.room, .vignette, .sprite) *)::before,
+  :not(:is(.room, .vignette, .sprite) *)::after {
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
@@ -495,7 +498,6 @@ html[data-motion="paused"] *::after {
     display: none;
   }
 }
-@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.motion-control{display:none}}
 .lab-entry { grid-template-columns: 1fr; }
 @media (max-width: 420px) {
   .sprite-scene > .sprite { --sprite-size: 200px !important; }

@@ -105,7 +105,6 @@ onMounted(() => {
   stops.push(() => clearTimeout(t));
 
   // Storm follows your pointer along the floor, wanders when ignored, naps, and stretches on waking.
-  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   let x = 230;
   let decide: ReturnType<typeof setTimeout> | undefined;
   // he decides ten times a second; the compositor does the walking in between
@@ -136,7 +135,7 @@ onMounted(() => {
     heading = to;
     walk?.cancel();
     walk = storm.value!.animate([{ transform: px(x) }, { transform: px(to) }], {
-      duration: reduce ? 0 : Math.abs(to - x) / WALK_SPEED,
+      duration: Math.abs(to - x) / WALK_SPEED,
       easing: "linear",
       fill: "forwards",
     });
