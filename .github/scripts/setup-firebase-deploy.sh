@@ -71,6 +71,17 @@ run gcloud iam service-accounts add-iam-policy-binding "$RUNTIME" --project "$PR
 exists gcloud artifacts repositories describe asad --project "$PROJECT_ID" --location "$REGION" ||
   run gcloud artifacts repositories create asad --project "$PROJECT_ID" --location "$REGION" \
     --repository-format docker --description "asad-api images"
+# Keep the five newest image versions; delete anything else older than 14 days.
+POLICY=$(mktemp)
+cat >"$POLICY" <<'JSON'
+[
+  {"name": "keep-recent", "action": {"type": "Keep"}, "mostRecentVersions": {"keepCount": 5}},
+  {"name": "delete-old", "action": {"type": "Delete"}, "condition": {"tagState": "any", "olderThan": "14d"}}
+]
+JSON
+run gcloud artifacts repositories set-cleanup-policies asad --project "$PROJECT_ID" --location "$REGION" \
+  --policy "$POLICY" --no-dry-run >/dev/null
+rm -f "$POLICY"
 run gcloud artifacts repositories add-iam-policy-binding asad --project "$PROJECT_ID" --location "$REGION" \
   --role roles/artifactregistry.writer --member "serviceAccount:$DEPLOYER" >/dev/null
 
