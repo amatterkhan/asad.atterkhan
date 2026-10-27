@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import PixelIcon from "../components/PixelIcon.vue";
-import { slugify, type Api, type Draft, type Summary } from "./admin-types";
-const { api } = defineProps<{ api: Api }>();
+import { slugify, type Api, type Authed, type Draft, type LabMap, type Summary } from "./admin-types";
+import { thumbnailPrompt } from "../lib/thumbnail-prompt";
+const { api, authed } = defineProps<{ api: Api; authed: Authed }>();
 const list = ref<Summary[] | null>(null);
 const draft = ref<Draft | null>(null);
 const preview = ref<string | null>(null);
@@ -17,7 +18,24 @@ const refresh = () =>
     (r) => (list.value = r.articles),
     (e: Error) => (note.value = e.message),
   );
-onMounted(refresh);
+// The Lab map feeds the section and category pickers.
+const lab = ref<LabMap>({ sections: [] });
+onMounted(() => {
+  refresh();
+  api<LabMap>("/api/admin/lab").then(
+    (m) => (lab.value = m),
+    () => {},
+  );
+});
+const sectionOf = (d: Pick<Draft, "section">) => lab.value.sections.find((s) => s.id === d.section);
+const categoryOf = (d: Pick<Draft, "section" | "category">) => sectionOf(d)?.categories.find((c) => c.id === d.category);
+const shelfName = (a: Summary) => [sectionOf(a)?.name, categoryOf(a)?.name].filter(Boolean).join(" · ");
+// Drafts from before the Lab map may carry a free-text category; send only ids the map knows.
+const filed = (d: Draft): Draft => (lab.value.sections.length && !categoryOf(d) ? { ...d, category: undefined } : d);
+const setSection = (id: string) => {
+  draft.value!.section = id || undefined;
+  if (!categoryOf(draft.value!)) draft.value!.category = undefined;
+};
 
 const run = async (label: string, fn: () => Promise<void>) => {
   note.value = label;
@@ -32,6 +50,7 @@ const open = (slug: string) =>
     draft.value = await api<Draft>(`/api/admin/articles/${slug}`);
     preview.value = null;
     note.value = "";
+    thumbNote.value = "";
   });
 const create = () =>
   run("Creating…", async () => {
@@ -45,7 +64,7 @@ const create = () =>
 const save = () =>
   run("Saving…", async () => {
     if (!draft.value) return;
-    draft.value = await api<Draft>(`/api/admin/articles/${draft.value.slug}`, { method: "PUT", body: JSON.stringify(draft.value) });
+    draft.value = await api<Draft>(`/api/admin/articles/${draft.value.slug}`, { method: "PUT", body: JSON.stringify(filed(draft.value)) });
     await refresh();
     note.value = "Draft saved.";
   });
@@ -53,7 +72,7 @@ const act = (verb: "publish" | "unpublish") =>
   run(verb === "publish" ? "Publishing…" : "Unpublishing…", async () => {
     if (!draft.value) return;
     const slug = draft.value.slug;
-    draft.value = await api<Draft>(`/api/admin/articles/${slug}`, { method: "PUT", body: JSON.stringify(draft.value) });
+    draft.value = await api<Draft>(`/api/admin/articles/${slug}`, { method: "PUT", body: JSON.stringify(filed(draft.value)) });
     draft.value = await api<Draft>(`/api/admin/articles/${slug}/${verb}`, { method: "POST" });
     await refresh();
     note.value =
@@ -94,7 +113,63 @@ watch(
     } else if (draft.value) timer = setTimeout(render, preview.value === null ? 0 : 350);
   },
 );
-onBeforeUnmount(() => clearTimeout(timer));
+onBeforeUnmount(() => {
+  clearTimeout(timer);
+  if (thumbUrl.value) URL.revokeObjectURL(thumbUrl.value);
+});
+// Thumbnail: the image is cropped and compressed here (lib/thumbnail-image.ts), stored by the API
+// under its hash, and attached by saving the draft. Drafts' thumbnails are private, so the preview
+// is fetched with the owner's token.
+const thumbUrl = ref<string | null>(null);
+const crisp = ref(false);
+const thumbNote = ref("");
+const showThumb = async (name?: string) => {
+  if (thumbUrl.value) URL.revokeObjectURL(thumbUrl.value);
+  thumbUrl.value = null;
+  if (!name) return;
+  const res = await authed(`/api/admin/thumbnails/${name}`);
+  if (res.ok && draft.value?.thumbnail === name) thumbUrl.value = URL.createObjectURL(await res.blob());
+};
+watch(
+  () => draft.value?.thumbnail,
+  (name) => showThumb(name).catch(() => (thumbNote.value = "Could not load the thumbnail.")),
+);
+const pickThumb = async (e: Event) => {
+  const input = e.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = "";
+  if (!file || !draft.value) return;
+  thumbNote.value = "Resizing…";
+  try {
+    const { makeThumbnail } = await import("../lib/thumbnail-image");
+    const blob = await makeThumbnail(file, crisp.value);
+    thumbNote.value = `Uploading ${Math.round(blob.size / 1024)} KB…`;
+    const form = new FormData();
+    form.append("file", blob, `thumbnail.${blob.type === "image/webp" ? "webp" : "jpg"}`);
+    const res = await authed("/api/admin/thumbnails", { method: "POST", body: form });
+    const body = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(body?.error || `Upload failed (${res.status})`);
+    draft.value.thumbnail = body.thumbnail;
+    thumbNote.value = `${Math.round(body.size / 1024)} KB, 640×360. Save the draft to keep it.`;
+  } catch (err) {
+    thumbNote.value = (err as Error).message;
+  }
+};
+const removeThumb = () => {
+  draft.value!.thumbnail = undefined;
+  thumbNote.value = "Removed. Save the draft to keep this.";
+};
+const copied = ref(false);
+const copyPrompt = async () => {
+  const d = draft.value!;
+  const section = sectionOf(d);
+  const category = categoryOf(d);
+  await navigator.clipboard.writeText(
+    thumbnailPrompt({ title: d.title, description: d.description, tags: d.tags, section, category }),
+  );
+  copied.value = true;
+  setTimeout(() => (copied.value = false), 2000);
+};
 const tagsText = (d: Draft) => d.tags.join(", ");
 const setTags = (value: string) => {
   draft.value!.tags = value.split(",").map((t) => t.trim()).filter(Boolean);
@@ -126,6 +201,7 @@ const statusLine = (d: Draft) =>
         <li v-for="a in visible" :key="a.slug">
           <button :class="draft?.slug === a.slug ? 'is-open' : ''" :aria-current="draft?.slug === a.slug ? 'true' : undefined" @click="open(a.slug)">
             <strong>{{ a.title }}</strong>
+            <small v-if="shelfName(a)" class="admin-list-shelf">{{ shelfName(a) }}</small>
             <span class="admin-list-meta">
               <span :class="`badge ${a.status}`">{{ a.status }}</span>
               <small>{{ new Date(a.modifiedAt).toLocaleDateString() }}</small>
@@ -136,11 +212,48 @@ const statusLine = (d: Draft) =>
     </aside>
 
     <form v-if="draft" class="admin-editor" @submit.prevent="save">
-      <div class="admin-row">
-        <label class="grow"><span>Title</span><input v-model="draft.title" /></label>
-        <label><span>Category</span><input :value="draft.category ?? ''" @input="draft.category = ($event.target as HTMLInputElement).value || undefined" /></label>
-      </div>
+      <label><span>Title</span><input v-model="draft.title" /></label>
       <label><span>Description</span><input v-model="draft.description" /></label>
+      <div class="admin-row">
+        <label class="grow">
+          <span>Section</span>
+          <select :value="draft.section ?? ''" @change="setSection(($event.target as HTMLSelectElement).value)">
+            <option value="">{{ lab.sections.length ? `None (shows in ${lab.sections.at(-1)!.name})` : "None" }}</option>
+            <option v-for="sec in lab.sections" :key="sec.id" :value="sec.id">{{ sec.name }}</option>
+            <option v-if="draft.section && !sectionOf(draft)" :value="draft.section">{{ draft.section }} (removed)</option>
+          </select>
+        </label>
+        <label class="grow">
+          <span>Category</span>
+          <select
+            :value="categoryOf(draft) ? draft.category : ''"
+            :disabled="!sectionOf(draft)?.categories.length"
+            @change="draft.category = ($event.target as HTMLSelectElement).value || undefined"
+          >
+            <option value="">None</option>
+            <option v-for="c in sectionOf(draft)?.categories ?? []" :key="c.id" :value="c.id">{{ c.name }}</option>
+          </select>
+        </label>
+      </div>
+      <div class="admin-thumb">
+        <div class="admin-thumb-frame">
+          <img v-if="thumbUrl" :src="thumbUrl" alt="Thumbnail preview" width="640" height="360" />
+          <span v-else><PixelIcon name="image" /> No thumbnail</span>
+        </div>
+        <div class="admin-thumb-tools">
+          <span class="admin-lab-label">Thumbnail <small>16:9, resized to 640×360 in your browser</small></span>
+          <div class="admin-thumb-buttons">
+            <label class="admin-file">
+              <input type="file" accept="image/png,image/jpeg,image/webp" @change="pickThumb" />
+              <span>{{ draft.thumbnail ? "Replace image" : "Upload image" }}</span>
+            </label>
+            <button v-if="draft.thumbnail" type="button" @click="removeThumb">Remove</button>
+            <button type="button" @click="copyPrompt">{{ copied ? "Copied" : "Copy AI prompt" }}</button>
+          </div>
+          <label class="check"><input v-model="crisp" type="checkbox" /> <span>Crisp pixels (nearest-neighbour scaling)</span></label>
+          <small class="admin-status" role="status">{{ thumbNote }}</small>
+        </div>
+      </div>
       <div class="admin-row">
         <label class="grow">
           <span>Tags (comma separated)</span>

@@ -50,5 +50,6 @@ for (const p of paths) {
 await write(path.join(dist, "404.html"), (await server.render("/404", ctx, assets)).html);
 await feeds(server, dist, write);
 await ogImages(server, root, dist, write);
+for (const [name, source] of server.thumbnailSources() as Map<string, string>) await write(path.join(dist, "lab-media", name), await fs.readFile(source));
 await fs.rm(path.join(dist, ".vite"), { recursive: true, force: true });
 console.log(`prerendered ${paths.length} pages + 404 to ${path.relative(process.cwd(), dist) || "dist"}`);

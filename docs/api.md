@@ -57,7 +57,9 @@ collection the public site already reads; field list in `frontend-integration.md
 type ArticleDraft = {
   slug: string; title: string; description: string;
   body: string;                 // Markdown
-  tags: string[]; category?: string; featured: boolean;
+  tags: string[]; featured: boolean;
+  section?: string; category?: string;  // Lab map ids (section 5); "" or absent clears them
+  thumbnail?: string;           // "<sha256>.<webp|png|jpg>" from POST /api/admin/thumbnails
   status: "draft" | "published";
   publishedAt?: string; updatedAt?: string;   // YYYY-MM-DD
   version: number;              // optimistic concurrency, incremented by the server
@@ -84,6 +86,15 @@ type ArticleDraft = {
 - Every write (save, publish, unpublish) increments `version`: keep the returned draft.
 - `POST /api/admin/preview` body `{ body: string }` (≤ 200,000 characters) → `{ html, toc }` rendered with the same
   `renderArticle()` the site uses (so the editor preview matches the page exactly)
+
+Saving with a `thumbnail` that was never uploaded → 400 ("Upload the thumbnail again").
+
+- `POST /api/admin/thumbnails` multipart `file` (PNG, JPEG or WebP by signature, ≤ 512 KiB; 50
+  per day) → 201 `{ thumbnail, size }`. The admin crops and compresses to 640×360 before
+  uploading. Objects are stored privately at `thumbnails/<sha256>.<ext>`, so the same image
+  uploaded twice returns the same name. Nothing is public until an article that names it is
+  published and the exporter copies it into the build (served from `/lab-media/<hash>`).
+- `GET /api/admin/thumbnails/{name}` → the image, for the editor's preview of drafts.
 
 Images in articles reuse the existing documents flow (`/api/admin/documents`, published images
 served from `/media/{id}`).
@@ -115,8 +126,30 @@ type Wardrobe = {
   id or unknown keys → 400) → `{ activeOutfit, updatedAt }`; then requests a rebuild.
 - Public read: the exporter includes the active outfit in the build snapshot (`CONTENT_SOURCE=firestore`); otherwise the index default is used.
 
+## 5. Lab map: `siteSettings/lab` (one document)
+
+The sections and categories of The Lab. Falls back to `content/lab.json` until the first save.
+
+```ts
+type LabMap = {
+  sections: {                 // 1–12, shown in this order; the last also holds unfiled articles
+    id: string;               // slug, ≤ 40, unique; part of /lab/section/<id>
+    name: string;             // 1–40
+    blurb: string;            // ≤ 200
+    icon: string;             // one of SECTION_ICONS in site/src/lib/icons.ts
+    categories: { id: string; name: string }[];   // ≤ 24, ids unique within the section
+  }[];
+  updatedAt?: string;         // ISO, set by the server
+};
+```
+
+- `GET /api/admin/lab` (service `content`) → `LabMap`
+- `PUT /api/admin/lab` body `{ sections }` (a sent `updatedAt` is ignored; duplicate ids, unknown
+  icons, unknown keys or control characters → 400) → `LabMap`; then requests a rebuild.
+- Public read: the exporter writes it to `lab.json` in the build snapshot.
+
 ## Rebuild requests
 
-Site-copy saves, article publish/unpublish, achievement and wardrobe changes ask GitHub to rebuild
+Site-copy saves, article publish/unpublish, achievement, wardrobe and Lab map changes ask GitHub to rebuild
 the site (`repository_dispatch` `content-published`; see [architecture.md](architecture.md)).
 Article draft saves and previews do not. Published documents change visibility immediately.

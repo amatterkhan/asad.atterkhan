@@ -1,0 +1,30 @@
+{
+  "sections": [
+    {
+      "id": "writeups",
+      "name": "Writeups",
+      "blurb": "Boxes, rooms, challenges and exams, worked through step by step.",
+      "icon": "flag",
+      "categories": [
+        { "id": "hackthebox", "name": "Hack The Box" },
+        { "id": "htb-certifications", "name": "HTB Certifications" },
+        { "id": "tryhackme", "name": "TryHackMe" },
+        { "id": "ctf", "name": "CTF" }
+      ]
+    },
+    {
+      "id": "tooling",
+      "name": "Tooling",
+      "blurb": "Tools, scripts and setups I use, build or take apart.",
+      "icon": "tools",
+      "categories": []
+    },
+    {
+      "id": "notes",
+      "name": "Notes",
+      "blurb": "Everything else: experiments, ideas and things I'm figuring out.",
+      "icon": "notebook",
+      "categories": []
+    }
+  ]
+}

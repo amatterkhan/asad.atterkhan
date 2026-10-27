@@ -3,15 +3,21 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/amatterkhan/asad.atterkhan/api/internal/server"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
+
+	"cloud.google.com/go/storage"
+	"github.com/amatterkhan/asad.atterkhan/api/internal/server"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func run() error {
@@ -45,6 +51,38 @@ func run() error {
 		return os.WriteFile(filepath.Join(tmp, path), append(b, '\n'), 0600)
 	}
 	valid := regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
+	thumbnail := regexp.MustCompile(`^([a-f0-9]{64})\.(webp|png|jpg)$`)
+	if err = os.Mkdir(filepath.Join(tmp, "thumbnails"), 0755); err != nil {
+		return err
+	}
+	// copyThumbnail writes a published article's thumbnail beside the snapshot. A missing object
+	// drops the thumbnail (the article still builds); one that does not match its name fails.
+	copyThumbnail := func(v map[string]any) error {
+		name, _ := v["thumbnail"].(string)
+		m := thumbnail.FindStringSubmatch(name)
+		if m == nil {
+			delete(v, "thumbnail")
+			return nil
+		}
+		reader, err := services.Bucket.Object("thumbnails/" + name).NewReader(ctx)
+		if errors.Is(err, storage.ErrObjectNotExist) {
+			log.Printf("thumbnail %s for %s is missing; exporting without it", name, v["slug"])
+			delete(v, "thumbnail")
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		defer reader.Close()
+		b, err := io.ReadAll(io.LimitReader(reader, 512*1024+1))
+		if err != nil {
+			return err
+		}
+		if sum := sha256.Sum256(b); hex.EncodeToString(sum[:]) != m[1] {
+			return fmt.Errorf("thumbnail %s does not match its digest", name)
+		}
+		return os.WriteFile(filepath.Join(tmp, "thumbnails", name), b, 0600)
+	}
 	for collection, dir := range map[string]string{"publicArticles": "articles", "publicProjects": "projects"} {
 		if err = os.Mkdir(filepath.Join(tmp, dir), 0755); err != nil {
 			return err
@@ -61,12 +99,17 @@ func run() error {
 			if !valid.MatchString(doc.Ref.ID) || v["slug"] != doc.Ref.ID {
 				return fmt.Errorf("invalid %s document identity", collection)
 			}
+			if _, ok := v["thumbnail"]; ok && collection == "publicArticles" {
+				if err = copyThumbnail(v); err != nil {
+					return err
+				}
+			}
 			if err = write(dir+"/"+doc.Ref.ID+".json", v); err != nil {
 				return err
 			}
 		}
 	}
-	for id, name := range map[string]string{"public": "site.json", "achievements": "achievements.json", "wardrobe": "wardrobe.json"} {
+	for id, name := range map[string]string{"public": "site.json", "achievements": "achievements.json", "wardrobe": "wardrobe.json", "lab": "lab.json"} {
 		doc, err := services.DB.Collection("siteSettings").Doc(id).Get(ctx)
 		if status.Code(err) == codes.NotFound {
 			continue

@@ -30,6 +30,7 @@ const name = copy.heroTitle.match(/Asad\.?$/)?.[0];
       <li v-for="a in articles" :key="a.slug">
         <time :datetime="a.publishedAt">{{ date(a.publishedAt!) }}</time>
         <a :href="`/lab/${a.slug}`">{{ a.title }}</a>
+        <small class="shelf-note">{{ a.shelf.categoryName ?? a.shelf.sectionName }}</small>
       </li>
     </ul>
     <p v-else class="quiet-note">

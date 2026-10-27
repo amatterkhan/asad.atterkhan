@@ -73,7 +73,7 @@ type route struct{ method, path string }
 
 func protectedRoutes() []route {
 	id := "12345678-1234-4234-8234-123456789012"
-	return []route{{"GET", "/api/admin/site"}, {"PUT", "/api/admin/site"}, {"GET", "/api/admin/wardrobe"}, {"PUT", "/api/admin/wardrobe"}, {"GET", "/api/admin/articles"}, {"POST", "/api/admin/articles"}, {"GET", "/api/admin/articles/test"}, {"PUT", "/api/admin/articles/test"}, {"DELETE", "/api/admin/articles/test"}, {"POST", "/api/admin/articles/test/publish"}, {"POST", "/api/admin/articles/test/unpublish"}, {"POST", "/api/admin/preview"}, {"GET", "/api/admin/achievements"}, {"PATCH", "/api/admin/achievements"}, {"GET", "/api/admin/documents"}, {"POST", "/api/admin/documents"}, {"PATCH", "/api/admin/documents/" + id}, {"DELETE", "/api/admin/documents/" + id}, {"POST", "/api/admin/documents/" + id + "/publish"}, {"GET", "/api/admin/documents/" + id + "/download"}}
+	return []route{{"GET", "/api/admin/site"}, {"PUT", "/api/admin/site"}, {"GET", "/api/admin/wardrobe"}, {"PUT", "/api/admin/wardrobe"}, {"GET", "/api/admin/lab"}, {"PUT", "/api/admin/lab"}, {"POST", "/api/admin/thumbnails"}, {"GET", "/api/admin/thumbnails/" + strings.Repeat("a", 64) + ".webp"}, {"GET", "/api/admin/articles"}, {"POST", "/api/admin/articles"}, {"GET", "/api/admin/articles/test"}, {"PUT", "/api/admin/articles/test"}, {"DELETE", "/api/admin/articles/test"}, {"POST", "/api/admin/articles/test/publish"}, {"POST", "/api/admin/articles/test/unpublish"}, {"POST", "/api/admin/preview"}, {"GET", "/api/admin/achievements"}, {"PATCH", "/api/admin/achievements"}, {"GET", "/api/admin/documents"}, {"POST", "/api/admin/documents"}, {"PATCH", "/api/admin/documents/" + id}, {"DELETE", "/api/admin/documents/" + id}, {"POST", "/api/admin/documents/" + id + "/publish"}, {"GET", "/api/admin/documents/" + id + "/download"}}
 }
 func TestShiftRotation(t *testing.T) {
 	for date, want := range map[string]string{"2025-11-24": "night", "2025-11-26": "off", "2025-12-03": "night", "2025-12-05": "off", "2025-12-22": "day", "2025-11-19": "day"} {
@@ -208,13 +208,60 @@ func TestEmulatorRoutes(t *testing.T) {
 	check("PUT", path, v, 400)
 	delete(v, "unknown")
 	v = check("PUT", path, v, 200)
+	sendThumbnail := func(b []byte, want int) map[string]any {
+		t.Helper()
+		var buf bytes.Buffer
+		form := multipart.NewWriter(&buf)
+		part, _ := form.CreateFormFile("file", "thumb.png")
+		_, _ = part.Write(b)
+		_ = form.Close()
+		req, _ := http.NewRequest("POST", ts.URL+"/api/admin/thumbnails", &buf)
+		req.Header.Set("Authorization", "Bearer "+token)
+		req.Header.Set("Content-Type", form.FormDataContentType())
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer res.Body.Close()
+		var out map[string]any
+		_ = json.NewDecoder(res.Body).Decode(&out)
+		if res.StatusCode != want {
+			t.Fatalf("thumbnail upload: %d %v", res.StatusCode, out)
+		}
+		return out
+	}
+	thumbImage, err := os.ReadFile("../../../site/public/sprites/storm-idle-still.png")
+	if err != nil {
+		t.Fatal(err)
+	}
+	sendThumbnail([]byte("%PDF-1.7 not an image"), 415)
+	sendThumbnail(bytes.Repeat([]byte("x"), maxThumbnail+1), 400)
+	thumb := str(sendThumbnail(thumbImage, 201)["thumbnail"])
+	if again := str(sendThumbnail(thumbImage, 201)["thumbnail"]); again != thumb || !thumbnailPattern.MatchString(thumb) {
+		t.Fatalf("thumbnail names %q, %q", thumb, again)
+	}
+	if code, _ := call("GET", "/api/admin/thumbnails/"+thumb, nil, token); code != 200 {
+		t.Fatal("stored thumbnail not readable", code)
+	}
+	v["thumbnail"] = strings.Repeat("0", 64) + ".png"
+	check("PUT", path, v, 400)
+	v["thumbnail"] = "../escape.png"
+	check("PUT", path, v, 400)
+	v["thumbnail"], v["section"], v["category"] = thumb, "writeups", "hackthebox"
+	v = check("PUT", path, v, 200)
+	if v["thumbnail"] != thumb || v["section"] != "writeups" || v["category"] != "hackthebox" {
+		t.Fatalf("shelf and thumbnail not saved: %v", v)
+	}
+	v["section"] = "Not A Slug"
+	check("PUT", path, v, 400)
+	v["section"] = "writeups"
 	stale := clone(v)
 	v["title"] = "Changed"
 	v = check("PUT", path, v, 200)
 	check("PUT", path, stale, 409)
 	v = check("POST", path+"/publish", nil, 200)
 	pub, err := services.DB.Collection("publicArticles").Doc(slug).Get(ctx)
-	if err != nil || pub.Data()["body"] != v["body"] {
+	if err != nil || pub.Data()["body"] != v["body"] || pub.Data()["thumbnail"] != thumb || pub.Data()["section"] != "writeups" {
 		t.Fatal("published snapshot missing", err)
 	}
 	check("DELETE", path, nil, 409)
@@ -250,6 +297,18 @@ func TestEmulatorRoutes(t *testing.T) {
 	check("PUT", "/api/admin/wardrobe", map[string]any{"activeOutfit": "classic"}, 200)
 	if got := check("GET", "/api/admin/wardrobe", nil, 200); got["activeOutfit"] != "classic" {
 		t.Fatalf("wardrobe after save: %v", got)
+	}
+	labMap := check("GET", "/api/admin/lab", nil, 200)
+	room := func(id, icon string) map[string]any {
+		return map[string]any{"id": id, "name": "Room", "blurb": "", "icon": icon, "categories": []any{}}
+	}
+	check("PUT", "/api/admin/lab", map[string]any{"sections": []any{}}, 400)
+	check("PUT", "/api/admin/lab", map[string]any{"sections": []any{room("a", "rocket")}}, 400)
+	check("PUT", "/api/admin/lab", map[string]any{"sections": []any{room("a", "flag"), room("a", "flag")}}, 400)
+	check("PUT", "/api/admin/lab", map[string]any{"sections": []any{room("Bad Id", "flag")}}, 400)
+	check("PUT", "/api/admin/lab", map[string]any{"sections": labMap["sections"], "extra": 1}, 400)
+	if got := check("PUT", "/api/admin/lab", map[string]any{"sections": labMap["sections"]}, 200); len(got["sections"].([]any)) != 3 {
+		t.Fatalf("lab map after save: %v", got)
 	}
 	check("GET", "/api/admin/achievements", nil, 200)
 	check("PATCH", "/api/admin/achievements", map[string]any{"featuredIds": []string{"unknown"}}, 400)
@@ -388,8 +447,8 @@ func TestEmulatorRoutes(t *testing.T) {
 	if code != 401 {
 		t.Fatal("stale auth allowed", code)
 	}
-	if hooks.Load() != 5 {
-		t.Errorf("rebuild hook calls got %d want 5", hooks.Load())
+	if hooks.Load() != 6 {
+		t.Errorf("rebuild hook calls got %d want 6", hooks.Load())
 	}
 	if _, err = services.Auth.UpdateUser(ctx, uid, (&auth.UserToUpdate{}).Disabled(true)); err != nil {
 		t.Fatal(err)

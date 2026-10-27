@@ -1,4 +1,5 @@
 import { createServer as createHttpServer } from "node:http";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { createServer } from "vite";
 
@@ -13,11 +14,28 @@ createHttpServer((req, res) => {
   vite.middlewares(req, res, async () => {
     const url = req.url || "/";
     try {
+      if (url.startsWith("/lab-media/")) {
+        const content = await vite.ssrLoadModule("/src/lib/content.server.ts");
+        const name = url.slice(11).split("?")[0];
+        // a reloaded module starts with an empty map; resolving the articles fills it again
+        if (!content.thumbnailSources().has(name)) await content.getArticles();
+        const source = (content.thumbnailSources() as Map<string, string>).get(name);
+        if (!source) throw Object.assign(new Error("Not found"), { status: 404 });
+        const ext = path.extname(source).slice(1);
+        res.writeHead(200, { "Content-Type": `image/${ext === "jpg" ? "jpeg" : ext}` });
+        res.end(await readFile(source));
+        return;
+      }
       const { render } = await vite.ssrLoadModule("/src/entry-server.ts");
       const { status, html } = await render(url.split("?")[0], { dev: true, root }, { tags });
       res.writeHead(status, { "Content-Type": "text/html; charset=utf-8" });
       res.end(html);
     } catch (e) {
+      if ((e as { status?: number }).status === 404) {
+        res.writeHead(404, { "Content-Type": "text/plain" });
+        res.end("Not found");
+        return;
+      }
       vite.ssrFixStacktrace(e as Error);
       console.error(e);
       res.writeHead(500, { "Content-Type": "text/plain" });

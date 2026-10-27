@@ -6,9 +6,10 @@ import OwnerSignIn from "./OwnerSignIn.vue";
 import AdminCopy from "./AdminCopy.vue";
 import AdminWriting from "./AdminWriting.vue";
 import AdminWardrobe from "./AdminWardrobe.vue";
+import AdminLab from "./AdminLab.vue";
 import { syncTheme } from "../behaviors/theme";
 import { ownerAuth } from "../lib/firebase-client";
-import type { Api } from "./admin-types";
+import type { Api, Authed } from "./admin-types";
 
 // Owner-only writing desk. Talks to /api/admin/* (the Go API, docs/admin-contract.md) with the
 // Firebase ID token.
@@ -18,6 +19,7 @@ const status = ref("");
 watch(user, () => nextTick(syncTheme));
 const SECTIONS = [
   { id: "writing", label: "Writing", hint: "Notes for The Lab", icon: "note" },
+  { id: "lab", label: "Lab map", hint: "Sections and categories of The Lab", icon: "map" },
   { id: "copy", label: "Site copy", hint: "The words on the site", icon: "article" },
   { id: "wardrobe", label: "Wardrobe", hint: "What Asad is wearing", icon: "shirt" },
 ] as const;
@@ -66,13 +68,12 @@ const signOut = async () => {
   status.value = "Signed out.";
 };
 
-const api: Api = async <T,>(path: string, init: RequestInit = {}): Promise<T> => {
+const authed: Authed = async (path, init = {}) => {
   if (!user.value) throw new Error("Sign in first");
-  const res = await fetch(path, {
-    ...init,
-    headers: { ...init.headers, "Content-Type": "application/json", Authorization: `Bearer ${await user.value.getIdToken()}` },
-    cache: "no-store",
-  });
+  return fetch(path, { ...init, headers: { ...init.headers, Authorization: `Bearer ${await user.value.getIdToken()}` }, cache: "no-store" });
+};
+const api: Api = async <T,>(path: string, init: RequestInit = {}): Promise<T> => {
+  const res = await authed(path, { ...init, headers: { ...init.headers, "Content-Type": "application/json" } });
   const body = await res.json().catch(() => null);
   if (!res.ok) throw new Error(body?.error || `Request failed (${res.status})`);
   if (body === null) throw new Error(`The admin API did not answer (${path} returned something that is not JSON). Is the Go API running and proxied?`);
@@ -154,7 +155,8 @@ const api: Api = async <T,>(path: string, init: RequestInit = {}): Promise<T> =>
       <div class="console-body">
         <AdminCopy v-if="tab === 'copy'" :api="api" />
         <AdminWardrobe v-else-if="tab === 'wardrobe'" :api="api" />
-        <AdminWriting v-else :api="api" />
+        <AdminLab v-else-if="tab === 'lab'" :api="api" />
+        <AdminWriting v-else :api="api" :authed="authed" />
       </div>
     </div>
   </div>

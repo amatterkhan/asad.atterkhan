@@ -53,10 +53,11 @@ export async function render(url: string, ctx: RenderContext, assets: Assets): P
 
 /** Every public path to prerender (dynamic routes expanded from content). */
 export async function prerenderPaths(): Promise<string[]> {
-  const { getArticles, getProjects } = await import("./lib/content.server");
+  const { getArticles, getLab, getProjects } = await import("./lib/content.server");
   return [
     "/",
     "/lab",
+    ...(await getLab()).sections.flatMap((s) => [`/lab/section/${s.id}`, ...s.categories.map((c) => `/lab/section/${s.id}/${c.id}`)]),
     ...(await getArticles()).map((a) => `/lab/${a.slug}`),
     "/workbench",
     ...(await getProjects()).map((p) => `/workbench/${p.slug}`),
@@ -67,4 +68,4 @@ export async function prerenderPaths(): Promise<string[]> {
     "/admin",
   ];
 }
-export { getArticles, getProjects, getActiveOutfit, articleSummary } from "./lib/content.server";
+export { getArticles, getLab, getProjects, getActiveOutfit, articleSummary, thumbnailSources } from "./lib/content.server";

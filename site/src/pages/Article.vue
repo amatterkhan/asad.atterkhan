@@ -16,7 +16,15 @@ const cls = (h: TocEntry) => (h.depth === 3 ? "subheading" : undefined);
 <template>
   <div class="read-progress" aria-hidden="true" />
   <p class="eyebrow article-crumb">
-    <a href="/lab">The Lab</a> <span aria-hidden="true">/</span> {{ article.category || "Notes" }}
+    <a href="/lab">The Lab</a> <span aria-hidden="true">/</span>
+    <template v-if="article.shelf">
+      <a :href="`/lab/section/${article.shelf.section}`">{{ article.shelf.sectionName }}</a>
+      <template v-if="article.shelf.category">
+        <span aria-hidden="true">/</span>
+        <a :href="`/lab/section/${article.shelf.section}/${article.shelf.category}`">{{ article.shelf.categoryName }}</a>
+      </template>
+    </template>
+    <template v-else>Notes</template>
   </p>
   <aside v-if="draft" class="callout draft">
     <strong>LOCAL DRAFT PREVIEW</strong>
@@ -34,6 +42,7 @@ const cls = (h: TocEntry) => (h.depth === 3 ? "subheading" : undefined);
     <span v-for="tag in article.tags" :key="tag">{{ tag }}</span>
   </div>
   <p class="article-lead">{{ article.description }}</p>
+  <img v-if="article.thumb" class="article-thumb" :src="article.thumb" alt="" width="640" height="360" fetchpriority="high" />
   <details v-if="toc.length > 0" class="mobile-toc">
     <summary>On this page</summary>
     <a v-for="h in toc" :key="h.id" :href="`#${h.id}`" :class="cls(h)">{{ h.title }}</a>
@@ -43,7 +52,7 @@ const cls = (h: TocEntry) => (h.depth === 3 ? "subheading" : undefined);
       <div v-html="html" />
       <footer class="article-end">
         <span class="tags">{{ article.tags.join(" / ") }}</span>
-        <a href="/lab"><PixelIcon name="arrowLeft" />Back to The Lab</a>
+        <a :href="article.shelf ? `/lab/section/${article.shelf.section}` : '/lab'"><PixelIcon name="arrowLeft" />Back to {{ article.shelf?.sectionName ?? "The Lab" }}</a>
       </footer>
     </article>
     <aside v-if="toc.length > 0" class="toc" aria-label="On this page">

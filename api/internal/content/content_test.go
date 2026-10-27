@@ -7,7 +7,7 @@ import (
 )
 
 func TestEmbeddedSeedsMatchSite(t *testing.T) {
-	for _, name := range []string{"site", "achievements", "achievement-settings"} {
+	for _, name := range []string{"site", "lab", "achievements", "achievement-settings"} {
 		want, err := os.ReadFile("../../../site/content/" + name + ".json")
 		if err != nil {
 			t.Fatal(err)

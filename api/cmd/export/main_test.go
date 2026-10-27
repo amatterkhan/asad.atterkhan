@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"github.com/amatterkhan/asad.atterkhan/api/internal/server"
 	"os"
@@ -25,12 +27,31 @@ func TestExportSnapshot(t *testing.T) {
 	}
 	defer services.DB.Close()
 	slug := "exported-fixture"
+	image, err := os.ReadFile("../../../site/public/sprites/storm-idle-still.png")
+	if err != nil {
+		t.Fatal(err)
+	}
+	sum := sha256.Sum256(image)
+	thumb := hex.EncodeToString(sum[:]) + ".png"
+	w := services.Bucket.Object("thumbnails/" + thumb).NewWriter(ctx)
+	if _, err = w.Write(image); err != nil {
+		t.Fatal(err)
+	}
+	if err = w.Close(); err != nil {
+		t.Fatal(err)
+	}
 	ref := services.DB.Collection("publicArticles").Doc(slug)
-	_, err = ref.Set(ctx, map[string]any{"slug": slug, "status": "published", "title": "Exported note", "description": "Snapshot fixture", "publishedAt": "2025-01-01", "tags": []string{}, "featured": false, "body": "## Exported"})
+	_, err = ref.Set(ctx, map[string]any{"slug": slug, "status": "published", "title": "Exported note", "description": "Snapshot fixture", "publishedAt": "2025-01-01", "tags": []string{}, "featured": false, "body": "## Exported", "section": "writeups", "category": "hackthebox", "thumbnail": thumb})
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer ref.Delete(ctx)
+	missing := services.DB.Collection("publicArticles").Doc("exported-without-thumbnail")
+	_, err = missing.Set(ctx, map[string]any{"slug": "exported-without-thumbnail", "status": "published", "title": "Lost image", "description": "Snapshot fixture", "publishedAt": "2025-01-01", "tags": []string{}, "featured": false, "body": "x", "thumbnail": strings.Repeat("0", 64) + ".png"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer missing.Delete(ctx)
 	unrelated := t.TempDir()
 	protected := filepath.Join(unrelated, "keep.txt")
 	if err = os.WriteFile(protected, []byte("keep"), 0600); err != nil {
@@ -53,8 +74,16 @@ func TestExportSnapshot(t *testing.T) {
 		t.Fatal(err)
 	}
 	var v map[string]any
-	if err = json.Unmarshal(b, &v); err != nil || v["body"] != "## Exported" {
+	if err = json.Unmarshal(b, &v); err != nil || v["body"] != "## Exported" || v["thumbnail"] != thumb {
 		t.Fatal(string(b), err)
+	}
+	if copied, err := os.ReadFile(filepath.Join(dir, "thumbnails", thumb)); err != nil || string(copied) != string(image) {
+		t.Fatal("thumbnail not exported", err)
+	}
+	b, _ = os.ReadFile(filepath.Join(dir, "articles", "exported-without-thumbnail.json"))
+	var lost map[string]any
+	if err = json.Unmarshal(b, &lost); err != nil || lost["thumbnail"] != nil {
+		t.Fatal("missing thumbnail was exported", string(b))
 	}
 	if os.Getenv("VERIFY_SITE_BUILD") == "true" {
 		cmd := exec.Command("npm", "run", "build")
