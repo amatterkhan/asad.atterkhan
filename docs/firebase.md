@@ -10,8 +10,8 @@ Provisioned on 2026-10-26 and deployment setup verified on 2026-10-27:
 - Default bucket: `asad-atterkhan.firebasestorage.app`, `us-central1`, uniform bucket IAM enabled and public access prevention explicitly enforced. No public IAM principals.
 - Repository Firestore rules, indexes, and Storage rules deployed to the explicit project with the personal Firebase CLI account.
 - Google is the only enabled sign-in provider. Identity Platform and TOTP are enabled; one adjacent TOTP interval is accepted. No SMS factor is configured.
-- Authorized domains: `localhost`, `127.0.0.1`, and Firebase's default project domains. The web.app domain is authorized; no custom production domain is connected.
-- Browser API key restricted to the Auth, token, Firestore and Firebase Storage APIs and `http://localhost:4180/*`, `http://127.0.0.1:4180/*`, `https://asad-atterkhan.firebaseapp.com/*` and (added 27 October) `https://asad-atterkhan.web.app/*`. The four API restrictions were preserved; the custom domain will be added during its rollout.
+- Authorized domains: `localhost`, `127.0.0.1`, and Firebase's default project domains. `asad-atterkhan.web.app` and `asad.atterkhan.com` are authorized.
+- Browser API key restricted to the Auth, token, Firestore and Firebase Storage APIs and `http://localhost:4180/*`, `http://127.0.0.1:4180/*`, `https://asad-atterkhan.firebaseapp.com/*` and (added 27 October) `https://asad-atterkhan.web.app/*` and `https://asad.atterkhan.com/*`. The four API restrictions were preserved.
 - The only human project IAM principal is `dev@asad.atterkhan.com` with Owner. Other IAM principals include Firebase/Google service identities and the two site service accounts listed below.
 - Billing: Blaze via Google Cloud Free Trial; project budget alerts at US$1, US$3 and US$5. Alerts are not spending caps.
 
@@ -62,9 +62,10 @@ Keyless GitHub deployment setup is provisioned in this project only:
   thresholds 20%, 60%, 100% ($1/$3/$5). No budget settings were changed.
 
 Runtime and Hosting rewrites use `us-central1`. The static launch succeeded with
-`API_ENABLED=false`; the API is now deployed with `API_ENABLED=true`, `CONTENT_SOURCE=git`, `INDEX_SITE=false`, `SITE_URL=https://asad-atterkhan.web.app`.
+`API_ENABLED=false`; the API is now deployed with `API_ENABLED=true`, `CONTENT_SOURCE=firestore`, `INDEX_SITE=true`, `SITE_URL=https://asad.atterkhan.com`.
 The owner confirmed real Google + TOTP sign-in on web.app on 27 October.
-`ENABLE_CONTENT_ADMIN=true` was explicitly approved; its API rollout and checks are in progress.
-The other four feature flags remain false.
+`ENABLE_CONTENT_ADMIN`, `ENABLE_ACHIEVEMENT_ADMIN`, `ENABLE_DOCUMENT_ADMIN` and `ENABLE_PUBLIC_FILES`
+are `true`, each explicitly approved by the owner. `asad-api-github-token` (Secret Manager) is
+readable by the runtime identity only.
 UID and web API-key values are omitted from setup output and mirrored into GitHub secrets so
 Actions masks action inputs. The browser API key remains a public client credential.

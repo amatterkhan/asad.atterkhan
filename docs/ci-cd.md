@@ -89,16 +89,22 @@ script preserves both grants. These read Firebase and GCS bucket metadata, not f
 
 Cloud Run image build and rollout, public invoker and Hosting API rewrites also succeeded
 ([run 40394130364](https://github.com/amatterkhan/asad.atterkhan/actions/runs/40394130364)).
-Real owner/TOTP sign-in, publish-triggered rebuild delivery, preview channels and custom-domain
-cutover are still pending verification. Pull requests from forks get no
+Owner sign-in, publish-triggered rebuild delivery (an admin publish started "Deploy site and API"
+through `repository_dispatch` on `main`), PR preview channels and the custom domain have all been
+verified. `main` has deployed since pull request 3. Pull requests from forks get no
 credentials: they run checks only.
 
 Configuration names set during launch (values of UID/key omitted):
 `WIF_PROVIDER`, `DEPLOY_SERVICE_ACCOUNT`, `API_SERVICE_ACCOUNT`, `FIREBASE_PROJECT_ID`,
 `FIREBASE_AUTH_DOMAIN`, `FIREBASE_STORAGE_BUCKET`, `FIREBASE_OWNER_UID`, `API_REGION`,
-`SITE_URL`, `FIREBASE_WEB_API_KEY`, `API_ENABLED`, `CONTENT_SOURCE`, `INDEX_SITE`.
-GitHub secrets: `FIREBASE_OWNER_UID`, `FIREBASE_WEB_API_KEY`. No Secret Manager rebuild token
-has been created. Feature flags and `REBUILD_HOOK` remain unset in GitHub (runtime flags false).
+`SITE_URL`, `FIREBASE_WEB_API_KEY`, `API_ENABLED`, `CONTENT_SOURCE`, `INDEX_SITE`, `REBUILD_HOOK`,
+`SITE_DEPLOY_BRANCH`, `ENABLE_CONTENT_ADMIN`, `ENABLE_ACHIEVEMENT_ADMIN`, `ENABLE_DOCUMENT_ADMIN`,
+`ENABLE_PUBLIC_FILES`.
+GitHub secrets: `FIREBASE_OWNER_UID`, `FIREBASE_WEB_API_KEY`. The Secret Manager secret
+`asad-api-github-token` (fine-grained token, Contents: read and write, this repository only) is
+mounted into Cloud Run when `REBUILD_HOOK=github`. It expires, so set a reminder and rotate it
+with `gcloud secrets versions add asad-api-github-token --data-file=-` plus an API redeploy.
+Rapid admin saves each start a run; the workflow's concurrency group cancels superseded ones.
 
 Cost follow-up: Cloud Run scales to zero with maximum two instances. Artifact images currently
 accumulate without a cleanup policy; configure a reviewed retention policy before frequent

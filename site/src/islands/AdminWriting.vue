@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import PixelIcon from "../components/PixelIcon.vue";
 import { slugify, type Api, type Draft, type Summary } from "./admin-types";
 const { api } = defineProps<{ api: Api }>();
@@ -70,13 +70,31 @@ const remove = () =>
     await refresh();
     note.value = "Draft deleted.";
   });
-const showPreview = () =>
-  run("Rendering preview…", async () => {
-    if (!draft.value) return;
+// Live preview: re-render shortly after typing stops; a counter drops answers that arrive out of order.
+const live = ref(false);
+let seq = 0;
+let timer: ReturnType<typeof setTimeout> | undefined;
+const render = async () => {
+  if (!draft.value) return;
+  const mine = ++seq;
+  try {
     const r = await api<{ html: string }>("/api/admin/preview", { method: "POST", body: JSON.stringify({ body: draft.value.body }) });
-    preview.value = r.html;
-    note.value = "";
-  });
+    if (mine === seq) preview.value = r.html;
+  } catch (e) {
+    if (mine === seq) note.value = (e as Error).message;
+  }
+};
+watch(
+  () => [live.value, draft.value?.slug, draft.value?.body] as const,
+  ([on]) => {
+    clearTimeout(timer);
+    if (!on) {
+      seq++;
+      preview.value = null;
+    } else if (draft.value) timer = setTimeout(render, preview.value === null ? 0 : 350);
+  },
+);
+onBeforeUnmount(() => clearTimeout(timer));
 const tagsText = (d: Draft) => d.tags.join(", ");
 const setTags = (value: string) => {
   draft.value!.tags = value.split(",").map((t) => t.trim()).filter(Boolean);
@@ -142,7 +160,7 @@ const statusLine = (d: Draft) =>
       </div>
       <div class="admin-actions">
         <button class="primary">Save draft</button>
-        <button type="button" @click="showPreview">Preview</button>
+        <label class="check"><input v-model="live" type="checkbox" /> <span>Live preview</span></label>
         <button type="button" @click="act('publish')">{{ draft.status === "draft" ? "Publish" : "Publish changes" }}</button>
         <button v-if="draft.status === 'published'" type="button" @click="act('unpublish')">Unpublish</button>
         <button v-if="draft.status === 'draft'" type="button" class="danger" @click="remove">Delete</button>

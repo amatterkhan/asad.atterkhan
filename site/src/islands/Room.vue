@@ -101,6 +101,24 @@ onMounted(() => {
   let busyUntil = 0;
   let dreamAt = 0;
   let bed: number | null = null; // where he naps: beside Asad, never in front of him
+  // Touch screens have no hover to lure him, so he gets restless sooner there.
+  const WANDER_AFTER = matchMedia("(hover: none)").matches ? 2000 : 6000;
+  // Position is written as a pixel translate (not a CSS variable) so a frame never restyles the subtree.
+  let roomW = root.value!.clientWidth;
+  const resize = new ResizeObserver(() => (roomW = root.value!.clientWidth));
+  resize.observe(root.value!);
+  stops.push(() => resize.disconnect());
+  let shown = true;
+  const io = new IntersectionObserver(([e]) => {
+    shown = e.isIntersecting;
+    if (shown) {
+      last = performance.now();
+      raf = requestAnimationFrame(loop);
+    }
+  });
+  io.observe(root.value!);
+  stops.push(() => io.disconnect());
+  let drawn = NaN;
   lastInput = last;
   const set = (m: StormMode) => {
     if (m !== current) {
@@ -113,6 +131,7 @@ onMounted(() => {
     busyUntil = now + STRETCH_MS;
   };
   const loop = (now: number) => {
+    if (!shown) return;
     const dt = Math.min(now - last, 50);
     last = now;
     const idle = now - lastInput;
@@ -134,7 +153,7 @@ onMounted(() => {
       bed ??= Math.abs(x - BEDS[0]) < Math.abs(x - BEDS[1]) ? BEDS[0] : BEDS[1];
       target = bed;
     } else bed = null;
-    if (idle > 6000 && idle <= 22000 && now > wander) {
+    if (idle > WANDER_AFTER && idle <= 22000 && now > wander) {
       target = 30 + Math.random() * 320;
       wander = now + 7000 + Math.random() * 6000;
     }
@@ -143,13 +162,16 @@ onMounted(() => {
       x += reduce ? dx : Math.sign(dx) * Math.min(Math.abs(dx), dt * WALK_SPEED);
       set("standing");
       storm.value?.style.setProperty("--flip", dx > 0 ? "1" : "-1"); // art faces right
-    } else if (current === "standing" && idle > 6000 && Math.random() < 0.35) {
+    } else if (current === "standing" && idle > WANDER_AFTER && Math.random() < 0.35) {
       stretch(now);
     } else if (idle > 22000 && bed !== null && Math.abs(x - bed) <= 1) {
       set("sleeping");
       dreamAt = now + 12000 + Math.random() * 10000;
     } else set("idle");
-    storm.value?.style.setProperty("--x", x.toFixed(1));
+    if (x !== drawn) {
+      drawn = x;
+      storm.value!.style.translate = `${(((x - 32) / W) * roomW).toFixed(1)}px 0`;
+    }
     raf = requestAnimationFrame(loop);
   };
   raf = requestAnimationFrame(loop);

@@ -6,7 +6,6 @@ import { ShiftCalendar } from "../islands";
 <template>
   <p class="eyebrow">Unlisted</p>
   <h1>Shift calendar</h1>
-  <p class="page-intro">My rotation, a month at a time.</p>
   <RoomVignette corner="calendar" />
   <ShiftCalendar />
 </template>

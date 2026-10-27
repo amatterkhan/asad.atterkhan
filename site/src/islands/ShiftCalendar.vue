@@ -125,8 +125,5 @@ const goToday = () => (view.value = { year: data.value!.today.year, month: data.
         </tr>
       </tbody>
     </table>
-    <p class="calendar-note">
-      Alternating five-day and two-day weeks; four weeks of nights, then four weeks of days. Mauritius time.
-    </p>
   </section>
 </template>

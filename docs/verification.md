@@ -63,8 +63,8 @@ the rebuild hand-off notes (now in git history); this run specifically added the
 - Go Markdown preview uses Chroma/Everforest. Code text matches the golden fixtures; token splits
   and classifications can differ from the site's Shiki highlighting. Go heading slugs use a
   generated filter from the site's github-slugger package, including Unicode cases.
-- Real web.app owner/TOTP sign-in and GitHub dispatch remain unverified; the cloud rollout
-  checks completed on 27 October are recorded below.
+- The cloud rollout, owner sign-in, GitHub dispatch and custom-domain checks of 27 October are
+  recorded below.
 - The Docker daemon was unavailable, so the distroless image was not built or run locally.
   No attempt was made to start or reconfigure Docker.
 - Automated accessibility checks do not replace a manual assistive-technology review.
@@ -127,11 +127,10 @@ Live checks passed against both the direct Cloud Run URL and Hosting origin:
 - Auth authorized domains and enabled TOTP read back with explicit quota-project header.
 - Browser API-key referrers updated for web.app while preserving the API restrictions.
 
-Owner sign-in is a required human check. Missing-token 401 checks cannot be performed live
-before feature enablement because disabled service flags return 503 first; emulator coverage
-passed for enabled-service authentication. Content/document end-to-end tests, hook token,
-repository dispatch, Firestore content source, PR previews, merge/main checks, DNS/TLS custom
-domain and indexing are pending the corresponding owner actions and approvals.
+Owner sign-in was a required human check, completed on 27 October. While a flag was off its routes
+returned 503 before authentication, so missing-token 401 checks were only possible after enabling
+each service; emulator coverage passed for enabled-service authentication. The remaining human
+checks are listed at the end of this file.
 
 The owner selected `Lab 000` with body “Welcome to the lab.” as the first launch article.
 `make check` and the browser suite passed again after adding it (54 passed / two expected skips).
@@ -143,3 +142,31 @@ It returned 200 with the requested title/body, and appeared in `/lab`, RSS, site
 Raw completed deploy logs were checked without printing values: both the owner UID and browser
 API key were absent, confirming Actions masking. The owner separately approved content admin;
 other feature flags still require approval.
+
+## Cutover verification — 27 October 2026
+
+- Pull request 3 (`frontend-redesign` → `main`) merged after its checks and preview channel
+  passed. A flaky concurrent-quota test (default five transaction attempts exhausted on a slow
+  runner) was fixed by raising the quota transaction to 25 attempts; the emulator suite passes
+  with `-race`. The old Pages workflow is gone from `main` and Pages stays disabled.
+- An admin publish produced `POST /api/admin/articles/{id}/publish` 200 in the Cloud Run request
+  log and a `repository_dispatch` run of "Deploy site and API" on `main` that succeeded.
+- The throwaway article was deleted from Firestore (`articles`, `publicArticles`); site copy in
+  `siteSettings` was kept. With `CONTENT_SOURCE=firestore`, `/lab`, `/rss.xml`, `/sitemap.xml`
+  and `/search.json` return 200 and are empty of articles until launch content is published.
+- After enabling the achievements, documents and public-files flags: admin routes return 401
+  without a token, and unknown `/files/{id}` and `/media/{id}` return 404, uncached.
+- Custom domain: Hosting reports `HOST_ACTIVE` and `OWNERSHIP_ACTIVE`; authoritative Cloudflare
+  and 8.8.8.8 return no AAAA and an A of `199.36.158.100`; the served certificate is issued by
+  Google Trust Services for `asad.atterkhan.com`; `curl` verifies it.
+- On `https://asad.atterkhan.com` after `INDEX_SITE=true`: `robots.txt` allows indexing and lists the
+  real sitemap; the canonical link, Open Graph URLs, `sitemap.xml` and RSS use the real domain;
+  no `web.app` URL remains in the home page; `/admin` and `/calendar` are `no-store`; `/nope` is
+  404; HSTS, CSP, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` and
+  `Permissions-Policy` are served from Firebase Hosting.
+- Pull request 4 replaced the remaining text glyphs with pixelarticons; `make check` and the
+  browser suite (54 passed, 2 skipped) passed.
+
+Not verified: browser end-to-end use of the achievements, documents and public-file admin tabs
+(upload → publish → `/files/{id}`), which needs an interactive owner session, and operation
+behind the Cloudflare proxy.

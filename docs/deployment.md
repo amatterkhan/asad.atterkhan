@@ -30,21 +30,36 @@ the Storage bucket, to avoid cross-region latency on API calls. Do not use `APP_
 7. Verify real owner/TOTP sign-in, stale/revoked sessions, publication/rebuild delivery, upload
    and archive, private/public files, the calendar, headers, redirects and 404s on the real host.
 
-## Deployed staging origin — 27 October 2026
+## Production — 27 October 2026
 
-- Hosting: `asad-atterkhan`, `https://asad-atterkhan.web.app`, with Firestore/Storage rules.
-- API: `asad-api`, `us-central1`, dedicated `asad-api` runtime identity, public invoker enabled
-  successfully. Direct URL: `https://asad-api-cqbapmrj3a-uc.a.run.app`.
-- Cloud Run: minimum 0 / maximum 2 instances, concurrency 8, 1 CPU, 512 MiB, request-based billing.
-- `/api/**`, `/files/**`, `/media/**` Hosting rewrites reach Cloud Run. Health returns 200;
-  disabled owner services return 503; disabled public files/media return 404, all uncached.
-- All five feature flags remain false. Because the flag gate precedes authentication, a missing
-  token returns 503 while disabled; production 401 checks wait for per-feature approval.
-- Browser Auth already authorizes `asad-atterkhan.web.app`. The browser key now also allows
-  `https://asad-atterkhan.web.app/*`; its four API restrictions and original referrers remain intact.
-- Git content, noindex, web.app canonical URL. `Lab 000` is the user-selected initial article.
+- Public origin: `https://asad.atterkhan.com`, Firebase Hosting site `asad-atterkhan` (project
+  `asad-atterkhan`), with Google-managed TLS (Google Trust Services certificate, valid to
+  24 January 2027, renewed by Hosting). `https://asad-atterkhan.web.app` serves the same site.
+- API: Cloud Run `asad-api` in `us-central1` (next to Firestore and Storage), dedicated `asad-api`
+  runtime identity, public invoker, minimum 0 / maximum 2 instances, concurrency 8, 1 CPU,
+  512 MiB, request-based billing. `/api/**`, `/files/**` and `/media/**` Hosting rewrites reach it.
+- Flags: `ENABLE_CONTENT_ADMIN`, `ENABLE_ACHIEVEMENT_ADMIN`, `ENABLE_DOCUMENT_ADMIN` and
+  `ENABLE_PUBLIC_FILES` are `true`. There is no calendar flag: `GET /api/calendar` is public.
+- Content: `CONTENT_SOURCE=firestore`; the site is built from Firestore on every deploy.
+- Indexing: `SITE_URL=https://asad.atterkhan.com`, `INDEX_SITE=true`; canonical links, Open Graph,
+  `sitemap.xml`, RSS and `robots.txt` use the real domain.
+- Publishing in `/admin` sends a `repository_dispatch` (`REBUILD_HOOK=github`) that runs "Deploy
+  site and API" on `main` (`SITE_DEPLOY_BRANCH=main`).
 
-The owner confirmed real Google/TOTP sign-in on web.app. Per-feature enablement and its
-end-to-end checks remain gated by owner approval. No custom Hosting domain has
-been added, no Cloudflare DNS records have changed and `main` has not been merged. Exact custom
-domain records will be recorded after the approved cutover; none are claimed verified yet.
+### DNS (Cloudflare, zone `atterkhan.com`)
+
+| Name | Type | Content | Proxy |
+| --- | --- | --- | --- |
+| `asad` | CNAME | `asad-atterkhan.web.app` | DNS only (grey cloud) |
+
+The previous proxied A and AAAA records for `asad` (the GitHub Pages cutover) were removed. No
+MX, TXT or other subdomain records were touched. Cloudflare flattens the CNAME, so resolvers see
+an A record (`199.36.158.100`). The proxy is deliberately off: Hosting issues and renews its own
+certificate and serves the security headers from `site/firebase.json`. If it is ever turned on, set
+Cloudflare TLS to Full (strict) first and re-check the headers and cache behaviour.
+
+### Not verified
+
+- Browser end-to-end checks of the achievements, documents and file-publishing admin tabs
+  (upload → publish → `/files/{id}`) need an interactive owner session.
+- Cloudflare-proxied operation (see above) has not been tested.
