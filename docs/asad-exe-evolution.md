@@ -159,7 +159,7 @@ Run on the production build (`npm run build`, served by `npm run preview`) with 
 
 ## Session log
 
-- **28 Oct 2026**: the owner brought standing and walking into scope; built the walk to the window (#32: about 7 cents of animation plus about 80 cents of lab-coat edits, one batch run twice by accident). Ran the release checklist and opened the release PR (#29).
+- **28 Oct 2026**: the owner brought standing and walking into scope; built the walk to the window (#32: 63 cents in all: about 7 for the animations, the rest lab-coat edits (one batch ran twice by accident); about $8.61 left). Ran the release checklist and opened the release PR (#29).
 
 - **27 Oct 2026**: cut the branch, recorded the baseline, captured the room baselines, added `GLOSSARY.md` and this file.
 - **28 Oct 2026**: lab coat (#26) redrawn with PixelLab *Edit images* after the owner rejected the recolour versions; the Steins Gate override (#27) is done. PixelLab spend so far is about 60 cents. Note: *Transfer outfit* needs a PixelLab Tier 1 plan (this account is on the trial).
