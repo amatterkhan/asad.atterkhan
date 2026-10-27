@@ -10,6 +10,8 @@ export type Assets = {
   tags: string;
   /** modulepreload tags for an island, by name (production only). */
   islandPreloads?: (name: string) => string;
+  /** Content hashes of the built Open Graph images (production only), for ?v= on their URLs. */
+  imageVersions?: ReadonlyMap<string, string>;
 };
 export type Rendered = { status: number; html: string };
 
@@ -42,7 +44,7 @@ export async function render(url: string, ctx: RenderContext, assets: Assets): P
     <script>try{var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");document.documentElement.dataset.theme=t}catch(e){}</script>
     <link rel="icon" href="/icon.svg">
     <link rel="preload" href="/fonts/DepartureMono-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-    ${renderHead(page.head, indexSite)}
+    ${renderHead(page.head, indexSite, { path: loaded ? route.path : undefined, imageVersions: assets.imageVersions })}
     ${assets.tags}${preloads}
   </head>
   <body>${body}</body>

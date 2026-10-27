@@ -218,6 +218,19 @@ it("names the site Asad.exe, with the motto as its description", () => {
   expect(home).toContain('<meta property="og:site_name" content="Asad.exe">');
   expect(home).toContain('<meta property="og:description" content="Somewhere between cloud nine and layer seven.">');
   expect(renderHead({ title: "The Lab" }, true)).toContain("<title>The Lab · Asad.exe</title>");
+});
+it("versions the share image by its content and gives every page an og:url", () => {
+  const versions = new Map([["/opengraph-image.png", "0123456789"]]);
+  const home = renderHead({ canonical: "/" }, true, { path: "/", imageVersions: versions });
+  expect(home).toContain('<meta property="og:image" content="https://asad.atterkhan.com/opengraph-image.png?v=0123456789">');
+  expect(home).toContain('<meta name="twitter:image" content="https://asad.atterkhan.com/opengraph-image.png?v=0123456789">');
+  expect(home).toContain('<meta property="og:url" content="https://asad.atterkhan.com">');
+  expect(home).toMatch(/og:image:alt" content="A pixel-art room at night/);
+  // a page without a canonical still says where it is; the dev server (no versions) links the bare file
+  const lab = renderHead({ title: "The Lab" }, true, { path: "/lab/section/notes" });
+  expect(lab).toContain('<meta property="og:url" content="https://asad.atterkhan.com/lab/section/notes">');
+  expect(lab).toContain('content="https://asad.atterkhan.com/opengraph-image.png">');
+  expect(renderHead({}, true)).not.toContain("og:url");
   expect(subtitles).toEqual({
     home: "Human, allegedly.",
     about: "Still figuring out the source code.",
