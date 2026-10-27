@@ -71,6 +71,13 @@ jobs:
       contents: read
       id-token: write
     steps:
+      # the CLI refuses to run without firebase.json, so check out just the Firebase config
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            site/firebase.json
+            site/firebase/
+          sparse-checkout-cone-mode: false
       - uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ vars.WIF_PROVIDER }}
@@ -78,10 +85,17 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
+      # A channel that already expired is fine; any other failure fails the job instead of
+      # leaving the preview up behind a green check.
       - name: Delete preview channel
-        run: >
-          npx --yes "$FIREBASE_TOOLS" hosting:channel:delete "$CHANNEL" --force
-          --project "$PROJECT_ID" ${SITE:+--site "$SITE"} --non-interactive || true
+        working-directory: site
+        run: |
+          if ! out=$(npx --yes "$FIREBASE_TOOLS" hosting:channel:delete "$CHANNEL" --force \
+            --project "$PROJECT_ID" ${SITE:+--site "$SITE"} --non-interactive 2>&1); then
+            echo "$out"
+            grep -qiE "not found|404" <<<"$out" || exit 1
+          fi
+          echo "$out"
         env:
           PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
           SITE: ${{ vars.FIREBASE_HOSTING_SITE }}
