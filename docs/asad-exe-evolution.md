@@ -29,7 +29,7 @@ Keep commits small and grouped by logic. Intermediate PRs into this branch are f
 | [Build: refreshed identity and copy](https://github.com/amatterkhan/asad.atterkhan/issues/22) | done (7d66bee, 32ff2a3) |
 | [Build: Thought content and admin Thoughts tab](https://github.com/amatterkhan/asad.atterkhan/issues/23) | done (3e02649, fc88a7b) |
 | [Build: worldline engine and divergence meter](https://github.com/amatterkhan/asad.atterkhan/issues/25) | done (588852f, c5e4e76) |
-| [Build: Asad's seated stretch and look animations](https://github.com/amatterkhan/asad.atterkhan/issues/31) | not started |
+| [Build: Asad's seated stretch and look animations](https://github.com/amatterkhan/asad.atterkhan/issues/31) | built (6512a07, 4c5020e); awaiting the owner's approval of the frames |
 | [Build: Thoughts in the room](https://github.com/amatterkhan/asad.atterkhan/issues/24) | done (414f18c) |
 | [Build: lab coat outfit art](https://github.com/amatterkhan/asad.atterkhan/issues/26) | blocked by #31 |
 | [Build: Steins Gate lab coat override](https://github.com/amatterkhan/asad.atterkhan/issues/27) | blocked by #26 |
@@ -83,9 +83,21 @@ Keep commits small and grouped by logic. Intermediate PRs into this branch are f
 | Visual check (production build): night desktop, day desktop, phone | the bubble is over Asad's head with its tail pointing at him; on the phone it grows left over the wall, clear of the meter |
 | Steins Gate lines in a real browser | not shot (one of 14 lines at random); covered by the `pickThought` context tests |
 
+### Seated stretch and look: 28 Oct 2026, 4c5020e
+
+| Check | Result |
+| --- | --- |
+| Pipeline check | the re-implemented scale and registration reproduces the shipped `asad-typing` frame 0 silhouette 100% (colours visually identical) |
+| Existing sheets after `export_ase.sh` and `outfits.py` | byte-identical (sprites and every outfit's existing states) |
+| Outfit check (all four outfits, both new states, every frame) | no changed pixel outside the hoodie regions; the only skin-coloured changes are drawstrings and five dark-red sleeve rim pixels; face and hair untouched |
+| `make check` | pass, 43 vitest tests (new: `nextPause` frequencies, stretch spacing, more glances with Storm by the window) |
+| `npx playwright test` | 78 passed, 2 skipped |
+| Visual check in the built room (night and day, desktop and phone) | both poses fit; the stretch's fists reach the bubble's area, so Thoughts wait while he stretches |
+
 ## Known issues
 
 - **Production copy comes from Firestore.** The deploy builds with `CONTENT_SOURCE=firestore`, and the saved `siteSettings/public` overrides the Git defaults field by field. So the new **headline, eyebrow role, lede, body, room hint, closing, Lab, Workbench and About copy** go live only once the same text is saved in `/admin` → Site copy (the owner does this; it triggers a rebuild). The motto, subtitles, titles, footer and 404 text are code and ship with the release. The text to paste is in `site/content/site.json`. Add this to the release PR's deploy steps.
+- Sprites play at one frame rate per state (the average), so the holds set in the new Aseprite documents only show in Aseprite, not on the site.
 - The Thoughts browser tests step a fake clock through a few simulated minutes of the room, so they are the slowest in the suite (about 2.5 minutes over four workers).
 - On phones the new hero (lede plus three paragraphs) pushes the room about two screens down. It's the approved copy; raise it at review if it matters.
 - No Java runtime on this machine, so the emulator suite in `docs/development.md` can't run here. CI runs it.
@@ -94,6 +106,7 @@ Keep commits small and grouped by logic. Intermediate PRs into this branch are f
 ## Session log
 
 - **27 Oct 2026**: cut the branch, recorded the baseline, captured the room baselines, added `GLOSSARY.md` and this file.
+- **28 Oct 2026**: built the seated stretch and look (#31). The lab coat (#26) must now cover six states: typing, coffee, idle, happy, stretch, look. PixelLab spend so far: about 3 cents (the balance is about $9.83). The restored generation scripts were not committed (see art/README).
 - **27 Oct 2026**: built Thoughts in the room (#24). The bubble follows `asadX` (66 today): if Asad ever moves, set it and the bubble follows. Context `storm` is Storm within 56 room px of Asad's middle.
 - **27 Oct 2026**: built Thought content and the admin tab (#23). For #24: `getThoughts()` in `lib/content.server.ts` returns `{ thoughts: {id, text, context}[], featured }` ready for the homepage route to pass to the room; `.thought-preview` in app.css is the admin preview's copy of the bubble look, so share one class once `.asad-thought` exists.
 - **27 Oct 2026**: built the worldline engine (#25). For later tickets: `Room.vue` exposes `worldline` (ref) and `shifting` (computed: a shift or its note is on screen). Thoughts must wait on `shifting`, and the coat override hangs off `worldline === "steins-gate"`. A live test found a race (a second press in the same tick slipped past the lock); the first phase now starts synchronously in the click.
