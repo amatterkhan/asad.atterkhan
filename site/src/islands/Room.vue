@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, type CSSProperties } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch, type CSSProperties } from "vue";
 import Sprite from "../components/Sprite.vue";
 import NixieClock from "../components/NixieClock.vue";
 import { NIXIE_X, NIXIE_Y, divergenceTubes, glyph, plinthWidth } from "../lib/nixie";
 import { loopMs, manifest, type SpriteState } from "../lib/manifest";
 import { spriteSheet } from "../lib/outfits";
 import { site } from "../lib/site";
+import { nextWait, pickThought, readMs, type PublicThought } from "../lib/thoughts";
+import type { ThoughtContext } from "../lib/schemas";
 import { DIVERGENCE, nextWorldline, scramble, shiftTimeline, worldlineLabel, type ShiftPhase, type Worldline } from "../lib/worldline";
 
 // The room is a 384x216 pixel-art scene drawn in LibreSprite (art/ase/room.ase), one PNG per layer.
@@ -17,7 +19,12 @@ const WALK_SPEED = manifest.strideRoomPx / manifest.walkCycleMs;
 // Nap spots on either side of Asad (he sits around x 104-156): rug end by the window, or by the chair.
 const BEDS = [60, 188] as const;
 
-const { hint, outfit } = defineProps<{ hint: string; outfit?: string }>();
+const {
+  hint,
+  outfit,
+  thoughts = [],
+  featured = null,
+} = defineProps<{ hint: string; outfit?: string; thoughts?: PublicThought[]; featured?: string | null }>();
 
 // Pixel glyphs, 3x5 (the book initials), drawn straight onto the room's 384x216 grid as SVG paths.
 const GLYPHS: Record<string, string[]> = {
@@ -82,6 +89,13 @@ const note = ref<Exclude<Worldline, "normal"> | null>(null);
 const announce = ref("");
 /** A shift or its note is on screen: Thoughts and other bubbles wait. */
 const shifting = computed(() => shift.value !== "idle");
+
+// Asad's Thoughts (lib/thoughts.ts): now and then a one-liner in a bubble over his head. He sits at
+// x 66 (his sprite's left edge); the bubble is placed from this, so it follows him if he ever moves.
+const asadX = ref(66);
+const thought = ref<{ text: string; key: number } | null>(null);
+// set up on mount: hush him (Storm was petted, or a worldline shift began) and start a fresh wait
+let hushThought = () => {};
 let shiftTimers: ReturnType<typeof setTimeout>[] = [];
 let cycle: ReturnType<typeof setInterval> | undefined;
 const pressMeter = () => {
@@ -193,6 +207,8 @@ onMounted(() => {
     shown = e.isIntersecting;
     clearTimeout(decide);
     if (shown) next();
+    if (shown) planThought();
+    else stopThought();
   });
   io.observe(root.value!);
   stops.push(() => io.disconnect());
@@ -262,6 +278,60 @@ onMounted(() => {
     clearTimeout(decide);
     walk?.cancel();
   });
+
+  // Thoughts: one timeout chain. The first comes 20-40 s after the room is on screen, then 60-150 s
+  // apart. A hidden tab or the room scrolled away stops the chain and the bubble; coming back starts
+  // a fresh wait rather than speaking at once.
+  let thoughtTimer: ReturnType<typeof setTimeout> | undefined;
+  let spoken = false;
+  let feature = featured;
+  let last: string | undefined;
+  let n = 0;
+  function planThought() {
+    clearTimeout(thoughtTimer);
+    if (!shown || document.hidden || shifting.value || !thoughts.length) return;
+    thoughtTimer = setTimeout(speak, nextWait(spoken));
+  }
+  function stopThought() {
+    clearTimeout(thoughtTimer);
+    thought.value = null;
+  }
+  const speak = () => {
+    // Storm has the room (the visitor petted him): one bubble at a time, so try again shortly
+    if (saying.value) {
+      thoughtTimer = setTimeout(speak, 3000 + Math.random() * 3000);
+      return;
+    }
+    const now = new Set<ThoughtContext>(["general"]);
+    if (sky.value === "night") now.add("night");
+    if (worldline.value === "steins-gate") now.add("steins-gate");
+    // Storm is "nearby" within about half a body of Asad's middle
+    if (Math.abs(position() - (asadX.value + 64)) < 56) now.add("storm");
+    const t = pickThought(thoughts, now, last, feature);
+    if (!t) return planThought();
+    if (t.id === feature) feature = null;
+    last = t.id;
+    spoken = true;
+    thought.value = { text: t.text, key: ++n };
+    thoughtTimer = setTimeout(() => {
+      thought.value = null;
+      planThought();
+    }, readMs(t.text));
+  };
+  hushThought = () => {
+    if (!thought.value) return;
+    stopThought();
+    planThought();
+  };
+  const onVisibility = () => (document.hidden ? stopThought() : planThought());
+  document.addEventListener("visibilitychange", onVisibility);
+  // a worldline shift (and its note) has the room: no Thought during it, none queued; afterwards a fresh wait
+  const unwatch = watch(shifting, (busy) => (busy ? stopThought() : planThought()));
+  stops.push(() => {
+    document.removeEventListener("visibilitychange", onVisibility);
+    unwatch();
+    clearTimeout(thoughtTimer);
+  });
 });
 onBeforeUnmount(() => {
   stops.forEach((stop) => stop());
@@ -283,6 +353,8 @@ const lure = (e: PointerEvent) => {
 const pet = () => {
   lastInput = performance.now();
   poke();
+  // one bubble at a time, and Storm's (the visitor asked for it) wins; Asad's isn't queued
+  hushThought();
   said.value = (said.value + 1) % mrrps.length;
   saying.value = true;
   clearTimeout(sayTimer);
@@ -380,6 +452,13 @@ const toggleTheme = () => {
       <span class="fx fx-router c" :style="at([246, 42, 1, 1])" />
       <span class="fx fx-steam" :style="at([338, 106, 1, 3])" />
       <span class="fx fx-steam two" :style="at([342, 104, 1, 3])" />
+
+      <!-- flavour text, not content: hidden from screen readers and never announced -->
+      <Transition name="thought">
+        <span v-if="thought" :key="thought.key" class="asad-thought" :style="{ '--ax': asadX }" aria-hidden="true">{{
+          thought.text
+        }}</span>
+      </Transition>
 
       <!-- the Easter egg: no label, just a faint glow on hover or focus -->
       <button

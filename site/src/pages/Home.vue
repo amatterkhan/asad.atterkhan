@@ -4,7 +4,14 @@ import { Room } from "../islands";
 import { date, site, subtitles } from "../lib/site";
 import type { SiteCopy, Project } from "../lib/schemas";
 import type { ArticleSummary } from "../lib/content.server";
-const { copy, articles, projects, outfit } = defineProps<{ copy: SiteCopy; articles: ArticleSummary[]; projects: Project[]; outfit: string }>();
+import type { PublicThought } from "../lib/thoughts";
+const { copy, articles, projects, outfit, thoughts } = defineProps<{
+  copy: SiteCopy;
+  articles: ArticleSummary[];
+  projects: Project[];
+  outfit: string;
+  thoughts: { thoughts: PublicThought[]; featured: string | null };
+}>();
 const name = copy.heroTitle.match(/Asad\.?$/)?.[0];
 // the body is short paragraphs separated by blank lines in the copy
 const body = copy.heroBody.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
@@ -22,7 +29,7 @@ const body = copy.heroBody.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean)
     </div>
   </section>
 
-  <Room :hint="copy.roomHint" :outfit="outfit" />
+  <Room :hint="copy.roomHint" :outfit="outfit" :thoughts="thoughts.thoughts" :featured="thoughts.featured" />
 
   <section class="block">
     <header class="block-head">

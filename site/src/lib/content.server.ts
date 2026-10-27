@@ -14,7 +14,6 @@ import {
   SkillsSchema,
   ThoughtsSchema,
   featuredSchema,
-  type ThoughtContext,
   type Article,
   type ArticleMeta,
   type Lab,
@@ -23,6 +22,7 @@ import {
 } from "./schemas";
 import { renderMarkdown, type TocEntry } from "./markdown";
 import { DEFAULT_OUTFIT, resolveOutfit } from "./outfits";
+import type { PublicThought } from "./thoughts";
 
 // Build-time content gateway (Node only). CONTENT_SOURCE=git (default) reads reviewed files in
 // content/; CONTENT_SOURCE=firestore reads the snapshot written by `go run ./cmd/export` (published
@@ -96,7 +96,6 @@ export async function getLab(): Promise<Lab> {
   const file = contentSource() === "firestore" && (await exists(exported)) ? exported : dir("content/lab.json");
   return LabSchema.parse(await readJson(file));
 }
-export type PublicThought = { id: string; text: string; context: ThoughtContext };
 /**
  * Asad's Thoughts as the room gets them: the exported siteSettings/thoughts when
  * CONTENT_SOURCE=firestore, else content/thoughts.json. Only enabled lines reach the page, and the

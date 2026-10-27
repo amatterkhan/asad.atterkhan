@@ -678,6 +678,41 @@ html[data-motion="paused"] *::after {
 }
 .zzz { position: absolute; left: 60%; top: 0; font: 12px var(--font-mono); color: var(--color-accent); animation: pop 2.4s ease-in-out infinite; }
 .room .storm-says { left: 40%; top: -16%; z-index: 4; }
+/* Asad's Thought: Storm's bubble look with a stepped pixel tail (the admin preview shares it). In room
+   pixels his head is about x 106-148, y 130; the box sits above it (bottom at y 122), clear of the
+   divergence meter (x 157-206, y 67-82), the books and the desk spots (x 210+). Wide rooms: it starts
+   at his head and grows right, up to x 206. Phones: it ends at x 152 and grows left over the wall, so
+   wrapped lines never reach the meter. */
+.asad-thought, .thought-preview {
+  font: 12px/1.35 var(--font-mono); padding: 5px 8px;
+  background: var(--color-ink-strong); color: var(--color-bg); box-shadow: 3px 3px 0 rgba(0, 0, 0, .35);
+}
+.asad-thought {
+  --tail: calc(var(--u) * 36);
+  position: absolute; z-index: 5; pointer-events: none;
+  left: calc(var(--u) * (var(--ax) + 20)); bottom: calc(var(--u) * (216 - 122));
+  width: max-content; max-width: calc(var(--u) * 120);
+}
+/* the tail: two pixel steps down toward his head */
+.asad-thought::before, .asad-thought::after { content: ""; position: absolute; top: 100%; background: inherit; }
+.asad-thought::before { left: var(--tail); width: max(8px, calc(var(--u) * 4)); height: max(4px, calc(var(--u) * 2)); }
+.asad-thought::after { left: var(--tail); width: max(4px, calc(var(--u) * 2)); height: max(8px, calc(var(--u) * 4)); }
+.thought-enter-active { transition: opacity .3s steps(3), translate .3s steps(3); }
+.thought-leave-active { transition: opacity .4s steps(4); }
+.thought-enter-from { opacity: 0; translate: 0 4px; }
+.thought-leave-to { opacity: 0; }
+@media (max-width: 760px) {
+  .asad-thought {
+    left: auto; right: calc(var(--u) * (384 - var(--ax) - 86));
+    max-width: calc(var(--u) * 140); font-size: 10px; padding: 4px 6px;
+  }
+  .asad-thought::before { left: auto; right: calc(var(--u) * 26); width: 8px; }
+  .asad-thought::after { left: auto; right: calc(var(--u) * 26 + 4px); width: 4px; }
+}
+/* Reduce Motion: Thoughts still come, without the rise: just a fade */
+@media (prefers-reduced-motion: reduce) {
+  .thought-enter-from { translate: none; }
+}
 .room-caption { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 20px; margin-top: 14px; font: 12px var(--font-mono); color: var(--color-muted); }
 .room-caption .hint { color: var(--color-accent); }
 @media (max-width: 760px) {
@@ -1113,9 +1148,8 @@ body:has(.console) main { padding: 0; min-height: 100vh; animation: none; }
 }
 .admin-thought-list li > button:hover, .admin-thought-list li > button[aria-pressed="true"] { border-color: var(--color-accent); }
 .admin-thought-list li > button .pixel-icon { width: 14px; height: 14px; margin: 0; }
-.admin-thought-preview { grid-column: 1 / -1; margin: 4px 0 10px; padding: 18px 16px 14px; background: #2b2730; }
-/* the room's bubble look: square, Departure Mono, ink on cream, an offset pixel shadow */
-.thought-preview { display: inline-block; max-width: 30ch; font: 12px/1.35 var(--font-mono); padding: 5px 8px; background: #fff2d2; color: #1b1d33; box-shadow: 3px 3px 0 rgba(0, 0, 0, .35); }
+.admin-thought-preview { grid-column: 1 / -1; margin: 4px 0 10px; padding: 18px 16px 14px; background: var(--color-bg); border: 2px dashed var(--color-faint); }
+.thought-preview { display: inline-block; max-width: 30ch; }
 .admin-thoughts .admin-lab-add input { flex: 1; }
 .admin-list-shelf { font: 10px var(--font-mono) !important; color: var(--color-peach) !important; text-transform: uppercase; letter-spacing: .06em; }
 .admin-thumb { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 18px; align-items: start; padding: 14px; border: 2px solid var(--color-faint); background: var(--color-bg-2); }

@@ -123,6 +123,68 @@ test("reduced motion shifts without the glitch, and Steins Gate says El Psy Kong
   const phases = await page.evaluate(() => (window as never as { phases: string[] }).phases);
   expect(phases).toEqual(["settle", "note", "idle"]);
 });
+test.describe("Asad's Thoughts", () => {
+  const bubble = (page: import("@playwright/test").Page) => page.locator(".asad-thought:not(.thought-leave-active)");
+  // stepping a fake clock through minutes of the room takes a while in real time
+  test.describe.configure({ timeout: 150_000 });
+  test.beforeEach(async ({ page }) => {
+    await page.clock.install();
+    await page.goto("/");
+    await page.locator(".room").scrollIntoViewIfNeeded();
+    // the room hydrates after its code loads; only then does its scheduler (and the fake clock's count) start
+    await page.waitForFunction(() => !!(document.querySelector("[data-island=Room]") as { __vue_app__?: unknown } | null)?.__vue_app__);
+    await page.waitForTimeout(300);
+  });
+  // step the fake clock 3 s at a time (a Thought stays up at least 4 s, so none slips by) until a
+  // bubble shows; returns the seconds waited
+  const waitForThought = async (page: import("@playwright/test").Page, max: number) => {
+    for (let s = 3; s <= max + 2; s += 3) {
+      await page.clock.runFor(3000);
+      if (await bubble(page).count()) return s;
+    }
+    return Infinity;
+  };
+  test("come now and then, never on load, never twice in a row", async ({ page }) => {
+    const first = await waitForThought(page, 45);
+    expect(first).toBeGreaterThanOrEqual(20);
+    expect(first).toBeLessThanOrEqual(43);
+    await expect(bubble(page)).toHaveAttribute("aria-hidden", "true");
+    const said = await bubble(page).textContent();
+    // no controls to make him talk
+    await expect(page.locator(".room").getByRole("button", { name: /refresh|next|previous|another/i })).toHaveCount(0);
+    // the bubble stays inside the room
+    const [b, r] = await Promise.all([bubble(page).boundingBox(), page.locator(".room").boundingBox()]);
+    expect(b!.x).toBeGreaterThanOrEqual(r!.x);
+    expect(b!.x + b!.width).toBeLessThanOrEqual(r!.x + r!.width);
+    expect(b!.y).toBeGreaterThanOrEqual(r!.y);
+    await page.clock.runFor(8_500);
+    await expect(bubble(page)).toHaveCount(0);
+    const next = await waitForThought(page, 160);
+    expect(next).toBeGreaterThanOrEqual(56);
+    expect(next).toBeLessThanOrEqual(153);
+    expect(await bubble(page).textContent()).not.toBe(said);
+  });
+  test("give way to Storm and to a worldline shift, and stop while the tab is hidden", async ({ page }) => {
+    expect(await waitForThought(page, 45)).toBeLessThan(Infinity);
+    await page.getByRole("button", { name: "Pet Storm" }).click();
+    await expect(bubble(page)).toHaveCount(0);
+    await expect(page.locator(".storm-says")).toBeVisible();
+
+    expect(await waitForThought(page, 160)).toBeLessThan(Infinity);
+    await page.getByRole("button", { name: "Divergence meter" }).click();
+    await expect(bubble(page)).toHaveCount(0);
+    // nothing queued: the shift and its note pass without a Thought
+    await page.clock.runFor(3_500);
+    await expect(page.locator(".room")).toHaveAttribute("data-shift", "idle");
+    await expect(bubble(page)).toHaveCount(0);
+
+    await page.evaluate(() => {
+      Object.defineProperty(document, "hidden", { value: true, configurable: true });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    expect(await waitForThought(page, 200)).toBe(Infinity);
+  });
+});
 test("room pet, lamp and theme interactions", async ({ page }) => {
   await page.goto("/");
   const pet = page.getByRole("button", { name: "Pet Storm" });
