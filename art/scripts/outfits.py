@@ -21,7 +21,8 @@ SPRITES = PUBLIC / "sprites"
 OUTFITS = PUBLIC / "art/outfits"
 # The Go API validates outfit ids against the same index.
 API_INDEX = ROOT.parent / "api/internal/content/data/outfits.json"
-STATES = ["asad-idle", "asad-typing", "asad-coffee", "asad-happy", "asad-stretch", "asad-look"]
+STATES = ["asad-idle", "asad-typing", "asad-coffee", "asad-happy", "asad-stretch", "asad-look",
+          "asad-standup", "asad-walk-left", "asad-walk-right", "asad-window"]
 # The hoodie's brightness range is measured on the original four, so adding a state never shifts
 # the colours of the outfits already on the site.
 RANGE_STATES = ["asad-idle", "asad-typing", "asad-coffee", "asad-happy"]
@@ -38,7 +39,24 @@ REGIONS = {
     # the look turns only his head: the body stays where typing has it
     "asad-look": [[(34, 85), (72, 85), (72, 92), (69, 92), (69, 111), (34, 111)]],
     "asad-stretch": [[(34, 85), (72, 85), (72, 92), (69, 92), (69, 111), (34, 111)]],
+    # standing up starts from the typing pose; from frame 3 on the region is found per frame (BANDED)
+    "asad-standup": [[(34, 85), (72, 85), (72, 92), (69, 92), (69, 111), (34, 111)]],
+    "asad-walk-left": [],
+    "asad-walk-right": [],
+    "asad-window": [],
 }
+# Standing, his body moves too much for one polygon, and his hair is the hoodie's colours, so the
+# region is found per frame: a band from the neck (the narrowest row under his head) down to the
+# waistband (where the jeans take over), never more than BAND_MAX rows. Frames listed per state.
+BANDED = {
+    "asad-standup": range(3, 8),
+    "asad-walk-left": range(8),
+    "asad-walk-right": range(8),
+    "asad-window": range(6),
+}
+BAND_MAX = 33
+# Boxes (x0, y0, x1, y1) kept out of a banded region: the laptop he sets down on the floor.
+BAND_EXCLUDE = {"asad-standup": [(70, 96, 128, 128)]}
 # Frames whose sleeves leave the body's region: the stretch's raised arms, traced per frame beside
 # (never over) the hair. Added to the state's own region for that frame.
 FRAME_REGIONS = {
@@ -95,7 +113,37 @@ def ramp_at(ramp, t):
     return lerp(ramp[i], ramp[i + 1], t - i)
 
 
-def region_mask(state, frame=0):
+def band(pixels):
+    """(neck, waist) rows of a standing frame: see BANDED."""
+    m = pixels[:, :, 3] > 0
+    ys = np.nonzero(m.any(1))[0]
+    top, bottom = ys[0], ys[-1]
+    width = m.sum(1)
+    lo, hi = top + int((bottom - top) * 0.22), top + int((bottom - top) * 0.45)
+    neck = lo + int(np.argmin(width[lo:hi]))
+    for y in range(neck + 8, min(bottom, neck + BAND_MAX)):
+        jeans = cloth = 0
+        for x in np.nonzero(m[y])[0]:
+            c = tuple(int(v) for v in pixels[y, x, :3])
+            h, s, v = hsv(c)
+            if 200 <= h < 244 and v >= 0.3:
+                jeans += 1
+            elif is_cloth(c):
+                cloth += 1
+        if jeans > cloth and jeans >= 3:
+            return neck, y
+    return neck, min(bottom, neck + BAND_MAX)
+
+
+def region_mask(state, frame=0, pixels=None):
+    """Where the hoodie is in one frame; banded frames need the frame's pixels."""
+    if frame in BANDED.get(state, ()):
+        neck, waist = band(pixels)
+        r = np.zeros((128, 128), bool)
+        r[neck:waist] = True
+        for x0, y0, x1, y1 in BAND_EXCLUDE.get(state, []):
+            r[y0:y1, x0:x1] = False
+        return r
     m = Image.new("L", (128, 128), 0)
     d = ImageDraw.Draw(m)
     for poly in REGIONS[state] + FRAME_REGIONS.get(state, {}).get(frame, []):
@@ -233,7 +281,7 @@ def build():
                 sheet = np.array(Image.open(src).convert("RGBA"))
                 for i in range(sheet.shape[1] // 128):
                     sl = slice(i * 128, (i + 1) * 128)
-                    sheet[:, sl] = recolour(sheet[:, sl], region_mask(state, i), meta["palette"], lo, hi)
+                    sheet[:, sl] = recolour(sheet[:, sl], region_mask(state, i, sheet[:, sl]), meta["palette"], lo, hi)
                 Image.fromarray(sheet).save(folder / f"{state}.png", optimize=True)
             else:
                 shutil.copyfile(src, folder / f"{state}.png")

@@ -29,6 +29,8 @@ PixelLab character IDs in case an animation is ever generated again.
 | --- | --- |
 | asad-typing, asad-coffee, asad-idle, asad-happy (when Storm is petted) | 8 |
 | asad-stretch (arms up, rarely), asad-look (a glance toward the window) | 8 |
+| asad-standup (played once; backwards to sit down), asad-walk-left, asad-walk-right | 8 |
+| asad-window (standing at the window, his back to us) | 6 |
 | storm-standing (walk), storm-idle, storm-stretch | 8 |
 | storm-sleeping, storm-nap (the small one on the Lab chair), storm-dream | 6–14 |
 | robot-idle | see `ase/` |
@@ -52,6 +54,21 @@ two motion marks painted out of the stretch's frame 2; frames scaled ×0.75 and 
 pixel for pixel); colours snapped to the 64 colours of Asad's existing sheets; documents built with
 `scripts/frames_to_aseprite.lua` (which now takes per-frame `durations`); `export_ase.sh`.
 
+### How the walk to the window was made (October 2026)
+
+Same client, same character. `asad-standup` is animated `south` from the raw typing frame ("closes
+the laptop, sets it down on the floor in front of him, then gets up"); the walks are `west` and
+`east` and the window is `north`, each from the character's own rotation, so the two walks are
+drawn separately rather than mirrored (his ponytail stays on its side). About 7 cents in all. The
+stand-up was scaled ×0.75 like the seated states; the others at whatever scale makes his standing
+height match the stand-up's last frame (about ×0.8), centred where the stand-up leaves him, feet on
+y 122. The left-facing walk had a moustache: the dark stroke between his nose and mouth was painted
+out with the skin above it on every frame. Colours snapped to his palette as above.
+
+`site/public/sprites/laptop-floor.png` is the laptop he leaves on the rug, cut from the stand-up's
+last frame (frame box 74,102 → room 140,180). In the room it shows while he's away from it.
+His walking speed (36 px per walk cycle) and the window spot are constants in `Room.vue`.
+
 ## Making a reference image
 
 References are built from the documents, not stored. Export one with the Aseprite CLI, for example
@@ -70,19 +87,24 @@ and builds every other `site/public/art/outfits/<id>/` by recolouring only the h
 region per animation, the face and goatee protected, shades mapped by brightness onto the outfit's
 ramp, drawstrings repainted). Pose, hair, glasses, goatee, frames and timing stay identical. Where a
 pose moves the sleeves out of that region (the stretch's raised arms), `FRAME_REGIONS` adds polygons
-for those frames, traced beside the hair, never over it. The hoodie's brightness range is measured
-on the original four states only, so a new state never shifts existing outfits.
+for those frames, traced beside the hair, never over it. Standing (the stand-up from frame 3, the
+walks, the window) his body moves too much for one polygon and his hair shares the hoodie's colours,
+so `BANDED` frames get a region found from the frame itself: a band from his neck (the narrowest row
+under his head) to the waistband (where the jeans take over), with the laptop on the rug kept out.
+The hoodie's brightness range is measured on the original four states only, so a new state never
+shifts existing outfits.
 
 `labcoat/` is the Steins Gate lab coat. `"hidden": true` keeps it out of `index.json`, so the admin
 wardrobe and the API never offer it; the room swaps it in while the Steins Gate worldline lasts and the
 saved outfit never changes. It is `"prebuilt"`: drawn, not recoloured. Its source is
-`ase/labcoat/<state>.aseprite` (exported by `export_ase.sh`), one document for each of Asad's six states
+`ase/labcoat/<state>.aseprite` (exported by `export_ase.sh`), one document for each of Asad's states
 with the same frames and timing. Made October 2026 with PixelLab's *Edit images* on his real frames
 ("an open white lab coat with collar and lapels over his dark tee"), one request per state so its
 frames match; each result was aligned back onto the original frame (PixelLab redraws a few pixels off)
 and only clothing was taken from it (hoodie pixels, the hood around his neck, and the coat's tail on
 the floor, kept still across each animation); face, glasses, goatee, hair, hands, laptop, mug and
-jeans are the original pixels. About 56 cents of PixelLab credit.
+jeans are the original pixels. About 56 cents of PixelLab credit. The standing poses were added the
+same way, except that the coat's hem below his hoodie is taken frame by frame (it swings as he walks).
 
 To add one: make `site/public/art/outfits/<id>/outfit.json` (copy `forest/`; `palette.hoodie` is five
 colours from shadow to highlight, `rim` tints the lamp-lit edge, `drawstring` is light/dark), run

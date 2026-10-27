@@ -1,5 +1,5 @@
 {
-  "version": 24,
+  "version": 26,
   "logicalSize": [
     128,
     128
@@ -294,6 +294,92 @@
       "anchor": [
         64,
         122
+      ]
+    },
+    "asad-standup": {
+      "sheet": "/sprites/asad-standup.png",
+      "still": "/sprites/asad-standup-still.png",
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        150,
+        150,
+        150,
+        150,
+        150,
+        150,
+        150,
+        150
+      ],
+      "frameMs": 150,
+      "anchor": [
+        64,
+        124
+      ]
+    },
+    "asad-walk-left": {
+      "sheet": "/sprites/asad-walk-left.png",
+      "still": "/sprites/asad-walk-left-still.png",
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130
+      ],
+      "frameMs": 130,
+      "anchor": [
+        64,
+        124
+      ]
+    },
+    "asad-walk-right": {
+      "sheet": "/sprites/asad-walk-right.png",
+      "still": "/sprites/asad-walk-right-still.png",
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130
+      ],
+      "frameMs": 130,
+      "anchor": [
+        64,
+        124
+      ]
+    },
+    "asad-window": {
+      "sheet": "/sprites/asad-window.png",
+      "still": "/sprites/asad-window-still.png",
+      "frames": 6,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        340,
+        340,
+        340,
+        340,
+        340,
+        340
+      ],
+      "frameMs": 340,
+      "anchor": [
+        64,
+        124
       ]
     }
   },
