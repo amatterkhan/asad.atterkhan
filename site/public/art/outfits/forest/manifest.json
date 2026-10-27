@@ -1,5 +1,5 @@
 {
-  "version": 22,
+  "version": 23,
   "outfit": "forest",
   "logicalSize": [
     128,
@@ -90,6 +90,50 @@
         170,
         170,
         170
+      ]
+    },
+    "asad-stretch": {
+      "sheet": "/art/outfits/forest/asad-stretch.png",
+      "still": "/art/outfits/forest/asad-stretch-still.png",
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        180,
+        180,
+        260,
+        300,
+        300,
+        260,
+        200,
+        200
+      ],
+      "frameMs": 235,
+      "anchor": [
+        64,
+        122
+      ]
+    },
+    "asad-look": {
+      "sheet": "/art/outfits/forest/asad-look.png",
+      "still": "/art/outfits/forest/asad-look-still.png",
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        200,
+        200,
+        240,
+        360,
+        360,
+        300,
+        220,
+        200
+      ],
+      "frameMs": 260,
+      "anchor": [
+        64,
+        122
       ]
     }
   }

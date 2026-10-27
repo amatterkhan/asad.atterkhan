@@ -21,7 +21,10 @@ SPRITES = PUBLIC / "sprites"
 OUTFITS = PUBLIC / "art/outfits"
 # The Go API validates outfit ids against the same index.
 API_INDEX = ROOT.parent / "api/internal/content/data/outfits.json"
-STATES = ["asad-idle", "asad-typing", "asad-coffee", "asad-happy"]
+STATES = ["asad-idle", "asad-typing", "asad-coffee", "asad-happy", "asad-stretch", "asad-look"]
+# The hoodie's brightness range is measured on the original four, so adding a state never shifts
+# the colours of the outfits already on the site.
+RANGE_STATES = ["asad-idle", "asad-typing", "asad-coffee", "asad-happy"]
 DEFAULT = "charcoal"
 
 # Where the hoodie is, per animation, in 128px frame coordinates: polygons around the torso and
@@ -32,6 +35,21 @@ REGIONS = {
     "asad-typing": [[(34, 85), (72, 85), (72, 92), (69, 92), (69, 111), (34, 111)]],
     "asad-happy": [[(34, 84), (72, 84), (72, 92), (69, 92), (69, 111), (34, 111)]],
     "asad-coffee": [[(34, 86), (64, 86), (66, 84), (90, 84), (90, 107), (68, 107), (68, 110), (34, 110)]],
+    # the look turns only his head: the body stays where typing has it
+    "asad-look": [[(34, 85), (72, 85), (72, 92), (69, 92), (69, 111), (34, 111)]],
+    "asad-stretch": [[(34, 85), (72, 85), (72, 92), (69, 92), (69, 111), (34, 111)]],
+}
+# Frames whose sleeves leave the body's region: the stretch's raised arms, traced per frame beside
+# (never over) the hair. Added to the state's own region for that frame.
+FRAME_REGIONS = {
+    "asad-stretch": {
+        1: [[(32, 80), (36, 70), (43, 66), (44, 90), (40, 96), (32, 92)], [(64, 94), (64, 86), (86, 70), (92, 74), (72, 94)]],
+        2: [[(36, 46), (46, 46), (46, 90), (36, 90)], [(62, 46), (72, 46), (72, 90), (62, 90)]],
+        3: [[(35, 47), (45, 47), (45, 92), (35, 92)], [(60, 47), (69, 47), (69, 90), (60, 90)]],
+        4: [[(35, 46), (45, 46), (45, 92), (35, 92)], [(60, 46), (69, 46), (69, 88), (60, 88)]],
+        5: [[(33, 50), (44, 50), (44, 94), (33, 94)], [(65, 50), (75, 50), (75, 90), (65, 90)]],
+        6: [[(34, 84), (52, 84), (52, 103), (34, 103)], [(70, 86), (88, 82), (94, 86), (90, 94), (72, 94)]],
+    },
 }
 
 
@@ -77,10 +95,10 @@ def ramp_at(ramp, t):
     return lerp(ramp[i], ramp[i + 1], t - i)
 
 
-def region_mask(state):
+def region_mask(state, frame=0):
     m = Image.new("L", (128, 128), 0)
     d = ImageDraw.Draw(m)
-    for poly in REGIONS[state]:
+    for poly in REGIONS[state] + FRAME_REGIONS.get(state, {}).get(frame, []):
         d.polygon(poly, fill=255)
     return np.array(m) > 0
 
@@ -183,7 +201,7 @@ def recolour(frame, region, palette, lo, hi):
 def cloth_range():
     """Luma range of the classic hoodie across every frame, so all outfits share one mapping."""
     vals = []
-    for state in STATES:
+    for state in RANGE_STATES:
         sheet = np.array(Image.open(SPRITES / f"{state}.png").convert("RGBA"))
         region = region_mask(state)
         for i in range(sheet.shape[1] // 128):
@@ -208,10 +226,9 @@ def build():
             src = SPRITES / f"{state}.png"
             if meta.get("palette"):
                 sheet = np.array(Image.open(src).convert("RGBA"))
-                region = region_mask(state)
                 for i in range(sheet.shape[1] // 128):
                     sl = slice(i * 128, (i + 1) * 128)
-                    sheet[:, sl] = recolour(sheet[:, sl], region, meta["palette"], lo, hi)
+                    sheet[:, sl] = recolour(sheet[:, sl], region_mask(state, i), meta["palette"], lo, hi)
                 Image.fromarray(sheet).save(folder / f"{state}.png", optimize=True)
             else:
                 shutil.copyfile(src, folder / f"{state}.png")
@@ -245,9 +262,9 @@ def preview(entries):
         frames = []
         for state in STATES:
             sheet = Image.open(OUTFITS / e["id"] / f"{state}.png").convert("RGBA")
-            frames += [sheet.crop((i * 128 + 32, 48, i * 128 + 96, 124)) for i in range(sheet.width // 128)]
+            frames += [sheet.crop((i * 128 + 28, 36, i * 128 + 100, 124)) for i in range(sheet.width // 128)]
         rows.append(frames)
-    w, h = 64, 76
+    w, h = 72, 88
     out = Image.new("RGBA", (w * len(rows[0]), h * len(rows)), (43, 36, 44, 255))
     for r, frames in enumerate(rows):
         for c, f in enumerate(frames):

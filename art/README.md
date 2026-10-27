@@ -28,6 +28,7 @@ PixelLab character IDs in case an animation is ever generated again.
 | State | Frames |
 | --- | --- |
 | asad-typing, asad-coffee, asad-idle, asad-happy (when Storm is petted) | 8 |
+| asad-stretch (arms up, rarely), asad-look (a glance toward the window) | 8 |
 | storm-standing (walk), storm-idle, storm-stretch | 8 |
 | storm-sleeping, storm-nap (the small one on the Lab chair), storm-dream | 6–14 |
 | robot-idle | see `ase/` |
@@ -37,7 +38,19 @@ Placement lives in `site/src/styles/app.css` (`.actor.asad`, `.actor.storm`, `.v
 Storm's walking speed is `strideRoomPx / walkCycleMs` in `site/public/sprites/manifest.json`.
 
 Facial hair rule for Asad: a short, neat dark goatee under the lower lip; no moustache, no cheek
-beard or sideburns.
+beard or sideburns. (The PixelLab character's own prompt still mentions a faint moustache: say "no
+mustache" in every action and check each frame.)
+
+### How asad-stretch and asad-look were made (October 2026)
+
+With the PixelLab client and `pl_animate.py` from `git show 79e2ec8^:art/scripts/`, animating
+character `5c4707d2…` (direction `south`, 8 frames) from the original raw typing frame
+(`git show 79e2ec8^:art/pixellab/asad/typing/00.png`) as the custom start frame, so the pose,
+laptop and scale match his other states. Each animation cost about a cent of PixelLab credit. Then:
+two motion marks painted out of the stretch's frame 2; frames scaled ×0.75 and registered on frame
+0's feet exactly as the original converter did (it reproduces the shipped typing frame's silhouette
+pixel for pixel); colours snapped to the 64 colours of Asad's existing sheets; documents built with
+`scripts/frames_to_aseprite.lua` (which now takes per-frame `durations`); `export_ase.sh`.
 
 ## Making a reference image
 
@@ -55,7 +68,10 @@ Asad's clothes are swappable without touching the character. `site/public/sprite
 from `ase/`) is the `classic` outfit; `scripts/outfits.py` copies it to `site/public/art/outfits/classic/`
 and builds every other `site/public/art/outfits/<id>/` by recolouring only the hoodie pixels (a fixed
 region per animation, the face and goatee protected, shades mapped by brightness onto the outfit's
-ramp, drawstrings repainted). Pose, hair, glasses, goatee, frames and timing stay identical.
+ramp, drawstrings repainted). Pose, hair, glasses, goatee, frames and timing stay identical. Where a
+pose moves the sleeves out of that region (the stretch's raised arms), `FRAME_REGIONS` adds polygons
+for those frames, traced beside the hair, never over it. The hoodie's brightness range is measured
+on the original four states only, so a new state never shifts existing outfits.
 
 To add one: make `site/public/art/outfits/<id>/outfit.json` (copy `forest/`; `palette.hoodie` is five
 colours from shadow to highlight, `rim` tints the lamp-lit edge, `drawstring` is light/dark), run
