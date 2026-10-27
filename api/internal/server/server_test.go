@@ -459,8 +459,9 @@ func TestEmulatorRoutes(t *testing.T) {
 	if code != 401 {
 		t.Fatal("stale auth allowed", code)
 	}
-	if hooks.Load() != 6 {
-		t.Errorf("rebuild hook calls got %d want 6", hooks.Load())
+	// one more than before: saving Thoughts publishes too
+	if hooks.Load() != 7 {
+		t.Errorf("rebuild hook calls got %d want 7", hooks.Load())
 	}
 	if _, err = services.Auth.UpdateUser(ctx, uid, (&auth.UserToUpdate{}).Disabled(true)); err != nil {
 		t.Fatal(err)
