@@ -2,8 +2,9 @@
 import { onBeforeUnmount, onMounted, ref, useTemplateRef, type CSSProperties } from "vue";
 import Sprite from "../components/Sprite.vue";
 import NixieClock from "../components/NixieClock.vue";
-import { glyph, mauritiusTime } from "../lib/nixie";
-import { loopMs, manifest } from "../lib/manifest";
+import { glyph } from "../lib/nixie";
+import { loopMs, manifest, type SpriteState } from "../lib/manifest";
+import { spriteSheet } from "../lib/outfits";
 import { site } from "../lib/site";
 
 // The room is a 384x216 pixel-art scene drawn in LibreSprite (art/ase/room.ase), one PNG per layer.
@@ -51,8 +52,9 @@ const root = useTemplateRef<HTMLDivElement>("root");
 const storm = useTemplateRef<HTMLDivElement>("storm");
 let target = 230;
 let lastInput = 0;
+// decide now rather than at the next tick, so a tap moves Storm at once (set up on mount)
+let poke = () => {};
 const sky = ref<"day" | "night">("night");
-const clock = ref("");
 const lamp = ref(true);
 const mode = ref<StormMode>("idle");
 const asad = ref<"typing" | "coffee" | "idle">("typing");
@@ -62,20 +64,28 @@ let happyTimer: ReturnType<typeof setTimeout> | undefined;
 const stops: (() => void)[] = [];
 
 onMounted(() => {
-  // client-only clock, theme and saved lamp state (the build renders night, lamp on, no time)
-  const tick = () => (clock.value = mauritiusTime());
-  tick();
+  // Fetch and decode every sheet Asad and Storm switch between once the page is idle, so a new state
+  // (Storm setting off on a walk, say) never waits on its image or hitches while it decodes.
+  const preload = () =>
+    (Object.keys(manifest.states) as SpriteState[])
+      .filter((k) => /^(asad|storm)-/.test(k) && k !== "storm-nap")
+      .forEach((k) => {
+        const img = new Image();
+        img.src = spriteSheet(k, outfit);
+        img.decode().catch(() => {});
+      });
+  if ("requestIdleCallback" in window) requestIdleCallback(preload, { timeout: 3000 });
+  else setTimeout(preload, 1500);
+  // client-only theme and saved lamp state (the build renders night, lamp on)
   const syncSky = () => (sky.value = document.documentElement.dataset.theme === "light" ? "day" : "night");
   syncSky();
   // the nav's theme button changes it too
   const themeWatch = new MutationObserver(syncSky);
   themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   stops.push(() => themeWatch.disconnect());
-  const clockId = setInterval(tick, 1000);
   try {
     if (localStorage.getItem("lamp") === "off") lamp.value = false;
   } catch {}
-  stops.push(() => clearInterval(clockId));
 
   // Asad types; every so often he sips coffee, or stops to think (and hum).
   let t: ReturnType<typeof setTimeout>;
@@ -200,6 +210,11 @@ onMounted(() => {
     next();
   };
   next();
+  poke = () => {
+    if (!shown) return;
+    clearTimeout(decide);
+    loop(performance.now());
+  };
   stops.push(() => {
     clearTimeout(decide);
     walk?.cancel();
@@ -216,10 +231,12 @@ const lure = (e: PointerEvent) => {
   const r = root.value!.getBoundingClientRect();
   target = Math.min(360, Math.max(24, ((e.clientX - r.left) / r.width) * W));
   lastInput = performance.now();
+  if (e.type === "pointerdown") poke();
 };
 
 const pet = () => {
   lastInput = performance.now();
+  poke();
   said.value = (said.value + 1) % mrrps.length;
   happy.value = true;
   clearTimeout(happyTimer);
@@ -292,7 +309,7 @@ const toggleTheme = () => {
 
       <div v-for="name in ['night', 'dark', 'glow', 'bulb']" :key="name" :class="`layer layer-${name}`" :style="layer(name)" />
       <!-- the lit digits glow over the dark, like the LEDs; blank until the client knows the time -->
-      <NixieClock part="lit" :time="clock" />
+      <NixieClock part="lit" live />
       <span class="fx fx-led" :style="at([286, 119, 2, 1])" />
       <span class="fx fx-router a" :style="at([238, 42, 1, 1])" />
       <span class="fx fx-router b" :style="at([242, 42, 1, 1])" />

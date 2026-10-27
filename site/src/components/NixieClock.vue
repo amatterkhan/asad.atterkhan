@@ -1,10 +1,20 @@
 <script setup lang="ts">
-import { NIXIE_BOX, NIXIE_X, NIXIE_Y, NIXIE_W, clockLabel, litPath, tubes, unlitPath } from "../lib/nixie";
+import { onBeforeUnmount, onMounted, ref } from "vue";
+import { NIXIE_BOX, NIXIE_X, NIXIE_Y, NIXIE_W, clockLabel, litPath, mauritiusTime, tubes, unlitPath } from "../lib/nixie";
 // One half of the Nixie clock (lib/nixie.ts), sized to the clock's own box inside a room-sized parent.
 // "glass" is the tubes and plinth, drawn on the wall under the night layers; "lit" is the glowing
-// digits, drawn over them. With no `time`, behaviors/nixie.ts keeps the digits ticking (the page
-// vignettes); the homepage room passes its own.
-const { part, time } = defineProps<{ part: "glass" | "lit"; time?: string }>();
+// digits, drawn over them. Inside an island (the homepage room) `live` ticks it here, so only the clock
+// re-renders each second; in static page vignettes behaviors/nixie.ts ticks it instead.
+const { part, live = false } = defineProps<{ part: "glass" | "lit"; live?: boolean }>();
+const time = ref("");
+let id: ReturnType<typeof setInterval> | undefined;
+onMounted(() => {
+  if (!live || part !== "lit") return;
+  const tick = () => (time.value = mauritiusTime());
+  tick();
+  id = setInterval(tick, 1000);
+});
+onBeforeUnmount(() => clearInterval(id));
 const [x, y, w, h] = NIXIE_BOX;
 const box = {
   left: `${(x / 384) * 100}%`,
@@ -32,9 +42,9 @@ const viewBox = `${x} ${y} ${w} ${h}`;
     :style="box"
     :viewBox="viewBox"
     role="img"
-    :aria-label="clockLabel(time ?? '')"
-    :data-nixie="time === undefined ? '' : undefined"
+    :aria-label="clockLabel(time)"
+    :data-nixie="live ? undefined : ''"
   >
-    <path :d="litPath(time ?? '')" />
+    <path :d="litPath(time)" />
   </svg>
 </template>

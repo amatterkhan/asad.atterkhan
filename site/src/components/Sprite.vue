@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { manifest, type SpriteState } from "../lib/manifest";
-import { DEFAULT_OUTFIT, outfitSheet } from "../lib/outfits";
+import { DEFAULT_OUTFIT, spriteSheet } from "../lib/outfits";
 // A PixelLab/Aseprite sheet played with CSS steps(). The sheet is a strip inside a one-frame window,
 // slid with transform so the browser's compositor plays it (no repaint per frame, and no var() in
 // the keyframes, which WebKit resolves badly). Keyed by state, so a new state starts on frame 0.
@@ -10,7 +10,7 @@ import { DEFAULT_OUTFIT, outfitSheet } from "../lib/outfits";
 const { state, size = 128, description, outfit = DEFAULT_OUTFIT } = defineProps<{ state: SpriteState; size?: number; description?: string; outfit?: string }>();
 const style = computed(() => ({
   "--sprite-size": `${size}px`,
-  "--sprite-sheet": `url(${state.startsWith("asad-") ? outfitSheet(outfit, state) : `/sprites/${state}.png?v=${manifest.version}`})`,
+  "--sprite-sheet": `url(${spriteSheet(state, outfit)})`,
   "--n": manifest.states[state].frames,
   "--ms": `${manifest.states[state].frameMs}ms`,
 }));

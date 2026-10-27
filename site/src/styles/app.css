@@ -521,7 +521,9 @@ html[data-motion="paused"] *::after {
 .layer-stars-a { animation: twinkle 3.2s steps(2) infinite; }
 .layer-stars-b { animation: twinkle 2.6s steps(2) infinite reverse; }
 .layer-clouds { inset: 0 auto 0 0; width: 100%; animation: drift 60s linear infinite; will-change: transform; }
-@keyframes drift { to { transform: translateX(calc(var(--u) * -96)); } }
+/* keyframes use percentages of the element's own size, never var(): WebKit resolves var() in keyframes badly
+   and falls back to animating on the main thread */
+@keyframes drift { to { transform: translate3d(-25%, 0, 0); } } /* 96 of the layer's 384 room px */
 @keyframes twinkle { 50% { opacity: .25; } }
 
 .fx { position: absolute; pointer-events: none; }
@@ -533,7 +535,8 @@ html[data-motion="paused"] *::after {
 .fx-steam.two { animation-delay: -1.3s; }
 .room[data-lamp="off"][data-sky="night"] .fx-steam { display: none; }
 @keyframes blink { 50% { opacity: .1; } }
-@keyframes steam { 0% { opacity: 0; transform: translateY(0); } 30% { opacity: .8; } 100% { opacity: 0; transform: translateY(calc(var(--u) * -8)) translateX(calc(var(--u) * 1)); } }
+/* the wisp is 1x3 room px: up 8, right 1 */
+@keyframes steam { 0% { opacity: 0; transform: translate(0, 0); } 30% { opacity: .8; } 100% { opacity: 0; transform: translate(100%, -266.667%); } }
 
 /* SVG drawn on the room's own 384x216 grid: book initials and the Nixie clock under the shelf */
 .wall-art { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; shape-rendering: crispEdges; }
@@ -607,6 +610,11 @@ html[data-motion="paused"] *::after {
   .room .spot { filter: none; }
   .layer { transition: none; }
   .layer-stars-b, .fx-steam.two { animation: none; }
+  /* phones skip the fade, so layers switched off can leave the compositor entirely (and stop animating) */
+  .room[data-sky="day"] :is(.layer-sky-night, .layer-stars-a, .layer-stars-b, .layer-night, .layer-dark),
+  .room[data-sky="night"] :is(.layer-sky-day, .layer-clouds, .layer-sunbeam),
+  .room[data-lamp="on"] .layer-dark,
+  .room[data-lamp="off"] :is(.layer-night, .layer-glow, .layer-bulb) { visibility: hidden; animation: none; }
   .room-caption .hint { display: none; }
 }
 
@@ -690,7 +698,8 @@ html[data-cursor="box"] .cursor-dot span { background: var(--color-accent); }
 /* QROVER drives a little way along the desk and back */
 .actor.robot { left: calc(var(--u) * 286); top: calc(var(--u) * 80); animation: robot-drive 16s ease-in-out infinite; }
 .actor.robot .sprite { --sprite-size: calc(var(--u) * 48) !important; display: block; }
-@keyframes robot-drive { 0%, 20% { translate: 0 0; } 45%, 60% { translate: calc(var(--u) * 14) 0; } 85%, 100% { translate: 0 0; } }
+/* 14 room px of the robot's 48 */
+@keyframes robot-drive { 0%, 20% { transform: translate3d(0, 0, 0); } 45%, 60% { transform: translate3d(29.1667%, 0, 0); } 85%, 100% { transform: translate3d(0, 0, 0); } }
 .room[data-lamp="off"][data-sky="night"] .actor.robot { animation-play-state: paused; }
 
 /* pixel icons inside links */
