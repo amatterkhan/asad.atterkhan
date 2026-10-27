@@ -106,7 +106,7 @@ mounted into Cloud Run when `REBUILD_HOOK=github`. It expires, so set a reminder
 with `gcloud secrets versions add asad-api-github-token --data-file=-` plus an API redeploy.
 Rapid admin saves each start a run; the workflow's concurrency group cancels superseded ones.
 
-Cost follow-up: Cloud Run scales to zero with maximum two instances. Artifact images currently
-accumulate without a cleanup policy; configure a reviewed retention policy before frequent
-rebuilds. Hosting traffic, stored objects, Firestore usage and logs can also incur charges.
+Cost follow-up: Cloud Run scales to zero with maximum two instances. The `asad` Artifact
+Registry repository keeps the five newest image versions and deletes older ones after 14 days
+(cleanup policy set on 27 October and reapplied by the setup script). Hosting traffic, stored objects, Firestore usage and logs can also incur charges.
 The $1/$3/$5 budget alerts are notifications, not spending caps.
