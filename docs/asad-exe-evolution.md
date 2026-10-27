@@ -28,12 +28,12 @@ Keep commits small and grouped by logic. Intermediate PRs into this branch are f
 | [Feature branch, baseline tests and progress doc](https://github.com/amatterkhan/asad.atterkhan/issues/20) | done |
 | [Build: refreshed identity and copy](https://github.com/amatterkhan/asad.atterkhan/issues/22) | done (7d66bee, 32ff2a3) |
 | [Build: Thought content and admin Thoughts tab](https://github.com/amatterkhan/asad.atterkhan/issues/23) | not started |
-| [Build: worldline engine and divergence meter](https://github.com/amatterkhan/asad.atterkhan/issues/25) | not started |
+| [Build: worldline engine and divergence meter](https://github.com/amatterkhan/asad.atterkhan/issues/25) | done (588852f, c5e4e76) |
 | [Build: Asad's seated stretch and look animations](https://github.com/amatterkhan/asad.atterkhan/issues/31) | not started |
-| [Build: Thoughts in the room](https://github.com/amatterkhan/asad.atterkhan/issues/24) | blocked by #23, #25 |
+| [Build: Thoughts in the room](https://github.com/amatterkhan/asad.atterkhan/issues/24) | blocked by #23 |
 | [Build: lab coat outfit art](https://github.com/amatterkhan/asad.atterkhan/issues/26) | blocked by #31 |
-| [Build: Steins Gate lab coat override](https://github.com/amatterkhan/asad.atterkhan/issues/27) | blocked by #25, #26 |
-| [Build: night-room share image and metadata](https://github.com/amatterkhan/asad.atterkhan/issues/28) | blocked by #25 |
+| [Build: Steins Gate lab coat override](https://github.com/amatterkhan/asad.atterkhan/issues/27) | blocked by #26 |
+| [Build: night-room share image and metadata](https://github.com/amatterkhan/asad.atterkhan/issues/28) | ready |
 | [Integration, verification and release PR](https://github.com/amatterkhan/asad.atterkhan/issues/29) | blocked by everything above |
 
 ## Test results
@@ -56,15 +56,23 @@ Keep commits small and grouped by logic. Intermediate PRs into this branch are f
 | `npx playwright test` | 62 passed, 2 skipped |
 | Visual check of the production build (system Chrome, 1280 and 390 wide, dark): Home, About, The Lab, 404, footer | subtitles, eyebrow, hero paragraphs and footer motto render; titles read `Asad.exe — Asad Atterkhan`; no horizontal overflow |
 
+### Worldline engine: 27 Oct 2026, c5e4e76
+
+| Check | Result |
+| --- | --- |
+| `make check` | pass, 28 vitest tests (new: worldline cycle, shift timeline incl. reduced motion, divergence tube layout) |
+| `npx playwright test` | 70 passed, 2 skipped. New: the meter cycles all four worldlines by keyboard and click, ignores presses mid-shift, keeps focus, announces once, leaves no layers in Normal, keeps the A/S books; reduced motion goes settle → note → idle with no flicker or glitch and shows the Steins Gate note. Axe passes on `/` with the new button |
+| Visual check (system Chrome, production build): night and day, lamp on and off, 1280 and 390 wide | the note sits above the meter on wide rooms and below it on narrow ones, inside the room; Alpha rain shows only through the glass; Beta's flicker only runs with the lamp on |
+
 ## Known issues
 
 - **Production copy comes from Firestore.** The deploy builds with `CONTENT_SOURCE=firestore`, and the saved `siteSettings/public` overrides the Git defaults field by field. So the new **headline, eyebrow role, lede, body, room hint, closing, Lab, Workbench and About copy** go live only once the same text is saved in `/admin` → Site copy (the owner does this; it triggers a rebuild). The motto, subtitles, titles, footer and 404 text are code and ship with the release. The text to paste is in `site/content/site.json`. Add this to the release PR's deploy steps.
 - On phones the new hero (lede plus three paragraphs) pushes the room about two screens down. It's the approved copy; raise it at review if it matters.
-
 - No Java runtime on this machine, so the emulator suite in `docs/development.md` can't run here. CI runs it.
 - Only WebKit is installed for Playwright locally. The suite itself uses system Chrome (`channel: "chrome"`).
 
 ## Session log
 
 - **27 Oct 2026**: cut the branch, recorded the baseline, captured the room baselines, added `GLOSSARY.md` and this file.
+- **27 Oct 2026**: built the worldline engine (#25). For later tickets: `Room.vue` exposes `worldline` (ref) and `shifting` (computed: a shift or its note is on screen). Thoughts must wait on `shifting`, and the coat override hangs off `worldline === "steins-gate"`. A live test found a race (a second press in the same tick slipped past the lock); the first phase now starts synchronously in the click.
 - **27 Oct 2026**: built identity and copy (#22). The headline and "Say hello." stay admin-editable copy with new defaults; only the motto and the four subtitles are fixed in code.
