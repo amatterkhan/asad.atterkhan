@@ -32,7 +32,9 @@ export function renderHead(head: Head, indexSite: boolean) {
     meta("property", "og:description", description),
     meta("property", "og:site_name", site.title),
     meta("property", "og:locale", "en_GB"),
+    head.canonical !== undefined ? meta("property", "og:url", site.url + (head.canonical === "/" ? "" : head.canonical)) : "",
     meta("property", "og:image", image),
+    meta("property", "og:image:alt", head.image ? title : "Pixel-art room: Asad typing on his laptop while Storm the cat stands nearby"),
     meta("property", "og:image:type", "image/png"),
     meta("property", "og:image:width", "1200"),
     meta("property", "og:image:height", "630"),
@@ -43,6 +45,7 @@ export function renderHead(head: Head, indexSite: boolean) {
     meta("name", "twitter:title", title),
     meta("name", "twitter:description", description),
     meta("name", "twitter:image", image),
+    meta("name", "twitter:image:alt", head.image ? title : "Pixel-art room: Asad typing on his laptop while Storm the cat stands nearby"),
     head.jsonLd ? `<script type="application/ld+json">${safeJson(head.jsonLd)}</script>` : "",
   ];
   return tags.filter(Boolean).join("\n    ");

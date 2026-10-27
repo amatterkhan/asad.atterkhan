@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, useTemplateRef, type CSSProperties } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, type CSSProperties } from "vue";
 import Sprite from "../components/Sprite.vue";
 import { loopMs, manifest } from "../lib/manifest";
 import { site } from "../lib/site";
@@ -15,13 +15,60 @@ const BEDS = [60, 188] as const;
 
 const { hint, outfit } = defineProps<{ hint: string; outfit?: string }>();
 
+// "HHMMSS" in Mauritius, for the Nixie clock under the bookshelf
 const mauritiusTime = () =>
   new Intl.DateTimeFormat("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
-    hour12: false,
+    second: "2-digit",
+    hourCycle: "h23",
     timeZone: "Indian/Mauritius",
-  }).format(new Date());
+  })
+    .format(new Date())
+    .replace(/\D/g, "");
+
+// Pixel glyphs, 3x5 (the book initials), drawn straight onto the room's 384x216 grid as SVG paths.
+const GLYPHS: Record<string, string[]> = {
+  A: ["010", "101", "111", "101", "101"],
+  S: ["011", "100", "010", "001", "110"],
+};
+// The clock's digits are taller, 3x7, narrow like real Nixie numerals.
+const DIGITS: Record<string, string[]> = {
+  "0": ["111", "101", "101", "101", "101", "101", "111"],
+  "1": ["010", "110", "010", "010", "010", "010", "111"],
+  "2": ["111", "001", "001", "111", "100", "100", "111"],
+  "3": ["111", "001", "001", "111", "001", "001", "111"],
+  "4": ["101", "101", "101", "111", "001", "001", "001"],
+  "5": ["111", "100", "100", "111", "001", "001", "111"],
+  "6": ["111", "100", "100", "111", "101", "101", "111"],
+  "7": ["111", "001", "001", "001", "001", "001", "001"],
+  "8": ["111", "101", "101", "111", "101", "101", "111"],
+  "9": ["111", "101", "101", "111", "001", "001", "111"],
+};
+const glyph = (ch: string, x: number, y: number, font = GLYPHS) =>
+  (font[ch] ?? [])
+    .flatMap((row, dy) => [...row].map((on, dx) => (on === "1" ? `M${x + dx} ${y + dy}h1v1h-1z` : "")))
+    .join("");
+
+// The Nixie clock, a Steins;Gate divergence meter telling the time: HH.MM.SS across eight tubes,
+// digit tubes 5px wide, the dot tubes 3px, 1px apart, standing on a dark plinth.
+const NIXIE_X = 157;
+const NIXIE_Y = 67;
+const tubes = (() => {
+  let x = NIXIE_X + 2;
+  return ["d", "d", ".", "d", "d", ".", "d", "d"].map((kind) => {
+    const t = { kind, x, w: kind === "d" ? 5 : 3 };
+    x += t.w + 1;
+    return t;
+  });
+})();
+const NIXIE_W = tubes.at(-1)!.x + 5 + 2 - NIXIE_X;
+const digitTubes = tubes.filter((t) => t.kind === "d");
+const unlit = digitTubes.map((t) => glyph("8", t.x + 1, NIXIE_Y + 2, DIGITS)).join("");
+const dots = tubes
+  .filter((t) => t.kind === ".")
+  .map((t) => `M${t.x + 1} ${NIXIE_Y + 8}h1v1h-1z`)
+  .join("");
 
 const mrrps = ["mrrp?", "*purr*", "mew.", "…supervising", "prrrt!", "(blink)"];
 
@@ -53,6 +100,9 @@ let target = 230;
 let lastInput = 0;
 const sky = ref<"day" | "night">("night");
 const clock = ref("");
+const lit = computed(() =>
+  clock.value ? digitTubes.map((t, i) => glyph(clock.value[i], t.x + 1, NIXIE_Y + 2, DIGITS)).join("") + dots : "",
+);
 const lamp = ref(true);
 const mode = ref<StormMode>("idle");
 const asad = ref<"typing" | "coffee" | "idle">("typing");
@@ -71,7 +121,7 @@ onMounted(() => {
   const themeWatch = new MutationObserver(syncSky);
   themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   stops.push(() => themeWatch.disconnect());
-  const clockId = setInterval(tick, 30000);
+  const clockId = setInterval(tick, 1000);
   try {
     if (localStorage.getItem("lamp") === "off") lamp.value = false;
   } catch {}
@@ -95,7 +145,6 @@ onMounted(() => {
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   let x = 230;
   let raf = 0;
-  let last = performance.now();
   let current: StormMode = "idle";
   let wander = 0;
   let busyUntil = 0;
@@ -103,23 +152,47 @@ onMounted(() => {
   let bed: number | null = null; // where he naps: beside Asad, never in front of him
   // Touch screens have no hover to lure him, so he gets restless sooner there.
   const WANDER_AFTER = matchMedia("(hover: none)").matches ? 2000 : 6000;
-  // Position is written as a pixel translate (not a CSS variable) so a frame never restyles the subtree.
+  // The loop below only decides where Storm goes. Each walk is one linear animation from where he is
+  // to where he's heading, at the same speed, so the compositor moves him and no frame restyles the
+  // page (which is what made him stutter on phones).
   let roomW = root.value!.clientWidth;
-  const resize = new ResizeObserver(() => (roomW = root.value!.clientWidth));
+  let from = x;
+  let heading = x;
+  let walk: Animation | undefined;
+  const px = (at: number) => `${((at - 32) / W) * roomW}px 0`;
+  // where he is now, read off the running walk, so the logic and the picture never disagree
+  const position = () => {
+    if (!walk) return x;
+    const d = Number(walk.effect?.getTiming().duration) || 0;
+    return d ? from + (heading - from) * Math.min(1, Number(walk.currentTime ?? 0) / d) : heading;
+  };
+  const glide = (to: number) => {
+    x = from = position();
+    heading = to;
+    walk?.cancel();
+    walk = storm.value!.animate([{ translate: px(x) }, { translate: px(to) }], {
+      duration: reduce ? 0 : Math.abs(to - x) / WALK_SPEED,
+      easing: "linear",
+      fill: "forwards",
+    });
+  };
+  const resize = new ResizeObserver(() => {
+    roomW = root.value!.clientWidth;
+    glide(heading);
+  });
   resize.observe(root.value!);
   stops.push(() => resize.disconnect());
+  // off screen the loop stops; coming back, it picks up from where he was
   let shown = true;
   const io = new IntersectionObserver(([e]) => {
     shown = e.isIntersecting;
-    if (shown) {
-      last = performance.now();
-      raf = requestAnimationFrame(loop);
-    }
+    cancelAnimationFrame(raf);
+    if (shown) raf = requestAnimationFrame(loop);
   });
   io.observe(root.value!);
   stops.push(() => io.disconnect());
-  let drawn = NaN;
-  lastInput = last;
+  let facing = 1;
+  lastInput = performance.now();
   const set = (m: StormMode) => {
     if (m !== current) {
       current = m;
@@ -132,8 +205,6 @@ onMounted(() => {
   };
   const loop = (now: number) => {
     if (!shown) return;
-    const dt = Math.min(now - last, 50);
-    last = now;
     const idle = now - lastInput;
     if (now < busyUntil) {
       raf = requestAnimationFrame(loop);
@@ -153,29 +224,34 @@ onMounted(() => {
       bed ??= Math.abs(x - BEDS[0]) < Math.abs(x - BEDS[1]) ? BEDS[0] : BEDS[1];
       target = bed;
     } else bed = null;
-    if (idle > WANDER_AFTER && idle <= 22000 && now > wander) {
+    // wander only once he's got where he was going, so a tap isn't overridden halfway there
+    if (idle > WANDER_AFTER && idle <= 22000 && now > wander && Math.abs(target - x) <= 1) {
       target = 30 + Math.random() * 320;
       wander = now + 7000 + Math.random() * 6000;
     }
     const dx = target - x;
     if (Math.abs(dx) > 1) {
-      x += reduce ? dx : Math.sign(dx) * Math.min(Math.abs(dx), dt * WALK_SPEED);
+      if (Math.abs(target - heading) > 0.5) glide(target);
+      x = position();
       set("standing");
-      storm.value?.style.setProperty("--flip", dx > 0 ? "1" : "-1"); // art faces right
+      const face = dx > 0 ? 1 : -1; // art faces right
+      if (face !== facing) {
+        facing = face;
+        storm.value!.style.setProperty("--flip", String(face));
+      }
     } else if (current === "standing" && idle > WANDER_AFTER && Math.random() < 0.35) {
       stretch(now);
     } else if (idle > 22000 && bed !== null && Math.abs(x - bed) <= 1) {
       set("sleeping");
       dreamAt = now + 12000 + Math.random() * 10000;
     } else set("idle");
-    if (x !== drawn) {
-      drawn = x;
-      storm.value!.style.translate = `${(((x - 32) / W) * roomW).toFixed(1)}px 0`;
-    }
     raf = requestAnimationFrame(loop);
   };
   raf = requestAnimationFrame(loop);
-  stops.push(() => cancelAnimationFrame(raf));
+  stops.push(() => {
+    cancelAnimationFrame(raf);
+    walk?.cancel();
+  });
 });
 onBeforeUnmount(() => {
   stops.forEach((stop) => stop());
@@ -228,7 +304,7 @@ const toggleTheme = () => {
     >
       <p class="sr-only">
         A pixel-art room: Asad sits on a rug typing on his laptop while Storm the cat wanders. There is a window, a
-        bookshelf, a framed certificate, a clipboard, and a desk with a notebook, an ESP32 board, a robot car, a mug
+        bookshelf with a Nixie tube clock beneath it, a framed certificate, a clipboard, and a desk with a notebook, an ESP32 board, a robot car, a mug
         and a lamp.
       </p>
       <div
@@ -237,6 +313,21 @@ const toggleTheme = () => {
         :class="`layer layer-${name}`"
         :style="layer(name)"
       />
+      <!-- drawn on the wall, so the night and lamp layers darken them with the rest of the room -->
+      <svg class="wall-art" :viewBox="`0 0 ${W} ${H}`" preserveAspectRatio="none" aria-hidden="true">
+        <!-- initials pressed into two hardcover spines -->
+        <path class="initial initial-a" :d="glyph('A', 165, 26)" />
+        <path class="initial initial-s" :d="glyph('S', 194, 29)" />
+        <rect class="nixie-plinth" :x="NIXIE_X" :y="NIXIE_Y + 12" :width="NIXIE_W" height="3" />
+        <rect class="nixie-plinth-top" :x="NIXIE_X" :y="NIXIE_Y + 12" :width="NIXIE_W" height="1" />
+        <g v-for="t in tubes" :key="t.x">
+          <rect class="nixie-glass" :x="t.x" :y="NIXIE_Y + 1" :width="t.w" height="9" />
+          <rect class="nixie-glass" :x="t.x + 1" :y="NIXIE_Y" :width="t.w - 2" height="1" />
+          <rect class="nixie-shine" :x="t.x" :y="NIXIE_Y + 1" width="1" height="8" />
+          <rect class="nixie-socket" :x="t.x" :y="NIXIE_Y + 10" :width="t.w" height="2" />
+        </g>
+        <path class="nixie-unlit" :d="unlit" />
+      </svg>
 
       <div class="actor asad">
         <Sprite :state="happy ? 'asad-happy' : `asad-${asad}`" :outfit="outfit" :size="128" />
@@ -256,6 +347,10 @@ const toggleTheme = () => {
       </div>
 
       <div v-for="name in ['night', 'dark', 'glow', 'bulb']" :key="name" :class="`layer layer-${name}`" :style="layer(name)" />
+      <!-- the lit digits glow over the dark, like the LEDs; blank until the client knows the time -->
+      <svg class="nixie-lit" :viewBox="`0 0 ${W} ${H}`" preserveAspectRatio="none" role="img" :aria-label="clock ? `A Nixie tube clock reading ${clock.slice(0, 2)}:${clock.slice(2, 4)} in Mauritius` : 'A Nixie tube clock'">
+        <path :d="lit" />
+      </svg>
       <span class="fx fx-led" :style="at([286, 119, 2, 1])" />
       <span class="fx fx-router a" :style="at([238, 42, 1, 1])" />
       <span class="fx fx-router b" :style="at([242, 42, 1, 1])" />
@@ -292,7 +387,6 @@ const toggleTheme = () => {
       </button>
     </div>
     <figcaption class="room-caption">
-      <span>It's {{ clock || "--:--" }} in Mauritius.</span>
       <span class="hint">{{ hint }}</span>
     </figcaption>
   </figure>

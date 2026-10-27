@@ -25,7 +25,7 @@ noted; the frontend falls back to `content/site.json` when the document is missi
 
 ```ts
 type SiteCopy = {
-  role: string;            // "Security Analyst"           (eyebrow + hero)
+  role: string;            // "Programmer · Hacker · Security" (eyebrow + hero)
   company: string;         // "Checkout.com"
   location: string;        // "Mauritius"
   heroTitle: string;       // "Hey, I'm Asad."
