@@ -23,6 +23,7 @@ import {
 import { thumbnailPrompt, PROMPT_HEADER } from "../../src/lib/thumbnail-prompt";
 import { DEFAULT_OUTFIT, outfitSheet } from "../../src/lib/outfits";
 import { renderHead } from "../../src/head";
+import { subtitles } from "../../src/lib/site";
 import { ICONS, ICON_SOURCES } from "../../src/lib/icons";
 
 afterEach(() => {
@@ -189,6 +190,19 @@ it("escapes head tags and keeps private pages out of indexing", () => {
   expect(html).not.toContain("</script><script>");
   expect(html).toContain("og:image");
   expect(html).toContain('rel="canonical"');
+});
+it("names the site Asad.exe, with the motto as its description", () => {
+  const home = renderHead({ canonical: "/" }, true);
+  expect(home).toContain("<title>Asad.exe — Asad Atterkhan</title>");
+  expect(home).toContain('<meta property="og:site_name" content="Asad.exe">');
+  expect(home).toContain('<meta property="og:description" content="Somewhere between cloud nine and layer seven.">');
+  expect(renderHead({ title: "The Lab" }, true)).toContain("<title>The Lab · Asad.exe</title>");
+  expect(subtitles).toEqual({
+    home: "Human, allegedly.",
+    about: "Still figuring out the source code.",
+    lab: "Running experiments on reality.",
+    notFound: "Lost in thought. Found in the logs.",
+  });
 });
 it("uses exact pixelarticons package paths", async () => {
   for (const key of Object.keys(ICONS) as (keyof typeof ICONS)[]) {

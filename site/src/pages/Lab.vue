@@ -4,6 +4,7 @@ import At from "../components/At.vue";
 import Sprite from "../components/Sprite.vue";
 import PixelIcon from "../components/PixelIcon.vue";
 import { LabSearch } from "../islands";
+import { subtitles } from "../lib/site";
 import type { ArticleCard } from "../lib/content.server";
 import type { LabMapSection } from "../routes";
 // The Lab and each of its sections share this page. The overview (no `active`) shows the room and the
@@ -27,6 +28,7 @@ const sectionHref = (id: string) => `/lab/section/${id}`;
       <div>
         <p class="eyebrow">Technical journal</p>
         <h1>The Lab</h1>
+        <p class="page-subtitle">{{ subtitles.lab }}</p>
         <p>{{ intro }}</p>
       </div>
     </div>

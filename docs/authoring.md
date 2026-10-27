@@ -4,7 +4,8 @@
 
 Sign in at `/admin` (Google + TOTP). The **Writing** tab creates drafts, saves with version checks,
 previews with the site's own renderer, and publishes or unpublishes. **Site copy** edits the hero,
-role, intros and About text. Publishing asks GitHub to rebuild; the change is live when that
+role, intros and About text. The motto and the page subtitles (Home, About, The Lab, 404) are
+fixed in `site/src/lib/site.ts`, not admin copy, so they never drift. Publishing asks GitHub to rebuild; the change is live when that
 deploy finishes (see [architecture.md](architecture.md)).
 
 ### The Lab map

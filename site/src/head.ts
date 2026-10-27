@@ -19,7 +19,7 @@ const meta = (attr: "name" | "property", key: string, value: string) => `<meta $
 
 /** The same tags the Next.js metadata API produced (title template, OG, Twitter, robots). */
 export function renderHead(head: Head, indexSite: boolean) {
-  const title = head.title ? `${head.title} · ${site.name}` : `${site.name} — ${site.title}`;
+  const title = head.title ? `${head.title} · ${site.title}` : `${site.title} — ${site.name}`;
   const description = head.description ?? site.description;
   const image = `${site.url}${head.image ?? "/opengraph-image.png"}`;
   const robots = indexSite && !head.noindex ? "index, follow" : "noindex, nofollow";

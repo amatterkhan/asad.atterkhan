@@ -140,6 +140,8 @@ main { padding: 36px 0 72px; min-height: 70vh; animation: arrive 0.5s ease both;
   gap: 8px 24px; padding: 28px 0 44px; color: var(--color-muted); font-size: 14px; text-align: center;
 }
 .site-footer p { margin: 0; }
+.footer-brand { font: 13px var(--font-mono); color: var(--color-ink); }
+.footer-sign em { font-family: var(--font-serif); }
 .motion-control { color: var(--color-muted); font: 12px var(--font-mono); min-height: 44px; }
 .motion-control:hover { color: var(--color-accent); }
 
@@ -156,6 +158,8 @@ p { margin: 0 0 1em; }
 .path a { color: inherit; }
 .accent { color: var(--color-accent); }
 .page-intro, .opening { font: 22px/1.5 var(--font-serif); color: var(--color-muted); max-width: 40ch; margin: 18px 0 40px; }
+/* the fixed line under a page heading: quiet, a step below the intro */
+.page-subtitle { font: italic 18px/1.4 var(--font-serif); color: var(--color-muted); margin: 10px 0 20px; }
 .meta { font: 12px/1.6 var(--font-mono); color: var(--color-muted); margin: 0; }
 .quiet-note { color: var(--color-muted); font-style: italic; }
 .collection-count { color: var(--color-muted); font: 12px var(--font-mono); margin: 0 0 8px; }
@@ -214,7 +218,7 @@ p { margin: 0 0 1em; }
 
 /* ---------- lists: lab / workbench / achievements ---------- */
 .lab-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; }
-.lab-heading p:not(.eyebrow) { font: 22px/1.5 var(--font-serif); color: var(--color-muted); max-width: 40ch; margin: 18px 0 32px; }
+.lab-heading p:not(.eyebrow, .page-subtitle) { font: 22px/1.5 var(--font-serif); color: var(--color-muted); max-width: 40ch; margin: 18px 0 32px; }
 .lab-companion { text-align: center; display: grid; justify-items: center; position: relative; flex: none; }
 .lab-companion .scene-note { order: 2; margin: 0 0 4px; font-size: 12px; }
 .sleep-mark { position: absolute; top: 28%; right: 6%; font: 14px var(--font-mono); color: var(--color-accent); animation: pulse 3s infinite; }
