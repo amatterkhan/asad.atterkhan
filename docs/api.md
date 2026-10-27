@@ -25,14 +25,14 @@ noted; the frontend falls back to `content/site.json` when the document is missi
 
 ```ts
 type SiteCopy = {
-  role: string;            // "Programmer · Hacker · Security" (eyebrow + hero)
+  role: string;            // "Security · Software · Curiosity" (eyebrow + hero)
   company: string;         // "Checkout.com"
   location: string;        // "Mauritius"
   heroTitle: string;       // "Hey, I'm Asad."
   heroLede: string;        // one sentence under the title
-  heroBody: string;        // short paragraph, plain text
+  heroBody: string;        // plain text; blank lines separate paragraphs
   roomHint: string;        // caption under the room
-  closingTitle: string;    // "Say hello"
+  closingTitle: string;    // "Say hello."
   closingBody: string;     // text before the email link
   labIntro: string; workbenchIntro: string; experienceIntro: string;
   achievementsIntro: string; aboutBody: string; // aboutBody: Markdown (sanitised like articles)
