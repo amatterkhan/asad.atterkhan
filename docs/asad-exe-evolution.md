@@ -29,10 +29,10 @@ Keep commits small and grouped by logic. Intermediate PRs into this branch are f
 | [Build: refreshed identity and copy](https://github.com/amatterkhan/asad.atterkhan/issues/22) | done (7d66bee, 32ff2a3) |
 | [Build: Thought content and admin Thoughts tab](https://github.com/amatterkhan/asad.atterkhan/issues/23) | done (3e02649, fc88a7b) |
 | [Build: worldline engine and divergence meter](https://github.com/amatterkhan/asad.atterkhan/issues/25) | done (588852f, c5e4e76) |
-| [Build: Asad's seated stretch and look animations](https://github.com/amatterkhan/asad.atterkhan/issues/31) | built (6512a07, 4c5020e); awaiting the owner's approval of the frames |
+| [Build: Asad's seated stretch and look animations](https://github.com/amatterkhan/asad.atterkhan/issues/31) | done, approved (6512a07, 4c5020e) |
 | [Build: Thoughts in the room](https://github.com/amatterkhan/asad.atterkhan/issues/24) | done (414f18c) |
-| [Build: lab coat outfit art](https://github.com/amatterkhan/asad.atterkhan/issues/26) | blocked by #31 |
-| [Build: Steins Gate lab coat override](https://github.com/amatterkhan/asad.atterkhan/issues/27) | blocked by #26 |
+| [Build: lab coat outfit art](https://github.com/amatterkhan/asad.atterkhan/issues/26) | done, approved (2b2a013) |
+| [Build: Steins Gate lab coat override](https://github.com/amatterkhan/asad.atterkhan/issues/27) | done |
 | [Build: night-room share image and metadata](https://github.com/amatterkhan/asad.atterkhan/issues/28) | ready |
 | [Integration, verification and release PR](https://github.com/amatterkhan/asad.atterkhan/issues/29) | blocked by everything above |
 
@@ -94,6 +94,15 @@ Keep commits small and grouped by logic. Intermediate PRs into this branch are f
 | `npx playwright test` | 78 passed, 2 skipped |
 | Visual check in the built room (night and day, desktop and phone) | both poses fit; the stretch's fists reach the bubble's area, so Thoughts wait while he stretches |
 
+### Lab coat and Steins Gate override: 28 Oct 2026
+
+| Check | Result |
+| --- | --- |
+| Coat art (2b2a013) | owner approved; face check: no skin pixel outside the hoodie changes; the coat changes less frame to frame than the hoodie it replaces |
+| `make check` | pass, 44 vitest tests (new: the room can show `labcoat` sheets for all six states, but `isOutfit`, `resolveOutfit` and the export refuse it) |
+| `npx playwright test` | 78 passed, 2 skipped. The meter test now checks the coat is on in Steins Gate with the sprite still animating, nothing written to storage, and his own outfit back in Normal |
+| Visual check (production build, desktop and phone) | the coat appears with the Steins Gate note |
+
 ## Known issues
 
 - **Production copy comes from Firestore.** The deploy builds with `CONTENT_SOURCE=firestore`, and the saved `siteSettings/public` overrides the Git defaults field by field. So the new **headline, eyebrow role, lede, body, room hint, closing, Lab, Workbench and About copy** go live only once the same text is saved in `/admin` → Site copy (the owner does this; it triggers a rebuild). The motto, subtitles, titles, footer and 404 text are code and ship with the release. The text to paste is in `site/content/site.json`. Add this to the release PR's deploy steps.
@@ -106,7 +115,7 @@ Keep commits small and grouped by logic. Intermediate PRs into this branch are f
 ## Session log
 
 - **27 Oct 2026**: cut the branch, recorded the baseline, captured the room baselines, added `GLOSSARY.md` and this file.
-- **28 Oct 2026**: built the seated stretch and look (#31). The lab coat (#26) must now cover six states: typing, coffee, idle, happy, stretch, look. PixelLab spend so far: about 3 cents (the balance is about $9.83). The restored generation scripts were not committed (see art/README).
+- **28 Oct 2026**: lab coat (#26) redrawn with PixelLab *Edit images* after the owner rejected the recolour versions; the Steins Gate override (#27) is done. PixelLab spend so far is about 60 cents. Note: *Transfer outfit* needs a PixelLab Tier 1 plan (this account is on the trial).\n- **28 Oct 2026**: built the seated stretch and look (#31). The lab coat (#26) must now cover six states: typing, coffee, idle, happy, stretch, look. PixelLab spend so far: about 3 cents (the balance is about $9.83). The restored generation scripts were not committed (see art/README).
 - **27 Oct 2026**: built Thoughts in the room (#24). The bubble follows `asadX` (66 today): if Asad ever moves, set it and the bubble follows. Context `storm` is Storm within 56 room px of Asad's middle.
 - **27 Oct 2026**: built Thought content and the admin tab (#23). For #24: `getThoughts()` in `lib/content.server.ts` returns `{ thoughts: {id, text, context}[], featured }` ready for the homepage route to pass to the room; `.thought-preview` in app.css is the admin preview's copy of the bubble look, so share one class once `.asad-thought` exists.
 - **27 Oct 2026**: built the worldline engine (#25). For later tickets: `Room.vue` exposes `worldline` (ref) and `shifting` (computed: a shift or its note is on screen). Thoughts must wait on `shifting`, and the coat override hangs off `worldline === "steins-gate"`. A live test found a race (a second press in the same tick slipped past the lock); the first phase now starts synchronously in the click.
