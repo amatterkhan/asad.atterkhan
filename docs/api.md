@@ -148,8 +148,33 @@ type LabMap = {
   icons, unknown keys or control characters → 400) → `LabMap`; then requests a rebuild.
 - Public read: the exporter writes it to `lab.json` in the build snapshot.
 
+## 6. Thoughts: `siteSettings/thoughts` (one document)
+
+The one-liners Asad now and then says in the homepage room. Falls back to `content/thoughts.json`
+until the first save.
+
+```ts
+type Thoughts = {
+  thoughts: {                 // ≤ 60, in admin order
+    id: string;               // slug, ≤ 40, unique; fixed once made (featured refers to it)
+    text: string;             // 1–80 after trimming, no control characters
+    enabled: boolean;         // off: never said
+    context: "general" | "night" | "storm" | "steins-gate"; // when it may come up
+  }[];
+  featured: string | null;    // an id from the list: said first on each visit when its context fits
+  updatedAt?: string;         // ISO, set by the server
+};
+```
+
+- `GET /api/admin/thoughts` (service `content`) → `Thoughts`
+- `PUT /api/admin/thoughts` body `{ thoughts, featured }` (a sent `updatedAt` is ignored; duplicate
+  ids, unknown contexts or keys, a featured id not in the list, or control characters → 400) →
+  `Thoughts`; then requests a rebuild.
+- Public read: the exporter writes it to `thoughts.json` in the build snapshot. The site passes
+  only enabled lines (and the featured id, if that line is enabled) to the room.
+
 ## Rebuild requests
 
-Site-copy saves, article publish/unpublish, achievement, wardrobe and Lab map changes ask GitHub to rebuild
+Site-copy saves, article publish/unpublish, achievement, wardrobe, Lab map and Thoughts changes ask GitHub to rebuild
 the site (`repository_dispatch` `content-published`; see [architecture.md](architecture.md)).
 Article draft saves and previews do not. Published documents change visibility immediately.

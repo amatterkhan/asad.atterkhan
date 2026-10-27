@@ -38,7 +38,7 @@ CONTENT_SOURCE=firestore npm run build
 ```
 
 The exporter writes `site/.content-export/{articles,projects}/*.json`, `site.json`,
-`achievements.json`, `lab.json` (the Lab map), `thumbnails/` (the thumbnails published articles
+`achievements.json`, `lab.json` (the Lab map), `thoughts.json` (Asad's Thoughts), `thumbnails/` (the thumbnails published articles
 name, checked against their SHA-256; a missing one is dropped with a log line) and `wardrobe.json` (Asad's active outfit; an id missing from
 `site/public/art/outfits/index.json` falls back to the default). `CONTENT_EXPORT_DIR` overrides its output directory; it is relative to the
 exporter's working directory. On the site build it is relative to `site/`. Use one absolute path
@@ -53,7 +53,7 @@ archiving require authentication within the last 300 seconds. Service flags defa
 
 | Variable | Enables |
 | --- | --- |
-| `ENABLE_CONTENT_ADMIN` | Site copy, article drafts, publication, Markdown preview, the Lab map, thumbnails and the wardrobe (Asad's outfit) |
+| `ENABLE_CONTENT_ADMIN` | Site copy, article drafts, publication, Markdown preview, the Lab map, thumbnails, the wardrobe (Asad's outfit) and Asad's Thoughts |
 | `ENABLE_DOCUMENT_ADMIN` | Private uploads, metadata, publication, downloads and archive |
 | `ENABLE_ACHIEVEMENT_ADMIN` | Featured achievement selection |
 | `ENABLE_PUBLIC_FILES` | Published `/files/{id}` and image-only `/media/{id}` |
@@ -77,7 +77,7 @@ original. Public delivery has a shared 64 MiB/day byte quota and never uses publ
 
 ## Rebuild hook
 
-Published pages are static. Site-copy saves, article publish/unpublish, Lab map, wardrobe and
+Published pages are static. Site-copy saves, article publish/unpublish, Lab map, wardrobe, Thoughts and
 achievement changes request a new build. They become visible **after that build has deployed**. Article draft saves
 and preview requests do not trigger builds. Published documents are served through the API and
 change visibility immediately.
