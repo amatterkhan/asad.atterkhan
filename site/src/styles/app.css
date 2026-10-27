@@ -472,6 +472,12 @@ p { margin: 0 0 1em; }
   will-change: transform; backface-visibility: hidden;
 }
 @keyframes sprite-play { to { transform: translate3d(-100%, 0, 0); } }
+/* played once: a strip one frame shorter than the sheet, so -100% lands on the last frame and holds */
+.sprite[data-once] > .sprite-strip {
+  width: calc(100% * var(--n1)); background-size: calc(100% * var(--n) / var(--n1)) 100%;
+  animation: sprite-play calc(var(--n1) * var(--ms)) steps(var(--n1)) forwards;
+}
+.sprite[data-once="reverse"] > .sprite-strip { animation-direction: reverse; }
 html[data-visibility="hidden"] *,
 html[data-visibility="hidden"] *::before,
 html[data-visibility="hidden"] *::after {
@@ -665,7 +671,8 @@ html[data-motion="paused"] *::after {
 .spot.below::after { bottom: auto; top: calc(100% + 8px); }
 
 .actor { position: absolute; pointer-events: none; }
-.actor.asad { left: calc(var(--u) * 66); top: calc(var(--u) * 78); }
+.actor.asad { left: calc(var(--u) * 66); top: calc(var(--u) * 78); transform: translate3d(calc(var(--u) * var(--walk, 0)), 0, 0); transition: transform 0ms linear; }
+.laptop-floor { position: absolute; background: url(/sprites/laptop-floor.png) 0 0 / 100% 100% no-repeat; image-rendering: pixelated; pointer-events: none; }
 .actor.asad .sprite { --sprite-size: calc(var(--u) * 128) !important; }
 .actor.storm { --x: 230; --flip: 1; left: 0; top: calc(var(--u) * 146); transform: translate3d(calc(var(--u) * 198), 0, 0); z-index: 2; will-change: transform; }
 .actor.storm .sprite { --sprite-size: calc(var(--u) * 64) !important; display: block; }

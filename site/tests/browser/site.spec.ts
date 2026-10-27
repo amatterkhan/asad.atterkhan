@@ -194,6 +194,57 @@ test.describe("Asad's Thoughts", () => {
     expect(await waitForThought(page, 200)).toBe(Infinity);
   });
 });
+test.describe("Asad's walk to the window", () => {
+  test.describe.configure({ timeout: 150_000 });
+  const open = async (page: import("@playwright/test").Page) => {
+    // every pause picks the walk once it's allowed (and "idle" before then)
+    await page.addInitScript(() => (Math.random = () => 0.95));
+    await page.clock.install();
+    await page.goto("/");
+    await page.locator(".room").scrollIntoViewIfNeeded();
+    await page.waitForFunction(() => !!(document.querySelector("[data-island=Room]") as { __vue_app__?: unknown } | null)?.__vue_app__);
+    await page.waitForTimeout(300);
+  };
+  const sprite = (page: import("@playwright/test").Page) => page.locator(".actor.asad .sprite");
+  const until = async (page: import("@playwright/test").Page, done: () => Promise<boolean>, max: number) => {
+    for (let s = 0; s <= max; s += 1) {
+      if (await done()) return s;
+      await page.clock.runFor(1000);
+    }
+    return Infinity;
+  };
+  test("he gets up after a while, looks out of the window, and comes back to his laptop", async ({ page }) => {
+    await open(page);
+    const laptop = page.locator(".laptop-floor");
+    // not before the walk's gap (150 s), and soon after it
+    const up = await until(page, async () => (await sprite(page).getAttribute("class"))!.includes("asad-standup"), 200);
+    expect(up).toBeGreaterThanOrEqual(150);
+    expect(up).toBeLessThan(200);
+    await expect(sprite(page)).toHaveAttribute("data-once", "");
+    expect(await until(page, async () => (await laptop.count()) > 0, 3)).toBeLessThan(Infinity);
+    await expect(sprite(page)).toHaveClass(/asad-walk-left/);
+    await expect(page.locator(".actor.asad")).toHaveAttribute("style", /--walk: -44/);
+    expect(await until(page, async () => (await sprite(page).getAttribute("class"))!.includes("asad-window"), 3)).toBeLessThan(Infinity);
+    // standing at the window, in front of the glass (the walk is a CSS transition, on real time)
+    const middle = async () => {
+      const [a, r] = await Promise.all([sprite(page).boundingBox(), page.locator(".room").boundingBox()]);
+      return (a!.x + a!.width * (55 / 128) - r!.x) / r!.width;
+    };
+    await expect.poll(async () => Math.abs((await middle()) - 77 / 384), { timeout: 3000 }).toBeLessThan(0.02);
+    // back, seated, laptop picked up
+    expect(await until(page, async () => (await sprite(page).getAttribute("class"))!.includes("asad-walk-right"), 15)).toBeLessThan(Infinity);
+    expect(await until(page, async () => (await sprite(page).getAttribute("data-once")) === "reverse", 3)).toBeLessThan(Infinity);
+    await expect(laptop).toHaveCount(0);
+    await expect(page.locator(".actor.asad")).toHaveAttribute("style", /--walk: 0/);
+    expect(await until(page, async () => (await sprite(page).getAttribute("class"))!.includes("asad-typing"), 3)).toBeLessThan(Infinity);
+  });
+  test("with Reduce Motion he stays on the rug", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await open(page);
+    expect(await until(page, async () => (await page.locator(".laptop-floor").count()) > 0 || (await sprite(page).getAttribute("class"))!.includes("asad-standup"), 220)).toBe(Infinity);
+  });
+});
+
 test("room pet, lamp and theme interactions", async ({ page }) => {
   await page.goto("/");
   const pet = page.getByRole("button", { name: "Pet Storm" });

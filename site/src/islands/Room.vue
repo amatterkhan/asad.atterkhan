@@ -19,6 +19,12 @@ const STRETCH_MS = loopMs("storm-stretch");
 const WALK_SPEED = manifest.strideRoomPx / manifest.walkCycleMs;
 // Nap spots on either side of Asad (he sits around x 104-156): rug end by the window, or by the chair.
 const BEDS = [60, 188] as const;
+// Asad's walk to the window: his sprite moves this far (room px) to stand at the glass's middle, at
+// the pace his feet travel (about 36 px per 8-frame walk cycle).
+const WINDOW_DX = -44;
+const ASAD_SPEED = 36 / loopMs("asad-walk-left");
+// a play-once sheet holds its last frame after (n - 1) frame times
+const onceMs = (k: SpriteState) => (manifest.states[k].frames - 1) * manifest.states[k].frameMs;
 
 const {
   hint,
@@ -71,7 +77,12 @@ let poke = () => {};
 const sky = ref<"day" | "night">("night");
 const lamp = ref(true);
 const mode = ref<StormMode>("idle");
-const asad = ref<"typing" | Pause>("typing");
+type Away = "standup" | "sitdown" | "walk-left" | "walk-right" | "window";
+const asad = ref<"typing" | Exclude<Pause, "walk"> | Away>("typing");
+// up from the rug: from standing up until he has sat back down (his laptop waits on the rug)
+const away = ref(false);
+// how far his sprite has walked from his spot, and how long that walk takes
+const asadWalk = ref({ dx: 0, ms: 0 });
 const happy = ref(false);
 const said = ref(-1);
 // the bubble fades by CSS, but is also taken away after it, so it can never stay on screen
@@ -140,13 +151,17 @@ onMounted(() => {
   // Fetch and decode every sheet Asad and Storm switch between once the page is idle, so a new state
   // (Storm setting off on a walk, say) never waits on its image or hitches while it decodes.
   const preload = () =>
-    (Object.keys(manifest.states) as SpriteState[])
-      .filter((k) => /^(asad|storm)-/.test(k) && k !== "storm-nap")
-      .forEach((k) => {
-        const img = new Image();
-        img.src = spriteSheet(k, outfit);
-        img.decode().catch(() => {});
-      });
+    [
+      ...(Object.keys(manifest.states) as SpriteState[])
+        .filter((k) => /^(asad|storm)-/.test(k) && k !== "storm-nap")
+        .map((k) => spriteSheet(k, outfit)),
+      // the laptop he leaves on the rug when he gets up
+      "/sprites/laptop-floor.png",
+    ].forEach((src) => {
+      const img = new Image();
+      img.src = src;
+      img.decode().catch(() => {});
+    });
   if ("requestIdleCallback" in window) requestIdleCallback(preload, { timeout: 3000 });
   else setTimeout(preload, 1500);
   // client-only theme and saved lamp state (the build renders night, lamp on)
@@ -164,17 +179,53 @@ onMounted(() => {
   // toward the window (more often when Storm is napping over there), and rarely stretches.
   let t: ReturnType<typeof setTimeout>;
   let stretchedAt = performance.now();
+  let walkedAt = performance.now();
   const typing = () => {
     asad.value = "typing";
     t = setTimeout(pause, 12000 + Math.random() * 12000);
   };
   const pause = () => {
     const now = performance.now();
+    // Reduce Motion keeps him on the rug (the room's loops still play, nothing crosses it)
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.dataset.motion === "paused";
     // Storm is "over by the window" when he's well left of Asad (his middle is about x 130)
-    const next = nextPause(Math.random(), now - stretchedAt, position() < asadX.value + 40);
+    const next = nextPause(Math.random(), now - stretchedAt, position() < asadX.value + 40, still ? 0 : now - walkedAt);
     if (next === "stretch") stretchedAt = now;
+    if (next === "walk") {
+      walkedAt = now;
+      return outing();
+    }
     asad.value = next;
     t = setTimeout(typing, loopMs(`asad-${next}`));
+  };
+  // He stands up (setting the laptop on the rug), walks to the window, looks out for a while, walks
+  // back and sits down again. Each step is one sprite; the walking itself is a CSS transition.
+  const stroll = (dx: number) => {
+    const ms = Math.abs(dx - asadWalk.value.dx) / ASAD_SPEED;
+    asadWalk.value = { dx, ms };
+    return ms;
+  };
+  const outing = () => {
+    away.value = true;
+    asad.value = "standup";
+    t = setTimeout(() => {
+      asad.value = "walk-left";
+      t = setTimeout(() => {
+        asad.value = "window";
+        asadX.value = 66 + WINDOW_DX;
+        t = setTimeout(() => {
+          asadX.value = 66;
+          asad.value = "walk-right";
+          t = setTimeout(() => {
+            asad.value = "sitdown";
+            t = setTimeout(() => {
+              away.value = false;
+              typing();
+            }, onceMs("asad-standup") + 300);
+          }, stroll(0));
+        }, 7000 + Math.random() * 6000);
+      }, stroll(WINDOW_DX));
+    }, onceMs("asad-standup") + 300);
   };
   t = setTimeout(pause, 8000);
   stops.push(() => clearTimeout(t));
@@ -317,9 +368,9 @@ onMounted(() => {
     thought.value = null;
   }
   const speak = () => {
-    // Storm has the room (the visitor petted him: one bubble at a time), or Asad's arms are up in a
-    // stretch where the bubble goes: try again shortly
-    if (saying.value || asad.value === "stretch") {
+    // Storm has the room (the visitor petted him: one bubble at a time), Asad's arms are up in a
+    // stretch where the bubble goes, or he's getting up, walking or sitting down: try again shortly
+    if (saying.value || ["stretch", "standup", "sitdown", "walk-left", "walk-right"].includes(asad.value)) {
       thoughtTimer = setTimeout(speak, 3000 + Math.random() * 3000);
       return;
     }
@@ -439,8 +490,16 @@ const toggleTheme = () => {
       </svg>
       <NixieClock part="glass" :reading="reading" />
 
-      <div class="actor asad">
-        <Sprite :state="happy ? 'asad-happy' : `asad-${asad}`" :outfit="shownOutfit" :size="128" />
+      <!-- the laptop he sets down on the rug while he's up (cut from the stand-up's last frame) -->
+      <span v-if="away && asad !== 'standup' && asad !== 'sitdown'" class="laptop-floor" :style="at([140, 180, 20, 22])" aria-hidden="true" />
+      <div class="actor asad" :style="{ '--walk': asadWalk.dx, transitionDuration: `${asadWalk.ms}ms` }">
+        <Sprite
+          :state="happy && !away ? 'asad-happy' : asad === 'sitdown' ? 'asad-standup' : `asad-${asad}`"
+          :outfit="shownOutfit"
+          :size="128"
+          :once="asad === 'standup' || asad === 'sitdown'"
+          :reverse="asad === 'sitdown'"
+        />
       </div>
       <div class="actor robot">
         <Sprite state="robot-idle" :size="48" />
