@@ -34,7 +34,8 @@ Keep commits small and grouped by logic. Intermediate PRs into this branch are f
 | [Build: lab coat outfit art](https://github.com/amatterkhan/asad.atterkhan/issues/26) | done, approved (2b2a013) |
 | [Build: Steins Gate lab coat override](https://github.com/amatterkhan/asad.atterkhan/issues/27) | done |
 | [Build: night-room share image and metadata](https://github.com/amatterkhan/asad.atterkhan/issues/28) | done |
-| [Integration, verification and release PR](https://github.com/amatterkhan/asad.atterkhan/issues/29) | blocked by everything above |
+| [Build: Asad stands up and walks to the window](https://github.com/amatterkhan/asad.atterkhan/issues/32) | done (df13d8a, 929671c); added 28 Oct at the owner's request |
+| [Integration, verification and release PR](https://github.com/amatterkhan/asad.atterkhan/issues/29) | checklist run; release PR opened, not merged |
 
 ## Test results
 
@@ -113,9 +114,43 @@ Keep commits small and grouped by logic. Intermediate PRs into this branch are f
 | `/opengraph-image.png` | 200, image/png, 1200×630, RGB with no alpha (`sips hasAlpha: no`), about 56 KB |
 | In-app previews (WhatsApp, Discord, LinkedIn, X, iMessage, Slack) | **not possible before deploy** (preview builds use the production URL and block the preview bots; decided in #21). After deploy: run the Facebook Sharing Debugger and LinkedIn Post Inspector on https://asad.atterkhan.com, then paste the link into each app |
 
+### Walk to the window: 28 Oct 2026, 929671c
+
+| Check | Result |
+| --- | --- |
+| Existing sheets after `export_ase.sh` and `outfits.py` | unchanged (no existing sprite or outfit PNG modified) |
+| Face check | goatee only: a moustache PixelLab drew on the left-facing walk was painted out on all 8 frames; the stand-up keeps his typing face |
+| Outfits (`art/previews/outfits.png`) | all four recolour the hoodie on every new frame; hair, jeans and the laptop on the rug untouched |
+| `make check` | pass, 46 vitest tests (new: the walk only after `WALK_GAP_MS`, then about 1 pause in 8; never when the room passes no time, which is how Reduce Motion keeps him seated) |
+| `npx playwright test` (new tests) | on a fake clock with the walk forced: he stands up at 150-200 s, the laptop appears on the rug, he walks left, stands at the window's middle, walks back, sits down (the sheet plays in reverse), the laptop goes, typing resumes; with Reduce Motion nothing happens in 220 s |
+| Visual check (production build, desktop and phone, Normal and Steins Gate) | walks to the window and back; lab coat on every standing pose in Steins Gate |
+
+### Release checklist (brief, Part 13): 28 Oct 2026, 929671c
+
+Run on the production build (`npm run build`, served by `npm run preview`) with system Chrome.
+
+| Check | Result |
+| --- | --- |
+| `make check`: gofmt, `go vet`, `go test ./...`; `vue-tsc`; vitest | pass; 46 vitest tests |
+| `npx playwright test` (desktop and mobile × dark and light) | **86 passed, 2 skipped** (4.1 min) |
+| Emulator suite | **not run** (no Java here); CI runs it |
+| Identity: motto, four subtitles, titles | pinned by vitest and seen in the build |
+| Copy natural, facts accurate | owner-approved copy; Checkout.com role, Storm, contact details unchanged from the records |
+| Thoughts: random, no refresh/next control, no immediate repeat, intervals, contexts, hidden tab, reduced motion | browser tests on a fake clock + `pickThought` unit tests; mobile bubble checked in screenshots |
+| Admin manages one-liners | component test with a mocked API and Go validation tests; **not checked signed-in** (Google + TOTP is the owner's) |
+| Worldlines: default room unchanged | desktop captures match the `baseline/room` set except Storm's frame and the clock digits; on the phone the room sits about 2.5 device px lower (the hero above is taller), so edges resample, and no art changed |
+| Live clock, meter switching, Alpha/Beta/Steins Gate, notes, rapid presses, back to Normal, day/night, no leaks | browser tests (meter cycle, presses mid-shift ignored, no layers left in Normal, live clock back) and earlier visual checks |
+| Wardrobe: lab coat on in Steins Gate, animating, off on exit, saved outfit untouched | browser test (nothing written to storage) + unit tests; the override is client-only, so an admin outfit change during it is simply the next build's outfit |
+| Social preview: real room assets, 1200×630, metadata | see *Share image and metadata*; public loading and in-app previews are post-deploy |
+| General: navigation, overflow, a11y (axe), hydration | the layout/axe/hydration test on every page passes in all four projects |
+| Dependencies | none added (`package.json`, `package-lock.json`, `go.mod` unchanged against `main`) |
+| Production build | pass |
+
 ## Known issues
 
 - **Production copy comes from Firestore.** The deploy builds with `CONTENT_SOURCE=firestore`, and the saved `siteSettings/public` overrides the Git defaults field by field. So the new **headline, eyebrow role, lede, body, room hint, closing, Lab, Workbench and About copy** go live only once the same text is saved in `/admin` → Site copy (the owner does this; it triggers a rebuild). The motto, subtitles, titles, footer and 404 text are code and ship with the release. The text to paste is in `site/content/site.json`. Add this to the release PR's deploy steps.
+- Standing and walking are at his seated scale, so standing he is about as tall as the chair back (the owner accepted this when bringing the walk into scope).
+- The right-facing lab-coat walk has a few dark specks where PixelLab's edit and his frame disagree; visible only up close.
 - Sprites play at one frame rate per state (the average), so the holds set in the new Aseprite documents only show in Aseprite, not on the site.
 - The Thoughts browser tests step a fake clock through a few simulated minutes of the room, so they are the slowest in the suite (about 2.5 minutes over four workers).
 - On phones the new hero (lede plus three paragraphs) pushes the room about two screens down. It's the approved copy; raise it at review if it matters.
@@ -124,8 +159,11 @@ Keep commits small and grouped by logic. Intermediate PRs into this branch are f
 
 ## Session log
 
+- **28 Oct 2026**: the owner brought standing and walking into scope; built the walk to the window (#32: about 7 cents of animation plus about 80 cents of lab-coat edits, one batch run twice by accident). Ran the release checklist and opened the release PR (#29).
+
 - **27 Oct 2026**: cut the branch, recorded the baseline, captured the room baselines, added `GLOSSARY.md` and this file.
-- **28 Oct 2026**: lab coat (#26) redrawn with PixelLab *Edit images* after the owner rejected the recolour versions; the Steins Gate override (#27) is done. PixelLab spend so far is about 60 cents. Note: *Transfer outfit* needs a PixelLab Tier 1 plan (this account is on the trial).\n- **28 Oct 2026**: built the seated stretch and look (#31). The lab coat (#26) must now cover six states: typing, coffee, idle, happy, stretch, look. PixelLab spend so far: about 3 cents (the balance is about $9.83). The restored generation scripts were not committed (see art/README).
+- **28 Oct 2026**: lab coat (#26) redrawn with PixelLab *Edit images* after the owner rejected the recolour versions; the Steins Gate override (#27) is done. PixelLab spend so far is about 60 cents. Note: *Transfer outfit* needs a PixelLab Tier 1 plan (this account is on the trial).
+- **28 Oct 2026**: built the seated stretch and look (#31). The lab coat (#26) must now cover six states: typing, coffee, idle, happy, stretch, look. PixelLab spend so far: about 3 cents (the balance is about $9.83). The restored generation scripts were not committed (see art/README).
 - **27 Oct 2026**: built Thoughts in the room (#24). The bubble follows `asadX` (66 today): if Asad ever moves, set it and the bubble follows. Context `storm` is Storm within 56 room px of Asad's middle.
 - **27 Oct 2026**: built Thought content and the admin tab (#23). For #24: `getThoughts()` in `lib/content.server.ts` returns `{ thoughts: {id, text, context}[], featured }` ready for the homepage route to pass to the room; `.thought-preview` in app.css is the admin preview's copy of the bubble look, so share one class once `.asad-thought` exists.
 - **27 Oct 2026**: built the worldline engine (#25). For later tickets: `Room.vue` exposes `worldline` (ref) and `shifting` (computed: a shift or its note is on screen). Thoughts must wait on `shifting`, and the coat override hangs off `worldline === "steins-gate"`. A live test found a race (a second press in the same tick slipped past the lock); the first phase now starts synchronously in the click.
