@@ -23,7 +23,7 @@ import {
   resolveShelf,
 } from "../../src/lib/content.server";
 import { thumbnailPrompt, PROMPT_HEADER } from "../../src/lib/thumbnail-prompt";
-import { DEFAULT_OUTFIT, outfitSheet } from "../../src/lib/outfits";
+import { DEFAULT_OUTFIT, isOutfit, outfitSheet, resolveOutfit } from "../../src/lib/outfits";
 import { renderHead } from "../../src/head";
 import { subtitles } from "../../src/lib/site";
 import { ICONS, ICON_SOURCES } from "../../src/lib/icons";
@@ -154,6 +154,25 @@ it("reads Asad's outfit from the export and falls back to the wardrobe default",
   }
   expect(outfitSheet("classic", "asad-idle")).toMatch(/^\/art\/outfits\/classic\/asad-idle\.png\?v=/);
   await fs.access(path.join("public", outfitSheet(DEFAULT_OUTFIT, "asad-typing").split("?")[0]));
+});
+it("lets a worldline dress Asad in the lab coat, but never makes it his outfit", async () => {
+  // the room can show it...
+  for (const state of ["asad-typing", "asad-coffee", "asad-idle", "asad-happy", "asad-stretch", "asad-look"] as const) {
+    expect(outfitSheet("labcoat", state)).toMatch(new RegExp(`^/art/outfits/labcoat/${state}\\.png\\?v=`));
+    await fs.access(path.join("public", outfitSheet("labcoat", state).split("?")[0]));
+  }
+  // ...but the wardrobe, the admin and the export never accept it as the saved outfit
+  expect(isOutfit("labcoat")).toBe(false);
+  expect(resolveOutfit("labcoat")).toBe(DEFAULT_OUTFIT);
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "asad-wardrobe-"));
+  try {
+    process.env.CONTENT_SOURCE = "firestore";
+    process.env.CONTENT_EXPORT_DIR = dir;
+    await fs.writeFile(path.join(dir, "wardrobe.json"), JSON.stringify({ activeOutfit: "labcoat" }));
+    expect(await getActiveOutfit()).toBe(DEFAULT_OUTFIT);
+  } finally {
+    await fs.rm(dir, { recursive: true, force: true });
+  }
 });
 it("groups adjacent company roles without mutating source", () => {
   const roles = [

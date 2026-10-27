@@ -67,6 +67,8 @@ test("the divergence meter shifts worldlines and back", async ({ page }) => {
   await expect(room).toHaveAttribute("data-worldline", "normal");
   await expect(tubes).toHaveAttribute("aria-label", /Nixie tube clock reading/);
   await expect(meter).toHaveAccessibleDescription(/Normal worldline/);
+  const outfitBefore = (await page.locator(".actor.asad .sprite").getAttribute("style"))!.match(/\/art\/outfits\/([a-z0-9-]+)\//)![1];
+  expect(outfitBefore).not.toBe("labcoat");
 
   // the keyboard works, and presses during a shift are ignored
   await meter.focus();
@@ -91,11 +93,18 @@ test("the divergence meter shifts worldlines and back", async ({ page }) => {
   }
   await expect(page.locator(".wl-rain")).toHaveCount(0);
   await expect(page.locator(".wl-spark").first()).toBeAttached();
+  // Steins Gate puts Asad in the lab coat, still animating, and saves nothing
+  const asad = page.locator(".actor.asad .sprite");
+  await expect(asad).toHaveAttribute("style", /\/art\/outfits\/labcoat\//);
+  await expect(asad.locator(".sprite-strip")).toHaveCSS("animation-name", "sprite-play");
+  expect(await page.evaluate(() => JSON.stringify(localStorage))).not.toMatch(/labcoat|outfit/);
 
-  // back to Normal: the live clock, and no worldline layer left behind
+  // back to Normal: the live clock, his own outfit, and no worldline layer left behind
   await meter.click();
   await expect(room).toHaveAttribute("data-worldline", "normal");
   await expect(tubes).toHaveAttribute("aria-label", /Nixie tube clock reading/);
+  await expect(asad).not.toHaveAttribute("style", /labcoat/);
+  await expect(asad).toHaveAttribute("style", new RegExp(`/art/outfits/${outfitBefore}/`));
   await expect(page.locator(".wl-tint, .wl-gold, .wl-spark, .wl-rain")).toHaveCount(0);
   await expect(page.locator(".initial-a, .initial-s")).toHaveCount(2);
 });

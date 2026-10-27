@@ -99,9 +99,23 @@ const thought = ref<{ text: string; key: number } | null>(null);
 let hushThought = () => {};
 let shiftTimers: ReturnType<typeof setTimeout>[] = [];
 let cycle: ReturnType<typeof setInterval> | undefined;
+// Steins Gate dresses Asad in the lab coat for as long as it lasts; the outfit the owner picked (the
+// prop, from the build) is untouched and comes back the moment the room leaves Steins Gate.
+const shownOutfit = computed(() => (worldline.value === "steins-gate" ? "labcoat" : outfit));
+// Fetch and decode an outfit's sheets ahead of need, so a swap never waits on an image.
+const preloadOutfit = (o: string | undefined) =>
+  (Object.keys(manifest.states) as SpriteState[])
+    .filter((k) => k.startsWith("asad-"))
+    .forEach((k) => {
+      const img = new Image();
+      img.src = spriteSheet(k, o);
+      img.decode().catch(() => {});
+    });
 const pressMeter = () => {
   if (shifting.value) return; // one shift at a time; presses during one are ignored
   const to = nextWorldline(worldline.value);
+  // the coat goes on when the shift settles, ~1 s from now: start fetching it now
+  if (to === "steins-gate") preloadOutfit("labcoat");
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.dataset.motion === "paused";
   announce.value = "";
   const enter = (phase: ShiftPhase) => {
@@ -426,7 +440,7 @@ const toggleTheme = () => {
       <NixieClock part="glass" :reading="reading" />
 
       <div class="actor asad">
-        <Sprite :state="happy ? 'asad-happy' : `asad-${asad}`" :outfit="outfit" :size="128" />
+        <Sprite :state="happy ? 'asad-happy' : `asad-${asad}`" :outfit="shownOutfit" :size="128" />
       </div>
       <div class="actor robot">
         <Sprite state="robot-idle" :size="48" />
