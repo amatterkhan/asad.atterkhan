@@ -122,14 +122,15 @@ test("a shift's glitch jolts the whole page, briefly, and never with Reduce Moti
         w.glitched.push(on ? 1 : 0);
         if (on) w.moving.push(getComputedStyle(document.querySelector(".hero")!).animationName);
       }).observe(document.documentElement, { attributeFilter: ["data-glitch"] });
-      // the words on screen rearrange: every text change in the hero, kept
-      const hero = document.querySelector(".hero")!;
-      (w as never as { before: string; texts: string[] }).before = hero.textContent!;
+      // the words on screen rearrange (whatever is on screen once the meter is in view): every text
+      // change outside the room, kept
+      const main = document.querySelector("main")!;
+      const text = () => [...main.children].filter((el) => !el.querySelector(".room")).map((el) => el.textContent).join("|");
+      (w as never as { before: string; texts: string[] }).before = text();
       (w as never as { texts: string[] }).texts = [];
-      new MutationObserver(() => (w as never as { texts: string[] }).texts.push(hero.textContent!)).observe(hero, {
-        characterData: true,
-        subtree: true,
-      });
+      new MutationObserver((records) => {
+        if (records.some((r) => !r.target.parentElement?.closest("[data-island]"))) (w as never as { texts: string[] }).texts.push(text());
+      }).observe(main, { characterData: true, subtree: true });
     });
     await page.getByRole("button", { name: "Divergence meter" }).click();
     await expect(page.locator(".room")).toHaveAttribute("data-shift", "idle", { timeout: 6000 });
@@ -141,7 +142,7 @@ test("a shift's glitch jolts the whole page, briefly, and never with Reduce Moti
       const w = window as never as { before: string; texts: string[] };
       return { before: w.before, texts: w.texts };
     });
-    await expect(page.locator(".hero")).toHaveText(before);
+    expect(await page.evaluate(() => [...document.querySelector("main")!.children].filter((el) => !el.querySelector(".room")).map((el) => el.textContent).join("|"))).toBe(before);
     expect(texts.some((t) => t !== before)).toBe(!reduced);
     // the page's own content moved, not just the room
     if (!reduced) expect(await page.evaluate(() => (window as never as { moving: string[] }).moving)).toEqual([expect.stringMatching(/page-glitch/)]);
