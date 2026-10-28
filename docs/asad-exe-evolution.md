@@ -35,7 +35,7 @@ Keep commits small and grouped by logic. Intermediate PRs into this branch are f
 | [Build: Steins Gate lab coat override](https://github.com/amatterkhan/asad.atterkhan/issues/27) | done |
 | [Build: night-room share image and metadata](https://github.com/amatterkhan/asad.atterkhan/issues/28) | done |
 | [Build: Asad stands up and walks to the window](https://github.com/amatterkhan/asad.atterkhan/issues/32) | done (df13d8a, 929671c); added 28 Oct at the owner's request |
-| [Integration, verification and release PR](https://github.com/amatterkhan/asad.atterkhan/issues/29) | checklist run; release PR opened, not merged |
+| [Integration, verification and release PR](https://github.com/amatterkhan/asad.atterkhan/issues/29) | checklist run; release PR #33 merged on the owner's go-ahead (28 Oct 2026) |
 
 ## Test results
 
@@ -150,6 +150,14 @@ The owner asked for the shift's glitch to hit the whole page. `html[data-glitch]
 
 - The glitch now also rearranges the words on screen (`lib/scramble.ts`): each word's letters shuffle, then settle back over 0.8 s. Unit tests: letters only trade within a word, the exact text returns, islands/code/screen-reader/off-screen text are untouched. Browser test: the hero scrambles and returns; never under Reduce Motion.
 - The owner found the outfit glitchy while walking: drawstrings were detected on some frames only and the lamp's warm dots moved frame to frame. Standing frames now detect both steadily; the lab coat no longer speckles. Seated sheets unchanged.
+- `make check` pass (49 vitest tests); `npx playwright test` **90 passed, 2 skipped**.
+
+### Final owner fixes before merge: 28 Oct 2026
+
+- Lab coat on standing frames: no longer redraws his hair; covers the old hoodie's dark and warm-red bits; hood remnants floating behind his neck removed. The tooth in his standing smile is now lip.
+- Every frame of all 11 Asad states checked for a moustache (goatee only); none found.
+- The laptop on the rug is drawn in front of him, so he walks behind it.
+- Homepage: the role line above the headline is gone and the intro is the owner's shorter text (Site copy in admin must be re-saved after deploy, as before).
 - `make check` pass (49 vitest tests); `npx playwright test` **90 passed, 2 skipped**.
 
 ### Release checklist (brief, Part 13): 28 Oct 2026, 929671c
