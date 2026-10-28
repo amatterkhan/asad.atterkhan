@@ -553,8 +553,6 @@ const toggleTheme = () => {
       </svg>
       <NixieClock part="glass" :reading="reading" />
 
-      <!-- the laptop he sets down on the rug while he's up (cut from the stand-up's last frame) -->
-      <span v-if="away && asad !== 'standup' && asad !== 'sitdown'" class="laptop-floor" :style="at([137, 182, 28, 22])" aria-hidden="true" />
       <div class="actor asad" :style="{ '--walk': asadWalk.dx, transitionDuration: `${asadWalk.ms}ms` }">
         <Sprite
           :state="happy && !away ? 'asad-happy' : asad === 'sitdown' ? 'asad-standup' : `asad-${asad}`"
@@ -565,6 +563,9 @@ const toggleTheme = () => {
         />
         <button type="button" class="asad-btn" aria-label="Asad (press twice to call him over)" data-cursor="plain" @click="tapAsad" />
       </div>
+      <!-- the laptop he sets down on the rug while he's up (cut from the stand-up's last frame); it
+           sits nearer than his feet, so he walks behind it, never over it -->
+      <span v-if="away && asad !== 'standup' && asad !== 'sitdown'" class="laptop-floor" :style="at([137, 182, 28, 22])" aria-hidden="true" />
       <div class="actor robot">
         <Sprite state="robot-idle" :size="48" />
       </div>
