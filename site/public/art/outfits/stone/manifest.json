@@ -1,5 +1,5 @@
 {
-  "version": 22,
+  "version": 36,
   "outfit": "stone",
   "logicalSize": [
     128,
@@ -90,6 +90,154 @@
         170,
         170,
         170
+      ]
+    },
+    "asad-stretch": {
+      "sheet": "/art/outfits/stone/asad-stretch.png",
+      "still": "/art/outfits/stone/asad-stretch-still.png",
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        180,
+        180,
+        260,
+        300,
+        300,
+        260,
+        200,
+        200
+      ],
+      "frameMs": 235,
+      "anchor": [
+        64,
+        122
+      ]
+    },
+    "asad-look": {
+      "sheet": "/art/outfits/stone/asad-look.png",
+      "still": "/art/outfits/stone/asad-look-still.png",
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        200,
+        200,
+        240,
+        360,
+        360,
+        300,
+        220,
+        200
+      ],
+      "frameMs": 260,
+      "anchor": [
+        64,
+        122
+      ]
+    },
+    "asad-standup": {
+      "sheet": "/art/outfits/stone/asad-standup.png",
+      "still": "/art/outfits/stone/asad-standup-still.png",
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        150,
+        150,
+        150,
+        150,
+        150,
+        150,
+        150,
+        150
+      ],
+      "frameMs": 150,
+      "anchor": [
+        64,
+        124
+      ]
+    },
+    "asad-stand": {
+      "sheet": "/art/outfits/stone/asad-stand.png",
+      "still": "/art/outfits/stone/asad-stand-still.png",
+      "frames": 4,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        450,
+        450,
+        450,
+        450
+      ],
+      "frameMs": 450,
+      "anchor": [
+        64,
+        124
+      ]
+    },
+    "asad-walk-left": {
+      "sheet": "/art/outfits/stone/asad-walk-left.png",
+      "still": "/art/outfits/stone/asad-walk-left-still.png",
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130
+      ],
+      "frameMs": 130,
+      "anchor": [
+        64,
+        124
+      ]
+    },
+    "asad-walk-right": {
+      "sheet": "/art/outfits/stone/asad-walk-right.png",
+      "still": "/art/outfits/stone/asad-walk-right-still.png",
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130
+      ],
+      "frameMs": 130,
+      "anchor": [
+        64,
+        124
+      ]
+    },
+    "asad-window": {
+      "sheet": "/art/outfits/stone/asad-window.png",
+      "still": "/art/outfits/stone/asad-window-still.png",
+      "frames": 6,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        340,
+        340,
+        340,
+        340,
+        340,
+        340
+      ],
+      "frameMs": 340,
+      "anchor": [
+        64,
+        124
       ]
     }
   }

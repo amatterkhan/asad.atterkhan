@@ -1,12 +1,20 @@
 export const site = {
   name: "Asad Atterkhan",
-  title: "ASAD.EXE",
+  title: "Asad.exe",
   url: (import.meta.env?.SITE_URL as string | undefined) || globalThis.process?.env?.SITE_URL || "https://asad.atterkhan.com",
-  description:
-    "Programmer, hacker and security person. I build things, break them, and write down what I learn.",
+  /** The motto: the site's description and the footer's sign-off. Never explained. */
+  description: "Somewhere between cloud nine and layer seven.",
   email: "contact@asad.atterkhan.com",
   github: "https://github.com/amatterkhan",
   linkedin: "https://linkedin.com/in/amatterkhan",
+};
+// Each page's fixed line under its heading. Deliberately code, not admin-editable copy, so they
+// never drift or rotate (Thoughts are the lines that change).
+export const subtitles = {
+  home: "Human, allegedly.",
+  about: "Still figuring out the source code.",
+  lab: "Running experiments on reality.",
+  notFound: "Lost in thought. Found in the logs.",
 };
 export const date = (value: string) =>
   new Intl.DateTimeFormat("en-GB", {

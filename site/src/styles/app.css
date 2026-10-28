@@ -135,11 +135,13 @@ main { padding: 36px 0 72px; min-height: 70vh; animation: arrive 0.5s ease both;
 .mobile-menu-links { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 32px; }
 .mobile-menu-links a { color: var(--color-muted); min-height: 44px; display: inline-flex; align-items: center; }
 .noscript-nav { display: flex; flex-wrap: wrap; gap: 14px; padding: 12px 0; }
+/* the motto, then the copyright under it */
 .site-footer {
-  display: flex; justify-content: center; align-items: center; flex-wrap: wrap;
-  gap: 8px 24px; padding: 28px 0 44px; color: var(--color-muted); font-size: 14px; text-align: center;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 6px; padding: 28px 0 44px; color: var(--color-muted); font-size: 14px; text-align: center;
 }
 .site-footer p { margin: 0; }
+.footer-sign em { font-family: var(--font-serif); }
 .motion-control { color: var(--color-muted); font: 12px var(--font-mono); min-height: 44px; }
 .motion-control:hover { color: var(--color-accent); }
 
@@ -156,6 +158,8 @@ p { margin: 0 0 1em; }
 .path a { color: inherit; }
 .accent { color: var(--color-accent); }
 .page-intro, .opening { font: 22px/1.5 var(--font-serif); color: var(--color-muted); max-width: 40ch; margin: 18px 0 40px; }
+/* the fixed line under a page heading: quiet, a step below the intro */
+.page-subtitle { font: italic 18px/1.4 var(--font-serif); color: var(--color-muted); margin: 10px 0 20px; }
 .meta { font: 12px/1.6 var(--font-mono); color: var(--color-muted); margin: 0; }
 .quiet-note { color: var(--color-muted); font-style: italic; }
 .collection-count { color: var(--color-muted); font: 12px var(--font-mono); margin: 0 0 8px; }
@@ -214,7 +218,7 @@ p { margin: 0 0 1em; }
 
 /* ---------- lists: lab / workbench / achievements ---------- */
 .lab-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; }
-.lab-heading p:not(.eyebrow) { font: 22px/1.5 var(--font-serif); color: var(--color-muted); max-width: 40ch; margin: 18px 0 32px; }
+.lab-heading p:not(.eyebrow, .page-subtitle) { font: 22px/1.5 var(--font-serif); color: var(--color-muted); max-width: 40ch; margin: 18px 0 32px; }
 .lab-companion { text-align: center; display: grid; justify-items: center; position: relative; flex: none; }
 .lab-companion .scene-note { order: 2; margin: 0 0 4px; font-size: 12px; }
 .sleep-mark { position: absolute; top: 28%; right: 6%; font: 14px var(--font-mono); color: var(--color-accent); animation: pulse 3s infinite; }
@@ -468,6 +472,12 @@ p { margin: 0 0 1em; }
   will-change: transform; backface-visibility: hidden;
 }
 @keyframes sprite-play { to { transform: translate3d(-100%, 0, 0); } }
+/* played once: a strip one frame shorter than the sheet, so -100% lands on the last frame and holds */
+.sprite[data-once] > .sprite-strip {
+  width: calc(100% * var(--n1)); background-size: calc(100% * var(--n) / var(--n1)) 100%;
+  animation: sprite-play calc(var(--n1) * var(--ms)) steps(var(--n1)) forwards;
+}
+.sprite[data-once="reverse"] > .sprite-strip { animation-direction: reverse; }
 html[data-visibility="hidden"] *,
 html[data-visibility="hidden"] *::before,
 html[data-visibility="hidden"] *::after {
@@ -563,6 +573,102 @@ html[data-motion="paused"] *::after {
   .nixie-lit path { fill: #ff9a3c; }
 }
 
+/* ---------- worldlines (islands/Room.vue, lib/worldline.ts) ---------- */
+/* the meter: an unlabelled button over the clock, never shorter than 24px however small the room */
+.meter {
+  position: absolute; z-index: 5; padding: 0; border: 0; background: none; cursor: pointer;
+  min-height: 24px; margin-top: min(0px, calc((var(--u) * 15 - 24px) / 2));
+  transition: box-shadow .2s steps(2);
+}
+.meter:hover, .meter:focus-visible { box-shadow: 0 0 calc(var(--u) * 4) rgba(255, 160, 74, .35); }
+.meter:focus-visible { outline: 2px solid rgba(255, 160, 74, .85); outline-offset: 2px; }
+/* a shift: one dip of the digits, then a brief spatial jolt of the room (never a flash of light) */
+.room[data-shift="flicker"] .nixie-lit { animation: meter-flicker .24s steps(1) both; }
+@keyframes meter-flicker { 35% { opacity: .25; } 70% { opacity: 1; } }
+.room[data-shift="glitch"] .layer:not(.layer-clouds, .wl-tint) { animation: wl-glitch .3s steps(1) both; }
+/* percentages of each full-room layer: .52% is 2 room px */
+@keyframes wl-glitch {
+  25% { transform: translate3d(.52%, 0, 0); }
+  50% { transform: translate3d(-.26%, .46%, 0); }
+  75% { transform: translate3d(.26%, 0, 0); }
+  100% { transform: none; }
+}
+/* The shift's glitch reaches past the room: the header, each section of the page and the footer slip
+   sideways and skew (neighbours in opposite directions, so the page looks sliced), and text splits
+   into tube-orange and cyan copies. Movement only, never a flash: nothing dims, hides or brightens an
+   area, and no saturated red (see the meter's accessibility limits). Reduce Motion has no glitch phase. */
+html[data-glitch] :is(.site-header, main > :not(.room-wrap), .site-footer) { animation: page-glitch .3s steps(1) both; }
+html[data-glitch] :is(main > :nth-child(even):not(.room-wrap), .site-footer) { animation-name: page-glitch-b; }
+html[data-glitch] :is(h1, h2, h3, p, li, a, time, small, em, .eyebrow) { animation: text-split .3s steps(1) both; }
+@keyframes page-glitch {
+  20% { transform: translate3d(7px, 0, 0) skewX(-5deg); }
+  45% { transform: translate3d(-5px, 1px, 0); }
+  70% { transform: translate3d(3px, 0, 0) skewX(3deg); }
+  100% { transform: none; }
+}
+@keyframes page-glitch-b {
+  20% { transform: translate3d(-6px, 0, 0); }
+  45% { transform: translate3d(6px, -1px, 0) skewX(5deg); }
+  70% { transform: translate3d(-2px, 0, 0); }
+  100% { transform: none; }
+}
+@keyframes text-split {
+  20% { text-shadow: 3px 0 rgba(255, 150, 60, .8), -3px 0 rgba(90, 220, 230, .8); }
+  45% { text-shadow: -2px 1px rgba(255, 150, 60, .8), 2px -1px rgba(90, 220, 230, .8); }
+  70% { text-shadow: 4px 0 rgba(255, 150, 60, .6), -4px 0 rgba(90, 220, 230, .6); }
+  100% { text-shadow: none; }
+}
+/* each worldline's light, over the whole room; Normal has no layer at all */
+.wl-enter-active, .wl-leave-active { transition: opacity .3s steps(4); }
+.wl-enter-from, .wl-leave-to { opacity: 0; }
+.room[data-worldline="alpha"] .wl-tint { background: rgba(26, 44, 92, .22); }
+.room[data-worldline="alpha"][data-sky="day"] .wl-tint { background: rgba(58, 88, 140, .22); }
+.room[data-worldline="beta"] .wl-tint { background: rgba(150, 58, 18, .15); }
+.room[data-worldline="beta"][data-sky="day"] .wl-tint { background: rgba(190, 96, 36, .11); }
+.room[data-worldline="steins-gate"] .wl-tint { background: rgba(255, 196, 96, .08); }
+.wl-gold {
+  background:
+    radial-gradient(ellipse at 88% 46%, rgba(255, 200, 110, .2), transparent 30%),
+    radial-gradient(ellipse at 20% 28%, rgba(255, 214, 140, .12), transparent 28%);
+}
+/* Alpha: pixel rain behind the window frame, a 24px tile sliding one tile per loop */
+.wl-rain { position: absolute; overflow: hidden; pointer-events: none; }
+.wl-rain span {
+  position: absolute; left: 0; top: -100%; width: 100%; height: 200%;
+  background-size: calc(var(--u) * 24) calc(var(--u) * 24); image-rendering: pixelated;
+  opacity: .75; animation: rain .5s steps(6) infinite; will-change: transform;
+}
+.room[data-sky="night"] .wl-rain span { opacity: .45; }
+/* the span is 140 room px tall: 17.142857% is one 24px tile */
+@keyframes rain { to { transform: translate3d(0, 17.142857%, 0); } }
+/* Beta: the lamp, only if it's on, dips now and then (gently, twice in five seconds) */
+.room[data-worldline="beta"][data-lamp="on"] .layer-bulb,
+.room[data-worldline="beta"][data-lamp="on"][data-sky="night"] .layer-glow { animation: lamp-flicker 5.3s steps(1) infinite; }
+@keyframes lamp-flicker { 37% { opacity: .72; } 38% { opacity: 1; } 71% { opacity: .84; } 72% { opacity: 1; } }
+/* Steins Gate: a few slow sparkles */
+.wl-spark {
+  position: absolute; pointer-events: none; background: #ffe6a6; opacity: 0;
+  box-shadow: 0 0 calc(var(--u) * 1.5) rgba(255, 220, 140, .8); animation: spark 2.7s steps(1) infinite;
+}
+@keyframes spark { 45%, 60% { opacity: .9; } 65% { opacity: 0; } }
+/* the note: just above the meter on wide rooms, just below it where a note above would reach the shelf */
+.wl-note {
+  position: absolute; z-index: 6; pointer-events: none; translate: -50% 0;
+  left: calc(var(--u) * 182); bottom: calc(var(--u) * (216 - 64));
+  display: grid; justify-items: center; gap: 2px; white-space: nowrap;
+  font: 10px/1.25 var(--font-mono); letter-spacing: .06em; padding: 5px 9px;
+  background: #18241d; color: #e8e2c6; border: 1px solid #4f6e58; box-shadow: 2px 2px 0 rgba(0, 0, 0, .35);
+}
+.wl-note b { color: #ffa04a; font-weight: normal; }
+.wl-note small { font-size: 8px; letter-spacing: .1em; color: #9fb8a4; }
+@container (max-width: 899px) {
+  .wl-note { bottom: auto; top: calc(var(--u) * 86); font-size: 9px; padding: 4px 7px; }
+  .wl-note small { font-size: 7px; }
+}
+.wl-note-enter-active { transition: opacity .25s steps(3); }
+.wl-note-leave-active { transition: opacity .4s steps(4); }
+.wl-note-enter-from, .wl-note-leave-to { opacity: 0; }
+
 .spot {
   --hl: #fff2d2; --c: calc(var(--u) * 4); --t: max(2px, calc(var(--u) * .9));
   position: absolute; display: block; cursor: pointer; outline: none; z-index: 5;
@@ -590,7 +696,10 @@ html[data-motion="paused"] *::after {
 .spot.below::after { bottom: auto; top: calc(100% + 8px); }
 
 .actor { position: absolute; pointer-events: none; }
-.actor.asad { left: calc(var(--u) * 66); top: calc(var(--u) * 78); }
+.actor.asad { left: calc(var(--u) * 66); top: calc(var(--u) * 78); transform: translate3d(calc(var(--u) * var(--walk, 0)), 0, 0); transition: transform 0ms linear; }
+/* his body, where a double tap calls him over; it moves with him */
+.actor.asad .asad-btn { position: absolute; left: 25%; top: 30%; width: 50%; height: 68%; padding: 0; border: 0; background: none; pointer-events: auto; cursor: pointer; }
+.laptop-floor { position: absolute; background: url(/sprites/laptop-floor.png) 0 0 / 100% 100% no-repeat; image-rendering: pixelated; pointer-events: none; }
 .actor.asad .sprite { --sprite-size: calc(var(--u) * 128) !important; }
 .actor.storm { --x: 230; --flip: 1; left: 0; top: calc(var(--u) * 146); transform: translate3d(calc(var(--u) * 198), 0, 0); z-index: 2; will-change: transform; }
 .actor.storm .sprite { --sprite-size: calc(var(--u) * 64) !important; display: block; }
@@ -603,6 +712,41 @@ html[data-motion="paused"] *::after {
 }
 .zzz { position: absolute; left: 60%; top: 0; font: 12px var(--font-mono); color: var(--color-accent); animation: pop 2.4s ease-in-out infinite; }
 .room .storm-says { left: 40%; top: -16%; z-index: 4; }
+/* Asad's Thought: Storm's bubble look with a stepped pixel tail (the admin preview shares it). In room
+   pixels his head is about x 106-148, y 130; the box sits above it (bottom at y 122), clear of the
+   divergence meter (x 157-206, y 67-82), the books and the desk spots (x 210+). Wide rooms: it starts
+   at his head and grows right, up to x 206. Phones: it ends at x 152 and grows left over the wall, so
+   wrapped lines never reach the meter. */
+.asad-thought, .thought-preview {
+  font: 12px/1.35 var(--font-mono); padding: 5px 8px;
+  background: var(--color-ink-strong); color: var(--color-bg); box-shadow: 3px 3px 0 rgba(0, 0, 0, .35);
+}
+.asad-thought {
+  --tail: calc(var(--u) * 36);
+  position: absolute; z-index: 5; pointer-events: none;
+  left: calc(var(--u) * (var(--ax) + 20)); bottom: calc(var(--u) * (216 - 122));
+  width: max-content; max-width: calc(var(--u) * 120);
+}
+/* the tail: two pixel steps down toward his head */
+.asad-thought::before, .asad-thought::after { content: ""; position: absolute; top: 100%; background: inherit; }
+.asad-thought::before { left: var(--tail); width: max(8px, calc(var(--u) * 4)); height: max(4px, calc(var(--u) * 2)); }
+.asad-thought::after { left: var(--tail); width: max(4px, calc(var(--u) * 2)); height: max(8px, calc(var(--u) * 4)); }
+.thought-enter-active { transition: opacity .3s steps(3), translate .3s steps(3); }
+.thought-leave-active { transition: opacity .4s steps(4); }
+.thought-enter-from { opacity: 0; translate: 0 4px; }
+.thought-leave-to { opacity: 0; }
+@media (max-width: 760px) {
+  .asad-thought {
+    left: auto; right: calc(var(--u) * (384 - var(--ax) - 86));
+    max-width: calc(var(--u) * 140); font-size: 10px; padding: 4px 6px;
+  }
+  .asad-thought::before { left: auto; right: calc(var(--u) * 26); width: 8px; }
+  .asad-thought::after { left: auto; right: calc(var(--u) * 26 + 4px); width: 4px; }
+}
+/* Reduce Motion: Thoughts still come, without the rise: just a fade */
+@media (prefers-reduced-motion: reduce) {
+  .thought-enter-from { translate: none; }
+}
 .room-caption { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 20px; margin-top: 14px; font: 12px var(--font-mono); color: var(--color-muted); }
 .room-caption .hint { color: var(--color-accent); }
 @media (max-width: 760px) {
@@ -1020,6 +1164,27 @@ body:has(.console) main { padding: 0; min-height: 100vh; animation: none; }
 .admin-lab-add { display: flex; gap: 6px; }
 .admin-lab-add input { padding: 6px 10px !important; font-size: 14px !important; }
 .admin-lab-new { margin: 0 0 20px; min-height: 44px; padding: 0 18px; }
+/* Thoughts: one row per line (on, words, when, featured, preview, remove) */
+.admin-thoughts legend small { opacity: .75; margin-left: 6px; }
+.admin-check { display: inline-flex !important; align-items: center; gap: 8px; min-height: 34px; cursor: pointer; }
+.admin-check .pixel-icon { width: 16px; height: 16px; margin: 0; color: var(--color-muted); }
+.admin-check:has(input:checked) .pixel-icon { color: var(--color-accent); }
+.admin-thought-list { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 6px; }
+.admin-thought-list li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto auto auto; gap: 6px; align-items: center; }
+.admin-thought-list li.is-off > input { opacity: .55; }
+.admin-thought-list input:not([type]), .admin-thought-list select, .admin-thoughts .admin-lab-add select {
+  padding: 6px 10px !important; font-size: 14px !important; min-height: 34px;
+}
+.admin-thought-list select, .admin-thoughts .admin-lab-add select { border: 2px solid var(--color-faint); background: var(--color-bg); color: var(--color-ink); font: 12px var(--font-mono); }
+.admin-thought-list li > button {
+  min-height: 34px; min-width: 34px; padding: 4px 10px; border: 2px solid var(--color-faint); background: var(--color-bg); color: var(--color-ink); font: 12px var(--font-mono);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.admin-thought-list li > button:hover, .admin-thought-list li > button[aria-pressed="true"] { border-color: var(--color-accent); }
+.admin-thought-list li > button .pixel-icon { width: 14px; height: 14px; margin: 0; }
+.admin-thought-preview { grid-column: 1 / -1; margin: 4px 0 10px; padding: 18px 16px 14px; background: var(--color-bg); border: 2px dashed var(--color-faint); }
+.thought-preview { display: inline-block; max-width: 30ch; }
+.admin-thoughts .admin-lab-add input { flex: 1; }
 .admin-list-shelf { font: 10px var(--font-mono) !important; color: var(--color-peach) !important; text-transform: uppercase; letter-spacing: .06em; }
 .admin-thumb { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 18px; align-items: start; padding: 14px; border: 2px solid var(--color-faint); background: var(--color-bg-2); }
 .admin-thumb-frame { aspect-ratio: 16 / 9; display: grid; place-items: center; background: var(--color-bg); border: 2px solid var(--color-faint); overflow: hidden; color: var(--color-muted); font: 11px var(--font-mono); }
@@ -1038,4 +1203,7 @@ body:has(.console) main { padding: 0; min-height: 100vh; animation: none; }
   .admin-lab-order { position: static; justify-content: flex-end; padding: 0; background: none; }
   .admin-lab-cats li { grid-template-columns: minmax(0, 1fr) auto auto auto; }
   .admin-lab-cats li small { grid-column: 1 / -1; grid-row: 2; }
+  .admin-thought-list li { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+  .admin-thought-list li > select { grid-column: 2; }
+  .admin-thoughts .admin-lab-add { flex-wrap: wrap; }
 }

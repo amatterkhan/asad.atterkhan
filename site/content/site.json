@@ -1,16 +1,16 @@
 {
-  "role": "Programmer · Hacker · Security",
+  "role": "Security · Software · Curiosity",
   "company": "Checkout.com",
   "location": "Mauritius",
   "heroTitle": "Hey, I'm Asad.",
-  "heroLede": "I'm part of Security Operations at Checkout.com, making sure the bad guys don't get in. Off the clock, I'm the one trying to break in. (Ethically, of course.)",
-  "heroBody": "Programmer, hacker, professional overthinker: if it's tech, I want to know how it works. At work I dig into what happened, then build and automate so the next time is easier. I write up what I learn here, usually with my cat asleep somewhere nearby.",
-  "roomHint": "Poke around. Everything on the desk leads somewhere.",
-  "closingTitle": "Say hello",
-  "closingBody": "Got a mission, a project, a question, or a bug to break? Write to me at",
-  "labIntro": "Experiments, useful notes, and things I'm figuring out. A technical journal, with room for the unfinished questions.",
-  "workbenchIntro": "Websites, tools and the occasional piece of hardware. Some were built for other people; some just to see whether I could.",
+  "heroLede": "I work in Security Operations at Checkout.com, investigating things that shouldn't have happened and building things to make sure they don't happen again. Well, ideally.",
+  "heroBody": "But that's just one worldline. In another, I'm usually taking things apart, building something new, or following a curiosity that turned into a six hour rabbit hole. Software, security, cloud, hardware. If it catches my interest, I'll probably experiment with it.\n\nSometimes it becomes a project. Sometimes a note in The Lab. Sometimes I just lose track of time.\n\nStorm supervises. Occasionally.",
+  "roomHint": "Poke around. Most things in here lead somewhere.",
+  "closingTitle": "Say hello.",
+  "closingBody": "Got a quest for me? Something you're building, something that broke in an interesting way, or just a question about something here? Write to me at",
+  "labIntro": "Experiments, notes, investigations, and things I wanted to understand. Some are finished, some are still running, and a few are mostly lessons in what not to do.",
+  "workbenchIntro": "Websites, tools and the occasional piece of hardware: things I've built, things I'm still building, and a few experiments that got slightly out of hand. Some were for other people; some were just to see whether I could.",
   "experienceIntro": "From the service desk to security operations. Each role taught me something the next one needed.",
   "achievementsIntro": "Certifications and badges I've picked up along the way, each linked to the original credential.",
-  "aboutBody": "I'm Asad. I work in security operations, and I like knowing how the whole stack fits together: the software, the infrastructure, the cloud underneath it, and all the ways it can go wrong.\n\nMost of my side projects start with a small question: how does this work, why did it break, could it be simpler? Usually that ends in a script, a tool, or a long evening of reading.\n\nThe Lab is where I keep what I learn. The name is a nod to *Steins;Gate*, one of my favourite anime: a small, messy lab where curious people try things just to see what happens.\n\nAnd this is Storm, a fluffy tabby-and-white cat with a firm claim on any warm spot near my desk.\n\nIf you'd like to talk about something I've built or written, [say hello](mailto:contact@asad.atterkhan.com)."
+  "aboutBody": "I'm Asad. I work in Security Operations at Checkout.com, where I spend a lot of time looking at what systems are doing and asking whether they should be.\n\nI got here the long way round: software trainee, IT support, the service desk, then security. Each step taught me a bit more about how things fit together, and how many ways they can come apart.\n\nOutside work I build things: small tools, scripts that automate the boring parts, the occasional bit of hardware. Most of it starts with *how does this actually work?* and ends somewhere I didn't plan.\n\nThe Lab is where I write those detours down. The name is a nod to *Steins;Gate*: a cramped lab, a few curious people, and experiments run mostly to see what happens.\n\nAnd this is Storm, a fluffy tabby-and-white cat who has decided every warm spot near my desk is his. He's usually right.\n\nIf something here caught your eye, [say hello](mailto:contact@asad.atterkhan.com)."
 }

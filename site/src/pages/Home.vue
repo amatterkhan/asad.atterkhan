@@ -1,25 +1,34 @@
 <script setup lang="ts">
 import PixelIcon from "../components/PixelIcon.vue";
 import { Room } from "../islands";
-import { date, site } from "../lib/site";
+import { date, site, subtitles } from "../lib/site";
 import type { SiteCopy, Project } from "../lib/schemas";
 import type { ArticleSummary } from "../lib/content.server";
-const { copy, articles, projects, outfit } = defineProps<{ copy: SiteCopy; articles: ArticleSummary[]; projects: Project[]; outfit: string }>();
+import type { PublicThought } from "../lib/thoughts";
+const { copy, articles, projects, outfit, thoughts } = defineProps<{
+  copy: SiteCopy;
+  articles: ArticleSummary[];
+  projects: Project[];
+  outfit: string;
+  thoughts: { thoughts: PublicThought[]; featured: string | null };
+}>();
 const name = copy.heroTitle.match(/Asad\.?$/)?.[0];
+// the body is short paragraphs separated by blank lines in the copy
+const body = copy.heroBody.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 </script>
 <template>
   <section class="hero">
     <div>
-      <p class="eyebrow">{{ copy.role }} · {{ copy.location }}</p>
       <h1>{{ copy.heroTitle.replace(/Asad\.?$/, "") }}<em>{{ name }}</em></h1>
+      <p class="page-subtitle">{{ subtitles.home }}</p>
     </div>
     <div>
       <p class="lede">{{ copy.heroLede }}</p>
-      <p class="hero-sub">{{ copy.heroBody }}</p>
+      <p v-for="(p, i) in body" :key="i" class="hero-sub">{{ p }}</p>
     </div>
   </section>
 
-  <Room :hint="copy.roomHint" :outfit="outfit" />
+  <Room :hint="copy.roomHint" :outfit="outfit" :thoughts="thoughts.thoughts" :featured="thoughts.featured" />
 
   <section class="block">
     <header class="block-head">
@@ -34,7 +43,7 @@ const name = copy.heroTitle.match(/Asad\.?$/)?.[0];
       </li>
     </ul>
     <p v-else class="quiet-note">
-      Nothing published yet. The first notes are being written: experiments, write-ups, and the occasional dead end
+      Nothing published yet. The first notes are on the bench: experiments, write-ups, and the occasional dead end
       worth keeping.
     </p>
   </section>

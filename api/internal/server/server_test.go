@@ -73,7 +73,7 @@ type route struct{ method, path string }
 
 func protectedRoutes() []route {
 	id := "12345678-1234-4234-8234-123456789012"
-	return []route{{"GET", "/api/admin/site"}, {"PUT", "/api/admin/site"}, {"GET", "/api/admin/wardrobe"}, {"PUT", "/api/admin/wardrobe"}, {"GET", "/api/admin/lab"}, {"PUT", "/api/admin/lab"}, {"POST", "/api/admin/thumbnails"}, {"GET", "/api/admin/thumbnails/" + strings.Repeat("a", 64) + ".webp"}, {"GET", "/api/admin/articles"}, {"POST", "/api/admin/articles"}, {"GET", "/api/admin/articles/test"}, {"PUT", "/api/admin/articles/test"}, {"DELETE", "/api/admin/articles/test"}, {"POST", "/api/admin/articles/test/publish"}, {"POST", "/api/admin/articles/test/unpublish"}, {"POST", "/api/admin/preview"}, {"GET", "/api/admin/achievements"}, {"PATCH", "/api/admin/achievements"}, {"GET", "/api/admin/documents"}, {"POST", "/api/admin/documents"}, {"PATCH", "/api/admin/documents/" + id}, {"DELETE", "/api/admin/documents/" + id}, {"POST", "/api/admin/documents/" + id + "/publish"}, {"GET", "/api/admin/documents/" + id + "/download"}}
+	return []route{{"GET", "/api/admin/site"}, {"PUT", "/api/admin/site"}, {"GET", "/api/admin/wardrobe"}, {"PUT", "/api/admin/wardrobe"}, {"GET", "/api/admin/lab"}, {"PUT", "/api/admin/lab"}, {"GET", "/api/admin/thoughts"}, {"PUT", "/api/admin/thoughts"}, {"POST", "/api/admin/thumbnails"}, {"GET", "/api/admin/thumbnails/" + strings.Repeat("a", 64) + ".webp"}, {"GET", "/api/admin/articles"}, {"POST", "/api/admin/articles"}, {"GET", "/api/admin/articles/test"}, {"PUT", "/api/admin/articles/test"}, {"DELETE", "/api/admin/articles/test"}, {"POST", "/api/admin/articles/test/publish"}, {"POST", "/api/admin/articles/test/unpublish"}, {"POST", "/api/admin/preview"}, {"GET", "/api/admin/achievements"}, {"PATCH", "/api/admin/achievements"}, {"GET", "/api/admin/documents"}, {"POST", "/api/admin/documents"}, {"PATCH", "/api/admin/documents/" + id}, {"DELETE", "/api/admin/documents/" + id}, {"POST", "/api/admin/documents/" + id + "/publish"}, {"GET", "/api/admin/documents/" + id + "/download"}}
 }
 func TestShiftRotation(t *testing.T) {
 	for date, want := range map[string]string{"2025-11-24": "night", "2025-11-26": "off", "2025-12-03": "night", "2025-12-05": "off", "2025-12-22": "day", "2025-11-19": "day"} {
@@ -310,6 +310,18 @@ func TestEmulatorRoutes(t *testing.T) {
 	if got := check("PUT", "/api/admin/lab", map[string]any{"sections": labMap["sections"]}, 200); len(got["sections"].([]any)) != 3 {
 		t.Fatalf("lab map after save: %v", got)
 	}
+	thoughts := check("GET", "/api/admin/thoughts", nil, 200)
+	if len(thoughts["thoughts"].([]any)) != 16 {
+		t.Fatalf("thoughts seed: %v", thoughts)
+	}
+	check("PUT", "/api/admin/thoughts", map[string]any{"thoughts": thoughts["thoughts"], "featured": "nope"}, 400)
+	check("PUT", "/api/admin/thoughts", map[string]any{"thoughts": thoughts["thoughts"], "featured": nil, "extra": 1}, 400)
+	if got := check("PUT", "/api/admin/thoughts", map[string]any{"thoughts": thoughts["thoughts"], "featured": "reality-is-an-edge-case"}, 200); got["featured"] != "reality-is-an-edge-case" {
+		t.Fatalf("thoughts after save: %v", got)
+	}
+	if got := check("GET", "/api/admin/thoughts", nil, 200); got["featured"] != "reality-is-an-edge-case" {
+		t.Fatalf("thoughts read back: %v", got)
+	}
 	check("GET", "/api/admin/achievements", nil, 200)
 	check("PATCH", "/api/admin/achievements", map[string]any{"featuredIds": []string{"unknown"}}, 400)
 	check("PATCH", "/api/admin/achievements", map[string]any{"featuredIds": []string{"4", "4"}}, 400)
@@ -447,8 +459,9 @@ func TestEmulatorRoutes(t *testing.T) {
 	if code != 401 {
 		t.Fatal("stale auth allowed", code)
 	}
-	if hooks.Load() != 6 {
-		t.Errorf("rebuild hook calls got %d want 6", hooks.Load())
+	// one more than before: saving Thoughts publishes too
+	if hooks.Load() != 7 {
+		t.Errorf("rebuild hook calls got %d want 7", hooks.Load())
 	}
 	if _, err = services.Auth.UpdateUser(ctx, uid, (&auth.UserToUpdate{}).Disabled(true)); err != nil {
 		t.Fatal(err)

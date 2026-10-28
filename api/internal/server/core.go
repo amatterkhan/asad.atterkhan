@@ -265,6 +265,7 @@ func (s *Server) Handler() http.Handler {
 		mux.HandleFunc(method+" /api/admin/site", endpoint(s.site))
 		mux.HandleFunc(method+" /api/admin/wardrobe", endpoint(s.wardrobe))
 		mux.HandleFunc(method+" /api/admin/lab", endpoint(s.lab))
+		mux.HandleFunc(method+" /api/admin/thoughts", endpoint(s.thoughts))
 	}
 	for _, method := range []string{"GET", "PATCH"} {
 		mux.HandleFunc(method+" /api/admin/achievements", endpoint(s.achievements))

@@ -1,0 +1,244 @@
+{
+  "version": 36,
+  "outfit": "labcoat",
+  "logicalSize": [
+    128,
+    128
+  ],
+  "states": {
+    "asad-idle": {
+      "sheet": "/art/outfits/labcoat/asad-idle.png",
+      "still": "/art/outfits/labcoat/asad-idle-still.png",
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        220,
+        220,
+        220,
+        220,
+        220,
+        220,
+        220,
+        220
+      ],
+      "anchor": [
+        64,
+        122
+      ],
+      "frameMs": 220
+    },
+    "asad-typing": {
+      "sheet": "/art/outfits/labcoat/asad-typing.png",
+      "still": "/art/outfits/labcoat/asad-typing-still.png",
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        140,
+        140,
+        140,
+        140,
+        140,
+        140,
+        140,
+        140
+      ],
+      "anchor": [
+        64,
+        122
+      ],
+      "frameMs": 140
+    },
+    "asad-coffee": {
+      "sheet": "/art/outfits/labcoat/asad-coffee.png",
+      "still": "/art/outfits/labcoat/asad-coffee-still.png",
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "anchor": [
+        64,
+        122
+      ],
+      "frameMs": 200
+    },
+    "asad-happy": {
+      "sheet": "/art/outfits/labcoat/asad-happy.png",
+      "still": "/art/outfits/labcoat/asad-happy-still.png",
+      "frames": 6,
+      "frameMs": 170,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "anchor": [
+        64,
+        122
+      ],
+      "durationsMs": [
+        170,
+        170,
+        170,
+        170,
+        170,
+        170
+      ]
+    },
+    "asad-stretch": {
+      "sheet": "/art/outfits/labcoat/asad-stretch.png",
+      "still": "/art/outfits/labcoat/asad-stretch-still.png",
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        180,
+        180,
+        260,
+        300,
+        300,
+        260,
+        200,
+        200
+      ],
+      "frameMs": 235,
+      "anchor": [
+        64,
+        122
+      ]
+    },
+    "asad-look": {
+      "sheet": "/art/outfits/labcoat/asad-look.png",
+      "still": "/art/outfits/labcoat/asad-look-still.png",
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        200,
+        200,
+        240,
+        360,
+        360,
+        300,
+        220,
+        200
+      ],
+      "frameMs": 260,
+      "anchor": [
+        64,
+        122
+      ]
+    },
+    "asad-standup": {
+      "sheet": "/art/outfits/labcoat/asad-standup.png",
+      "still": "/art/outfits/labcoat/asad-standup-still.png",
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        150,
+        150,
+        150,
+        150,
+        150,
+        150,
+        150,
+        150
+      ],
+      "frameMs": 150,
+      "anchor": [
+        64,
+        124
+      ]
+    },
+    "asad-stand": {
+      "sheet": "/art/outfits/labcoat/asad-stand.png",
+      "still": "/art/outfits/labcoat/asad-stand-still.png",
+      "frames": 4,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        450,
+        450,
+        450,
+        450
+      ],
+      "frameMs": 450,
+      "anchor": [
+        64,
+        124
+      ]
+    },
+    "asad-walk-left": {
+      "sheet": "/art/outfits/labcoat/asad-walk-left.png",
+      "still": "/art/outfits/labcoat/asad-walk-left-still.png",
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130
+      ],
+      "frameMs": 130,
+      "anchor": [
+        64,
+        124
+      ]
+    },
+    "asad-walk-right": {
+      "sheet": "/art/outfits/labcoat/asad-walk-right.png",
+      "still": "/art/outfits/labcoat/asad-walk-right-still.png",
+      "frames": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130,
+        130
+      ],
+      "frameMs": 130,
+      "anchor": [
+        64,
+        124
+      ]
+    },
+    "asad-window": {
+      "sheet": "/art/outfits/labcoat/asad-window.png",
+      "still": "/art/outfits/labcoat/asad-window-still.png",
+      "frames": 6,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        340,
+        340,
+        340,
+        340,
+        340,
+        340
+      ],
+      "frameMs": 340,
+      "anchor": [
+        64,
+        124
+      ]
+    }
+  }
+}
