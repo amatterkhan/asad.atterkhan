@@ -19,7 +19,6 @@ const body = copy.heroBody.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean)
 <template>
   <section class="hero">
     <div>
-      <p class="eyebrow">{{ copy.role }} · {{ copy.location }}</p>
       <h1>{{ copy.heroTitle.replace(/Asad\.?$/, "") }}<em>{{ name }}</em></h1>
       <p class="page-subtitle">{{ subtitles.home }}</p>
     </div>
