@@ -22,7 +22,7 @@ OUTFITS = PUBLIC / "art/outfits"
 # The Go API validates outfit ids against the same index.
 API_INDEX = ROOT.parent / "api/internal/content/data/outfits.json"
 STATES = ["asad-idle", "asad-typing", "asad-coffee", "asad-happy", "asad-stretch", "asad-look",
-          "asad-standup", "asad-walk-left", "asad-walk-right", "asad-window"]
+          "asad-standup", "asad-stand", "asad-walk-left", "asad-walk-right", "asad-window"]
 # The hoodie's brightness range is measured on the original four, so adding a state never shifts
 # the colours of the outfits already on the site.
 RANGE_STATES = ["asad-idle", "asad-typing", "asad-coffee", "asad-happy"]
@@ -41,6 +41,7 @@ REGIONS = {
     "asad-stretch": [[(34, 85), (72, 85), (72, 92), (69, 92), (69, 111), (34, 111)]],
     # standing up starts from the typing pose; from frame 3 on the region is found per frame (BANDED)
     "asad-standup": [[(34, 85), (72, 85), (72, 92), (69, 92), (69, 111), (34, 111)]],
+    "asad-stand": [],
     "asad-walk-left": [],
     "asad-walk-right": [],
     "asad-window": [],
@@ -49,14 +50,15 @@ REGIONS = {
 # region is found per frame: a band from the neck (the narrowest row under his head) down to the
 # waistband (where the jeans take over), never more than BAND_MAX rows. Frames listed per state.
 BANDED = {
-    "asad-standup": range(3, 8),
+    "asad-standup": range(2, 8),
+    "asad-stand": range(4),
     "asad-walk-left": range(8),
     "asad-walk-right": range(8),
     "asad-window": range(6),
 }
 BAND_MAX = 33
 # Boxes (x0, y0, x1, y1) kept out of a banded region: the laptop he sets down on the floor.
-BAND_EXCLUDE = {"asad-standup": [(70, 96, 128, 128)]}
+BAND_EXCLUDE = {"asad-standup": [(68, 100, 128, 128)]}
 # Frames whose sleeves leave the body's region: the stretch's raised arms, traced per frame beside
 # (never over) the hair. Added to the state's own region for that frame.
 FRAME_REGIONS = {

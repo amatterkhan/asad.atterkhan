@@ -1,5 +1,5 @@
 {
-  "version": 26,
+  "version": 28,
   "logicalSize": [
     128,
     128
@@ -377,6 +377,24 @@
         340
       ],
       "frameMs": 340,
+      "anchor": [
+        64,
+        124
+      ]
+    },
+    "asad-stand": {
+      "sheet": "/sprites/asad-stand.png",
+      "still": "/sprites/asad-stand-still.png",
+      "frames": 4,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        450,
+        450,
+        450,
+        450
+      ],
+      "frameMs": 450,
       "anchor": [
         64,
         124

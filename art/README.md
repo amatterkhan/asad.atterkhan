@@ -30,6 +30,7 @@ PixelLab character IDs in case an animation is ever generated again.
 | asad-typing, asad-coffee, asad-idle, asad-happy (when Storm is petted) | 8 |
 | asad-stretch (arms up, rarely), asad-look (a glance toward the window) | 8 |
 | asad-standup (played once; backwards to sit down), asad-walk-left, asad-walk-right | 8 |
+| asad-stand (standing still, breathing) | 4 |
 | asad-window (standing at the window, his back to us) | 6 |
 | storm-standing (walk), storm-idle, storm-stretch | 8 |
 | storm-sleeping, storm-nap (the small one on the Lab chair), storm-dream | 6–14 |
@@ -56,18 +57,23 @@ pixel for pixel); colours snapped to the 64 colours of Asad's existing sheets; d
 
 ### How the walk to the window was made (October 2026)
 
-Same client, same character. `asad-standup` is animated `south` from the raw typing frame ("closes
-the laptop, sets it down on the floor in front of him, then gets up"); the walks are `west` and
+Same client, same character. `asad-standup` is animated `south` from the raw typing frame ("lifts the
+open laptop with both hands and sets it down flat on the floor just in front of his knees, then …
+stands up"; an earlier take that closed the laptop morphed it mid-air); the walks are `west` and
 `east` and the window is `north`, each from the character's own rotation, so the two walks are
-drawn separately rather than mirrored (his ponytail stays on its side). About 7 cents in all. The
+drawn separately rather than mirrored (his ponytail stays on its side). About 10 cents in all. The
 stand-up was scaled ×0.75 like the seated states; the others at whatever scale makes his standing
-height match the stand-up's last frame (about ×0.8), centred where the stand-up leaves him, feet on
-y 122. The left-facing walk had a moustache: the dark stroke between his nose and mouth was painted
-out with the skin above it on every frame. Colours snapped to his palette as above.
+height match the stand-up's last frame (about ×0.82), centred where the stand-up leaves him, feet on
+y 122. Both walks had a moustache: on every frame, the first dark stroke under his eyes near the
+front of his face (between nose and mouth) was refilled with the skin beside it. `asad-stand` is
+the stand-up's last frame without the laptop, breathing by hand (everything above his waistband one
+pixel lower on two of its four frames); PixelLab's own idle for it opened his mouth and pointed.
+Colours snapped to his palette as above.
 
 `site/public/sprites/laptop-floor.png` is the laptop he leaves on the rug, cut from the stand-up's
-last frame (frame box 74,102 → room 140,180). In the room it shows while he's away from it.
-His walking speed (36 px per walk cycle) and the window spot are constants in `Room.vue`.
+last frame (frame box 71,104 → room 137,182). In the room it shows while he's away from it.
+His walking speed (37 px per walk cycle), the window spot and the floor he may follow the pointer
+along are constants in `Room.vue`.
 
 ## Making a reference image
 
@@ -87,8 +93,8 @@ and builds every other `site/public/art/outfits/<id>/` by recolouring only the h
 region per animation, the face and goatee protected, shades mapped by brightness onto the outfit's
 ramp, drawstrings repainted). Pose, hair, glasses, goatee, frames and timing stay identical. Where a
 pose moves the sleeves out of that region (the stretch's raised arms), `FRAME_REGIONS` adds polygons
-for those frames, traced beside the hair, never over it. Standing (the stand-up from frame 3, the
-walks, the window) his body moves too much for one polygon and his hair shares the hoodie's colours,
+for those frames, traced beside the hair, never over it. Standing (the stand-up from frame 2, standing
+still, the walks, the window) his body moves too much for one polygon and his hair shares the hoodie's colours,
 so `BANDED` frames get a region found from the frame itself: a band from his neck (the narrowest row
 under his head) to the waistband (where the jeans take over), with the laptop on the rug kept out.
 The hoodie's brightness range is measured on the original four states only, so a new state never

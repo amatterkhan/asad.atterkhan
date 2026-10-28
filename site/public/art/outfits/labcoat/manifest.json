@@ -1,5 +1,5 @@
 {
-  "version": 26,
+  "version": 28,
   "outfit": "labcoat",
   "logicalSize": [
     128,
@@ -153,6 +153,24 @@
         150
       ],
       "frameMs": 150,
+      "anchor": [
+        64,
+        124
+      ]
+    },
+    "asad-stand": {
+      "sheet": "/art/outfits/labcoat/asad-stand.png",
+      "still": "/art/outfits/labcoat/asad-stand-still.png",
+      "frames": 4,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "durationsMs": [
+        450,
+        450,
+        450,
+        450
+      ],
+      "frameMs": 450,
       "anchor": [
         64,
         124
