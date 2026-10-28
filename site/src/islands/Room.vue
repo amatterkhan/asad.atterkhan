@@ -9,6 +9,7 @@ import { site } from "../lib/site";
 import { nextPause, type Pause } from "../lib/pose";
 import { nextWait, pickThought, readMs, type PublicThought } from "../lib/thoughts";
 import type { ThoughtContext } from "../lib/schemas";
+import { scramblePage } from "../lib/scramble";
 import { DIVERGENCE, nextWorldline, scramble, shiftTimeline, worldlineLabel, type ShiftPhase, type Worldline } from "../lib/worldline";
 
 // The room is a 384x216 pixel-art scene drawn in LibreSprite (art/ase/room.ase), one PNG per layer.
@@ -118,6 +119,8 @@ const thought = ref<{ text: string; key: number } | null>(null);
 let hushThought = () => {};
 let shiftTimers: ReturnType<typeof setTimeout>[] = [];
 let cycle: ReturnType<typeof setInterval> | undefined;
+// puts the page's text back if the room goes away mid-glitch
+let unscramble = () => {};
 // Steins Gate dresses Asad in the lab coat for as long as it lasts; the outfit the owner picked (the
 // prop, from the build) is untouched and comes back the moment the room leaves Steins Gate.
 const shownOutfit = computed(() => (worldline.value === "steins-gate" ? "labcoat" : outfit));
@@ -141,6 +144,8 @@ const pressMeter = () => {
     shift.value = phase;
     // the glitch jolts the whole page, not just the room (app.css, html[data-glitch])
     document.documentElement.toggleAttribute("data-glitch", phase === "glitch");
+    // and the words on screen rearrange themselves, then settle back letter by letter (lib/scramble.ts)
+    if (phase === "glitch") unscramble = scramblePage(document.body, { ms: 800 });
     if (phase === "cycle") cycle = setInterval(() => (reading.value = scramble()), 70);
     if (phase === "settle") {
       clearInterval(cycle);
@@ -456,6 +461,7 @@ onBeforeUnmount(() => {
   clearTimeout(sayTimer);
   shiftTimers.forEach(clearTimeout);
   document.documentElement.removeAttribute("data-glitch");
+  unscramble();
   clearInterval(cycle);
 });
 

@@ -122,12 +122,27 @@ test("a shift's glitch jolts the whole page, briefly, and never with Reduce Moti
         w.glitched.push(on ? 1 : 0);
         if (on) w.moving.push(getComputedStyle(document.querySelector(".hero")!).animationName);
       }).observe(document.documentElement, { attributeFilter: ["data-glitch"] });
+      // the words on screen rearrange: every text change in the hero, kept
+      const hero = document.querySelector(".hero")!;
+      (w as never as { before: string; texts: string[] }).before = hero.textContent!;
+      (w as never as { texts: string[] }).texts = [];
+      new MutationObserver(() => (w as never as { texts: string[] }).texts.push(hero.textContent!)).observe(hero, {
+        characterData: true,
+        subtree: true,
+      });
     });
     await page.getByRole("button", { name: "Divergence meter" }).click();
     await expect(page.locator(".room")).toHaveAttribute("data-shift", "idle", { timeout: 6000 });
     await expect(page.locator("html")).not.toHaveAttribute("data-glitch", /.*/);
     const glitched = await page.evaluate(() => (window as never as { glitched: number[] }).glitched);
     expect(glitched.includes(1)).toBe(!reduced);
+    // the hero's words were rearranged and came back exactly; never with Reduce Motion
+    const { before, texts } = await page.evaluate(() => {
+      const w = window as never as { before: string; texts: string[] };
+      return { before: w.before, texts: w.texts };
+    });
+    await expect(page.locator(".hero")).toHaveText(before);
+    expect(texts.some((t) => t !== before)).toBe(!reduced);
     // the page's own content moved, not just the room
     if (!reduced) expect(await page.evaluate(() => (window as never as { moving: string[] }).moving)).toEqual([expect.stringMatching(/page-glitch/)]);
   }
