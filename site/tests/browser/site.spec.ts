@@ -113,23 +113,23 @@ test("a shift's glitch jolts the whole page, briefly, and never with Reduce Moti
     await page.emulateMedia({ reducedMotion: reduced ? "reduce" : "no-preference" });
     await page.goto("/");
     await page.evaluate(() => {
-      const w = window as never as { glitched: number[] };
+      // read as the glitch starts: it only lasts 0.3 s, too short to catch from the test runner
+      const w = window as never as { glitched: number[]; moving: string[] };
       w.glitched = [];
-      new MutationObserver(() => w.glitched.push(document.documentElement.hasAttribute("data-glitch") ? 1 : 0)).observe(document.documentElement, {
-        attributeFilter: ["data-glitch"],
-      });
+      w.moving = [];
+      new MutationObserver(() => {
+        const on = document.documentElement.hasAttribute("data-glitch");
+        w.glitched.push(on ? 1 : 0);
+        if (on) w.moving.push(getComputedStyle(document.querySelector(".hero")!).animationName);
+      }).observe(document.documentElement, { attributeFilter: ["data-glitch"] });
     });
     await page.getByRole("button", { name: "Divergence meter" }).click();
-    if (!reduced) {
-      await expect(page.locator("html")).toHaveAttribute("data-glitch", "");
-      // the page's own content moves, not just the room
-      const moving = await page.locator(".hero").evaluate((el) => getComputedStyle(el).animationName);
-      expect(moving).toMatch(/page-glitch/);
-    }
     await expect(page.locator(".room")).toHaveAttribute("data-shift", "idle", { timeout: 6000 });
     await expect(page.locator("html")).not.toHaveAttribute("data-glitch", /.*/);
     const glitched = await page.evaluate(() => (window as never as { glitched: number[] }).glitched);
     expect(glitched.includes(1)).toBe(!reduced);
+    // the page's own content moved, not just the room
+    if (!reduced) expect(await page.evaluate(() => (window as never as { moving: string[] }).moving)).toEqual([expect.stringMatching(/page-glitch/)]);
   }
 });
 
