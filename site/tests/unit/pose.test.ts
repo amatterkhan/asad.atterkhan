@@ -25,7 +25,7 @@ it("walks to the window only after a long while, and then now and then", () => {
   const walks = (sinceWalk: number) =>
     Array.from({ length: n }, (_, i) => nextPause(i / n, 0, false, sinceWalk)).filter((p) => p === "walk").length / n;
   expect(walks(WALK_GAP_MS - 1)).toBe(0);
-  expect(walks(WALK_GAP_MS)).toBeCloseTo(0.12, 2);
-  // never by default (the room passes how long it has been; Reduce Motion keeps him seated)
+  expect(walks(WALK_GAP_MS)).toBeCloseTo(0.2, 2);
+  // never by default (the room passes how long it has been)
   expect(Array.from({ length: n }, (_, i) => nextPause(i / n, 0, false)).includes("walk")).toBe(false);
 });

@@ -19,10 +19,13 @@ const STRETCH_MS = loopMs("storm-stretch");
 const WALK_SPEED = manifest.strideRoomPx / manifest.walkCycleMs;
 // Nap spots on either side of Asad (he sits around x 104-156): rug end by the window, or by the chair.
 const BEDS = [60, 188] as const;
-// Asad's walk to the window: his sprite moves this far (room px) to stand at the glass's middle, at
-// the pace his feet travel (about 36 px per 8-frame walk cycle).
-const WINDOW_DX = -44;
-const ASAD_SPEED = 36 / loopMs("asad-walk-left");
+// Asad up and about. His middle is x 51 of his 128 px frame, so x 117 in the room when he sits; he
+// walks at the pace his feet travel (about 37 px per 8-frame walk cycle). WINDOW_DX puts him at the
+// glass's middle; following the pointer he keeps to the floor between the window and the desk's end.
+const ASAD_HOME = 66 + 51;
+const WINDOW_DX = -40;
+const FLOOR_DX = [30 - ASAD_HOME, 300 - ASAD_HOME] as const;
+const ASAD_SPEED = 37 / loopMs("asad-walk-left");
 // a play-once sheet holds its last frame after (n - 1) frame times
 const onceMs = (k: SpriteState) => (manifest.states[k].frames - 1) * manifest.states[k].frameMs;
 
@@ -72,12 +75,17 @@ const root = useTemplateRef<HTMLDivElement>("root");
 const storm = useTemplateRef<HTMLDivElement>("storm");
 let target = 230;
 let lastInput = 0;
+// where the pointer last was on the floor (room px) and when: Asad follows it after a double tap
+let asadTarget = ASAD_HOME;
+let asadLured = 0;
+// set up on mount: a double tap on Asad gets him up (or, if he's following, sends him back)
+let callAsad = () => {};
 // decide now rather than at the next tick, so a tap moves Storm at once (set up on mount)
 let poke = () => {};
 const sky = ref<"day" | "night">("night");
 const lamp = ref(true);
 const mode = ref<StormMode>("idle");
-type Away = "standup" | "sitdown" | "walk-left" | "walk-right" | "window";
+type Away = "standup" | "sitdown" | "walk-left" | "walk-right" | "window" | "stand";
 const asad = ref<"typing" | Exclude<Pause, "walk"> | Away>("typing");
 // up from the rug: from standing up until he has sat back down (his laptop waits on the rug)
 const away = ref(false);
@@ -180,52 +188,87 @@ onMounted(() => {
   let t: ReturnType<typeof setTimeout>;
   let stretchedAt = performance.now();
   let walkedAt = performance.now();
+  let following = false;
   const typing = () => {
     asad.value = "typing";
     t = setTimeout(pause, 12000 + Math.random() * 12000);
   };
   const pause = () => {
     const now = performance.now();
-    // Reduce Motion keeps him on the rug (the room's loops still play, nothing crosses it)
-    const still = matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.dataset.motion === "paused";
     // Storm is "over by the window" when he's well left of Asad (his middle is about x 130)
-    const next = nextPause(Math.random(), now - stretchedAt, position() < asadX.value + 40, still ? 0 : now - walkedAt);
+    const next = nextPause(Math.random(), now - stretchedAt, position() < asadX.value + 40, now - walkedAt);
     if (next === "stretch") stretchedAt = now;
-    if (next === "walk") {
-      walkedAt = now;
-      return outing();
-    }
+    if (next === "walk") return getUp("window");
     asad.value = next;
     t = setTimeout(typing, loopMs(`asad-${next}`));
   };
-  // He stands up (setting the laptop on the rug), walks to the window, looks out for a while, walks
-  // back and sits down again. Each step is one sprite; the walking itself is a CSS transition.
-  const stroll = (dx: number) => {
-    const ms = Math.abs(dx - asadWalk.value.dx) / ASAD_SPEED;
+  // Up from the rug: he stands (setting the laptop down) and either walks to the window, looks out
+  // and comes back, or (tapped twice) walks after the pointer along the floor until it has been
+  // still for a while, or half a minute has passed, then goes back and sits down. Walking is a CSS
+  // transition at his stride's pace; a new heading mid-walk starts from wherever he has got to.
+  let walking = { from: 0, to: 0, at: 0, ms: 0 };
+  const dxNow = () => {
+    const { from, to, at, ms } = walking;
+    return ms ? from + (to - from) * Math.min(1, (performance.now() - at) / ms) : to;
+  };
+  const walkTo = (dx: number) => {
+    const from = dxNow();
+    const ms = Math.abs(dx - from) / ASAD_SPEED;
+    walking = { from, to: dx, at: performance.now(), ms };
     asadWalk.value = { dx, ms };
+    if (ms > 0) asad.value = dx < from ? "walk-left" : "walk-right";
     return ms;
   };
-  const outing = () => {
+  const sitDown = () => {
+    clearTimeout(t);
+    following = false;
+    t = setTimeout(() => {
+      asadX.value = 66;
+      asad.value = "sitdown";
+      t = setTimeout(() => {
+        away.value = false;
+        walkedAt = performance.now();
+        typing();
+      }, onceMs("asad-standup") + 300);
+    }, walkTo(0));
+  };
+  let followUntil = 0;
+  const follow = () => {
+    const now = performance.now();
+    if (now > followUntil || now - asadLured > 8000) return sitDown();
+    const to = Math.min(FLOOR_DX[1], Math.max(FLOOR_DX[0], asadTarget - ASAD_HOME));
+    if (Math.abs(to - walking.to) > 6) walkTo(to);
+    else if (now >= walking.at + walking.ms && asad.value !== "stand") {
+      asad.value = "stand";
+      asadX.value = 66 + walking.to;
+    }
+    t = setTimeout(follow, 150);
+  };
+  const startFollowing = () => {
+    clearTimeout(t);
+    following = true;
+    asadLured = followUntil = performance.now();
+    followUntil += 30000;
+    follow();
+  };
+  const getUp = (why: "window" | "follow") => {
+    clearTimeout(t);
     away.value = true;
     asad.value = "standup";
     t = setTimeout(() => {
-      asad.value = "walk-left";
+      if (why === "follow") return startFollowing();
       t = setTimeout(() => {
         asad.value = "window";
         asadX.value = 66 + WINDOW_DX;
-        t = setTimeout(() => {
-          asadX.value = 66;
-          asad.value = "walk-right";
-          t = setTimeout(() => {
-            asad.value = "sitdown";
-            t = setTimeout(() => {
-              away.value = false;
-              typing();
-            }, onceMs("asad-standup") + 300);
-          }, stroll(0));
-        }, 7000 + Math.random() * 6000);
-      }, stroll(WINDOW_DX));
+        t = setTimeout(sitDown, 7000 + Math.random() * 6000);
+      }, walkTo(WINDOW_DX));
     }, onceMs("asad-standup") + 300);
+  };
+  callAsad = () => {
+    if (!away.value) getUp("follow");
+    else if (following) sitDown();
+    // already up (at the window, or on his way there or back): he comes along instead
+    else if (asad.value !== "standup" && asad.value !== "sitdown") startFollowing();
   };
   t = setTimeout(pause, 8000);
   stops.push(() => clearTimeout(t));
@@ -369,8 +412,8 @@ onMounted(() => {
   }
   const speak = () => {
     // Storm has the room (the visitor petted him: one bubble at a time), Asad's arms are up in a
-    // stretch where the bubble goes, or he's getting up, walking or sitting down: try again shortly
-    if (saying.value || ["stretch", "standup", "sitdown", "walk-left", "walk-right"].includes(asad.value)) {
+    // stretch where the bubble goes, or he's up and following the pointer or on the move: try again shortly
+    if (saying.value || following || ["stretch", "standup", "sitdown", "walk-left", "walk-right", "stand"].includes(asad.value)) {
       thoughtTimer = setTimeout(speak, 3000 + Math.random() * 3000);
       return;
     }
@@ -418,7 +461,8 @@ const lure = (e: PointerEvent) => {
   if (e.type === "pointermove" && e.pointerType !== "mouse") return;
   const r = root.value!.getBoundingClientRect();
   target = Math.min(360, Math.max(24, ((e.clientX - r.left) / r.width) * W));
-  lastInput = performance.now();
+  lastInput = asadLured = performance.now();
+  asadTarget = target;
   if (e.type === "pointerdown") poke();
 };
 
@@ -434,6 +478,16 @@ const pet = () => {
   happy.value = true;
   clearTimeout(happyTimer);
   happyTimer = setTimeout(() => (happy.value = false), loopMs("asad-happy"));
+};
+
+// two presses on Asad within half a second (a double tap or double click, or Enter twice)
+let tappedAt = 0;
+const tapAsad = () => {
+  const now = performance.now();
+  if (now - tappedAt < 500) {
+    tappedAt = 0;
+    callAsad();
+  } else tappedAt = now;
 };
 
 const toggleLamp = () => {
@@ -491,7 +545,7 @@ const toggleTheme = () => {
       <NixieClock part="glass" :reading="reading" />
 
       <!-- the laptop he sets down on the rug while he's up (cut from the stand-up's last frame) -->
-      <span v-if="away && asad !== 'standup' && asad !== 'sitdown'" class="laptop-floor" :style="at([140, 180, 20, 22])" aria-hidden="true" />
+      <span v-if="away && asad !== 'standup' && asad !== 'sitdown'" class="laptop-floor" :style="at([137, 182, 28, 22])" aria-hidden="true" />
       <div class="actor asad" :style="{ '--walk': asadWalk.dx, transitionDuration: `${asadWalk.ms}ms` }">
         <Sprite
           :state="happy && !away ? 'asad-happy' : asad === 'sitdown' ? 'asad-standup' : `asad-${asad}`"
@@ -500,6 +554,7 @@ const toggleTheme = () => {
           :once="asad === 'standup' || asad === 'sitdown'"
           :reverse="asad === 'sitdown'"
         />
+        <button type="button" class="asad-btn" aria-label="Asad (press twice to call him over)" data-cursor="plain" @click="tapAsad" />
       </div>
       <div class="actor robot">
         <Sprite state="robot-idle" :size="48" />

@@ -10,6 +10,6 @@ export const WALK_GAP_MS = 150_000;
 export function nextPause(rand: number, sinceStretchMs: number, stormByWindow: boolean, sinceWalkMs = 0): Pause {
   if (sinceStretchMs >= STRETCH_GAP_MS && rand < 0.12) return "stretch";
   if (rand >= 0.12 && rand < (stormByWindow ? 0.42 : 0.24)) return "look";
-  if (sinceWalkMs >= WALK_GAP_MS && rand >= 0.88) return "walk";
+  if (sinceWalkMs >= WALK_GAP_MS && rand >= 0.8) return "walk";
   return rand < 0.7 ? "coffee" : "idle";
 }

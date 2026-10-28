@@ -672,6 +672,8 @@ html[data-motion="paused"] *::after {
 
 .actor { position: absolute; pointer-events: none; }
 .actor.asad { left: calc(var(--u) * 66); top: calc(var(--u) * 78); transform: translate3d(calc(var(--u) * var(--walk, 0)), 0, 0); transition: transform 0ms linear; }
+/* his body, where a double tap calls him over; it moves with him */
+.actor.asad .asad-btn { position: absolute; left: 25%; top: 30%; width: 50%; height: 68%; padding: 0; border: 0; background: none; pointer-events: auto; cursor: pointer; }
 .laptop-floor { position: absolute; background: url(/sprites/laptop-floor.png) 0 0 / 100% 100% no-repeat; image-rendering: pixelated; pointer-events: none; }
 .actor.asad .sprite { --sprite-size: calc(var(--u) * 128) !important; }
 .actor.storm { --x: 230; --flip: 1; left: 0; top: calc(var(--u) * 146); transform: translate3d(calc(var(--u) * 198), 0, 0); z-index: 2; will-change: transform; }

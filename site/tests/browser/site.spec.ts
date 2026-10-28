@@ -223,14 +223,14 @@ test.describe("Asad's walk to the window", () => {
     await expect(sprite(page)).toHaveAttribute("data-once", "");
     expect(await until(page, async () => (await laptop.count()) > 0, 3)).toBeLessThan(Infinity);
     await expect(sprite(page)).toHaveClass(/asad-walk-left/);
-    await expect(page.locator(".actor.asad")).toHaveAttribute("style", /--walk: -44/);
+    await expect(page.locator(".actor.asad")).toHaveAttribute("style", /--walk: -40/);
     expect(await until(page, async () => (await sprite(page).getAttribute("class"))!.includes("asad-window"), 3)).toBeLessThan(Infinity);
     // standing at the window, in front of the glass (the walk is a CSS transition, on real time)
     const middle = async () => {
       const [a, r] = await Promise.all([sprite(page).boundingBox(), page.locator(".room").boundingBox()]);
-      return (a!.x + a!.width * (55 / 128) - r!.x) / r!.width;
+      return (a!.x + a!.width * (51 / 128) - r!.x) / r!.width;
     };
-    await expect.poll(async () => Math.abs((await middle()) - 77 / 384), { timeout: 3000 }).toBeLessThan(0.02);
+    await expect.poll(async () => Math.abs((await middle()) - 77.5 / 384), { timeout: 3000 }).toBeLessThan(0.02);
     // back, seated, laptop picked up
     expect(await until(page, async () => (await sprite(page).getAttribute("class"))!.includes("asad-walk-right"), 15)).toBeLessThan(Infinity);
     expect(await until(page, async () => (await sprite(page).getAttribute("data-once")) === "reverse", 3)).toBeLessThan(Infinity);
@@ -238,10 +238,29 @@ test.describe("Asad's walk to the window", () => {
     await expect(page.locator(".actor.asad")).toHaveAttribute("style", /--walk: 0/);
     expect(await until(page, async () => (await sprite(page).getAttribute("class"))!.includes("asad-typing"), 3)).toBeLessThan(Infinity);
   });
-  test("with Reduce Motion he stays on the rug", async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: "reduce" });
+  test("tapped twice, he gets up, follows the pointer, and goes back when it rests", async ({ page }) => {
     await open(page);
-    expect(await until(page, async () => (await page.locator(".laptop-floor").count()) > 0 || (await sprite(page).getAttribute("class"))!.includes("asad-standup"), 220)).toBe(Infinity);
+    const laptop = page.locator(".laptop-floor");
+    const asad = page.getByRole("button", { name: /^Asad/ });
+    // one press does nothing
+    await asad.click();
+    await page.clock.runFor(1000);
+    await expect(sprite(page)).not.toHaveClass(/asad-standup/);
+    await asad.dblclick();
+    await expect(sprite(page)).toHaveClass(/asad-standup/);
+    await page.clock.runFor(1500);
+    await expect(laptop).toHaveCount(1);
+    // the pointer by the desk (clear of Storm): he walks right, after it
+    const r = (await page.locator(".room").boundingBox())!;
+    await page.mouse.move(r.x + r.width * (300 / 384), r.y + r.height * 0.95);
+    await page.clock.runFor(300);
+    await expect(sprite(page)).toHaveClass(/asad-walk-right/);
+    await expect(page.locator(".actor.asad")).toHaveAttribute("style", /--walk: 183/);
+    // there, he stands; the pointer rests and he goes back, sits down, picks the laptop up
+    expect(await until(page, async () => (await sprite(page).getAttribute("class"))!.endsWith("asad-stand"), 8)).toBeLessThan(Infinity);
+    expect(await until(page, async () => (await sprite(page).getAttribute("data-once")) === "reverse", 16)).toBeLessThan(Infinity);
+    await expect(laptop).toHaveCount(0);
+    expect(await until(page, async () => (await sprite(page).getAttribute("class"))!.includes("asad-typing"), 3)).toBeLessThan(Infinity);
   });
 });
 
