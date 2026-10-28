@@ -16,7 +16,7 @@ const year = new Date().getFullYear();
     </header>
     <main id="main"><slot /></main>
     <footer class="site-footer">
-      <p class="footer-sign"><span class="footer-brand">Asad.exe</span> · <em>{{ site.description }}</em></p>
+      <p class="footer-sign"><em>{{ site.description }}</em></p>
       <p>© {{ year }} Asad Atterkhan</p>
     </footer>
   </div>
