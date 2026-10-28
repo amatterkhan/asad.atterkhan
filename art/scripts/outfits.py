@@ -173,8 +173,12 @@ def components(mask):
     return out
 
 
-def hoodie_pixels(frame, region):
-    """(cloth, strings): boolean masks of hoodie pixels and drawstring pixels in one frame."""
+def hoodie_pixels(frame, region, standing=False):
+    """(cloth, strings): boolean masks of hoodie pixels and drawstring pixels in one frame.
+
+    standing (BANDED frames): drawn smaller and redrawn every frame, so the drawstrings are any short
+    vertical light stroke (not only two-pixel-wide ones), and the lamp's tiny warm dots on the hoodie
+    are recoloured with it; otherwise both come and go between frames and the walk flickers."""
     rgb, alpha = frame[:, :, :3], frame[:, :, 3] > 0
     skin = np.zeros((128, 128), bool)
     cloth = np.zeros((128, 128), bool)
@@ -221,15 +225,22 @@ def hoodie_pixels(frame, region):
     for comp in components(skin & region & ~protect):
         ys = [p[0] for p in comp]
         xs = [p[1] for p in comp]
-        if len(comp) <= 14 and max(xs) - min(xs) <= 1 and max(ys) - min(ys) >= 3:
+        w, h = max(xs) - min(xs) + 1, max(ys) - min(ys) + 1
+        if len(comp) <= 14 and w <= 2 and h >= 4:
             for y, x in comp:
                 strings[y, x] = True
+        elif standing and len(comp) <= 18 and w <= 3 and h >= 5 and h >= 2 * w and any(luma(tuple(int(v) for v in rgb[y, x])) > 0.6 for y, x in comp):
+            for y, x in comp:
+                strings[y, x] = True
+        elif standing and len(comp) <= 4 and all(hsv(tuple(int(v) for v in rgb[y, x]))[2] < 0.65 for y, x in comp):
+            for y, x in comp:
+                hood[y, x] = True
     return hood, strings
 
 
-def recolour(frame, region, palette, lo, hi):
+def recolour(frame, region, palette, lo, hi, standing=False):
     out = frame.copy()
-    hood, strings = hoodie_pixels(frame, region)
+    hood, strings = hoodie_pixels(frame, region, standing)
     ramp = [hexrgb(h) for h in palette["hoodie"]]
     warm = hexrgb(palette.get("rim", "#a0623a"))
     for y, x in zip(*np.nonzero(hood)):
@@ -283,7 +294,7 @@ def build():
                 sheet = np.array(Image.open(src).convert("RGBA"))
                 for i in range(sheet.shape[1] // 128):
                     sl = slice(i * 128, (i + 1) * 128)
-                    sheet[:, sl] = recolour(sheet[:, sl], region_mask(state, i, sheet[:, sl]), meta["palette"], lo, hi)
+                    sheet[:, sl] = recolour(sheet[:, sl], region_mask(state, i, sheet[:, sl]), meta["palette"], lo, hi, i in BANDED.get(state, ()))
                 Image.fromarray(sheet).save(folder / f"{state}.png", optimize=True)
             else:
                 shutil.copyfile(src, folder / f"{state}.png")
