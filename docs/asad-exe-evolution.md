@@ -146,6 +146,12 @@ The owner asked for the shift's glitch to hit the whole page. `html[data-glitch]
 | `npx playwright test` | **90 passed, 2 skipped**. New: the page's content animates during the glitch, the attribute is gone at idle, and it never appears with Reduce Motion |
 | Visual check (production build, desktop and phone) | headings and paragraphs jolt and split mid-shift, then settle |
 
+### Scrambled words and steadier walking outfits: 28 Oct 2026
+
+- The glitch now also rearranges the words on screen (`lib/scramble.ts`): each word's letters shuffle, then settle back over 0.8 s. Unit tests: letters only trade within a word, the exact text returns, islands/code/screen-reader/off-screen text are untouched. Browser test: the hero scrambles and returns; never under Reduce Motion.
+- The owner found the outfit glitchy while walking: drawstrings were detected on some frames only and the lamp's warm dots moved frame to frame. Standing frames now detect both steadily; the lab coat no longer speckles. Seated sheets unchanged.
+- `make check` pass (49 vitest tests); `npx playwright test` **90 passed, 2 skipped**.
+
 ### Release checklist (brief, Part 13): 28 Oct 2026, 929671c
 
 Run on the production build (`npm run build`, served by `npm run preview`) with system Chrome.
