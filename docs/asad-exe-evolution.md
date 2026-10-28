@@ -125,6 +125,17 @@ Keep commits small and grouped by logic. Intermediate PRs into this branch are f
 | `npx playwright test` (new tests) | on a fake clock with the walk forced: he stands up at 150-200 s, the laptop appears on the rug, he walks left, stands at the window's middle, walks back, sits down (the sheet plays in reverse), the laptop goes, typing resumes; with Reduce Motion nothing happens in 220 s |
 | Visual check (production build, desktop and phone, Normal and Steins Gate) | walks to the window and back; lab coat on every standing pose in Steins Gate |
 
+### Owner feedback on the walk: 28 Oct 2026, 1a2e8e6
+
+The owner saw no walk on their iPhone (Reduce Motion is on there, and the walk skipped it, against the room's standing exemption), found the laptop set-down off and a moustache on some frames, and asked for a double tap that makes him follow the cursor.
+
+| Check | Result |
+| --- | --- |
+| Art (5f61d57) | new stand-up take (laptop lifted off his lap and set flat on the floor); moustache refilled on every frame of both walks; new `asad-stand` (breathing by hand); walks, window, every outfit and the lab coat redone; seated sheets unchanged. PixelLab about 47 cents more |
+| `make check` | pass, 46 vitest tests (walk odds now one break in five after the gap) |
+| `npx playwright test` | **86 passed, 2 skipped**. Walk tests: the outing (now also under Reduce Motion); one press does nothing; two presses get him up, he walks after the pointer, stands, and 8 s after it rests he walks back and sits |
+| Visual check (production build, desktop and phone) | set-down, following, standing by the desk |
+
 ### Release checklist (brief, Part 13): 28 Oct 2026, 929671c
 
 Run on the production build (`npm run build`, served by `npm run preview`) with system Chrome.
@@ -151,6 +162,7 @@ Run on the production build (`npm run build`, served by `npm run preview`) with 
 - **Production copy comes from Firestore.** The deploy builds with `CONTENT_SOURCE=firestore`, and the saved `siteSettings/public` overrides the Git defaults field by field. So the new **headline, eyebrow role, lede, body, room hint, closing, Lab, Workbench and About copy** go live only once the same text is saved in `/admin` → Site copy (the owner does this; it triggers a rebuild). The motto, subtitles, titles, footer and 404 text are code and ship with the release. The text to paste is in `site/content/site.json`. Add this to the release PR's deploy steps.
 - Standing and walking are at his seated scale, so standing he is about as tall as the chair back (the owner accepted this when bringing the walk into scope).
 - The right-facing lab-coat walk has a few dark specks where PixelLab's edit and his frame disagree; visible only up close.
+- Storm follows the same pointer, so when Asad follows it too, Storm ends up at his feet, in front of him.
 - Sprites play at one frame rate per state (the average), so the holds set in the new Aseprite documents only show in Aseprite, not on the site.
 - The Thoughts browser tests step a fake clock through a few simulated minutes of the room, so they are the slowest in the suite (about 2.5 minutes over four workers).
 - On phones the new hero (lede plus three paragraphs) pushes the room about two screens down. It's the approved copy; raise it at review if it matters.
@@ -158,6 +170,8 @@ Run on the production build (`npm run build`, served by `npm run preview`) with 
 - Only WebKit is installed for Playwright locally. The suite itself uses system Chrome (`channel: "chrome"`).
 
 ## Session log
+
+- **28 Oct 2026**: owner feedback on the walk: redid the stand-up, shaved both walks, added the double tap to follow the pointer, and dropped the Reduce Motion exception for the walk (the room ignores Reduce Motion by the owner's choice).
 
 - **28 Oct 2026**: the owner brought standing and walking into scope; built the walk to the window (#32: 63 cents in all: about 7 for the animations, the rest lab-coat edits (one batch ran twice by accident); about $8.61 left). Ran the release checklist and opened the release PR (#29).
 
