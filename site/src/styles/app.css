@@ -593,6 +593,31 @@ html[data-motion="paused"] *::after {
   75% { transform: translate3d(.26%, 0, 0); }
   100% { transform: none; }
 }
+/* The shift's glitch reaches past the room: the header, each section of the page and the footer slip
+   sideways and skew (neighbours in opposite directions, so the page looks sliced), and text splits
+   into tube-orange and cyan copies. Movement only, never a flash: nothing dims, hides or brightens an
+   area, and no saturated red (see the meter's accessibility limits). Reduce Motion has no glitch phase. */
+html[data-glitch] :is(.site-header, main > :not(.room-wrap), .site-footer) { animation: page-glitch .3s steps(1) both; }
+html[data-glitch] :is(main > :nth-child(even):not(.room-wrap), .site-footer) { animation-name: page-glitch-b; }
+html[data-glitch] :is(h1, h2, h3, p, li, a, time, small, em, .eyebrow) { animation: text-split .3s steps(1) both; }
+@keyframes page-glitch {
+  20% { transform: translate3d(7px, 0, 0) skewX(-5deg); }
+  45% { transform: translate3d(-5px, 1px, 0); }
+  70% { transform: translate3d(3px, 0, 0) skewX(3deg); }
+  100% { transform: none; }
+}
+@keyframes page-glitch-b {
+  20% { transform: translate3d(-6px, 0, 0); }
+  45% { transform: translate3d(6px, -1px, 0) skewX(5deg); }
+  70% { transform: translate3d(-2px, 0, 0); }
+  100% { transform: none; }
+}
+@keyframes text-split {
+  20% { text-shadow: 3px 0 rgba(255, 150, 60, .8), -3px 0 rgba(90, 220, 230, .8); }
+  45% { text-shadow: -2px 1px rgba(255, 150, 60, .8), 2px -1px rgba(90, 220, 230, .8); }
+  70% { text-shadow: 4px 0 rgba(255, 150, 60, .6), -4px 0 rgba(90, 220, 230, .6); }
+  100% { text-shadow: none; }
+}
 /* each worldline's light, over the whole room; Normal has no layer at all */
 .wl-enter-active, .wl-leave-active { transition: opacity .3s steps(4); }
 .wl-enter-from, .wl-leave-to { opacity: 0; }

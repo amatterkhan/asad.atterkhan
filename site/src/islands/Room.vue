@@ -139,6 +139,8 @@ const pressMeter = () => {
   announce.value = "";
   const enter = (phase: ShiftPhase) => {
     shift.value = phase;
+    // the glitch jolts the whole page, not just the room (app.css, html[data-glitch])
+    document.documentElement.toggleAttribute("data-glitch", phase === "glitch");
     if (phase === "cycle") cycle = setInterval(() => (reading.value = scramble()), 70);
     if (phase === "settle") {
       clearInterval(cycle);
@@ -453,6 +455,7 @@ onBeforeUnmount(() => {
   clearTimeout(happyTimer);
   clearTimeout(sayTimer);
   shiftTimers.forEach(clearTimeout);
+  document.documentElement.removeAttribute("data-glitch");
   clearInterval(cycle);
 });
 

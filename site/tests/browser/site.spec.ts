@@ -108,6 +108,31 @@ test("the divergence meter shifts worldlines and back", async ({ page }) => {
   await expect(page.locator(".wl-tint, .wl-gold, .wl-spark, .wl-rain")).toHaveCount(0);
   await expect(page.locator(".initial-a, .initial-s")).toHaveCount(2);
 });
+test("a shift's glitch jolts the whole page, briefly, and never with Reduce Motion", async ({ page }) => {
+  for (const reduced of [false, true]) {
+    await page.emulateMedia({ reducedMotion: reduced ? "reduce" : "no-preference" });
+    await page.goto("/");
+    await page.evaluate(() => {
+      const w = window as never as { glitched: number[] };
+      w.glitched = [];
+      new MutationObserver(() => w.glitched.push(document.documentElement.hasAttribute("data-glitch") ? 1 : 0)).observe(document.documentElement, {
+        attributeFilter: ["data-glitch"],
+      });
+    });
+    await page.getByRole("button", { name: "Divergence meter" }).click();
+    if (!reduced) {
+      await expect(page.locator("html")).toHaveAttribute("data-glitch", "");
+      // the page's own content moves, not just the room
+      const moving = await page.locator(".hero").evaluate((el) => getComputedStyle(el).animationName);
+      expect(moving).toMatch(/page-glitch/);
+    }
+    await expect(page.locator(".room")).toHaveAttribute("data-shift", "idle", { timeout: 6000 });
+    await expect(page.locator("html")).not.toHaveAttribute("data-glitch", /.*/);
+    const glitched = await page.evaluate(() => (window as never as { glitched: number[] }).glitched);
+    expect(glitched.includes(1)).toBe(!reduced);
+  }
+});
+
 test("reduced motion shifts without the glitch, and Steins Gate says El Psy Kongroo", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
