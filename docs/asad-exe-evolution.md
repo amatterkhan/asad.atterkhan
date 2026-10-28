@@ -136,6 +136,16 @@ The owner saw no walk on their iPhone (Reduce Motion is on there, and the walk s
 | `npx playwright test` | **86 passed, 2 skipped**. Walk tests: the outing (now also under Reduce Motion); one press does nothing; two presses get him up, he walks after the pointer, stands, and 8 s after it rests he walks back and sits |
 | Visual check (production build, desktop and phone) | set-down, following, standing by the desk |
 
+### Page-wide glitch: 28 Oct 2026
+
+The owner asked for the shift's glitch to hit the whole page. `html[data-glitch]` is set for the glitch phase only; the header, sections and footer slip and skew, text splits orange/cyan. Movement only (no area flash, no saturated red), so it stays within [Accessibility limits for the meter's glitch and notifications](https://github.com/amatterkhan/asad.atterkhan/issues/19).
+
+| Check | Result |
+| --- | --- |
+| `make check` | pass, 46 vitest tests |
+| `npx playwright test` | **90 passed, 2 skipped**. New: the page's content animates during the glitch, the attribute is gone at idle, and it never appears with Reduce Motion |
+| Visual check (production build, desktop and phone) | headings and paragraphs jolt and split mid-shift, then settle |
+
 ### Release checklist (brief, Part 13): 28 Oct 2026, 929671c
 
 Run on the production build (`npm run build`, served by `npm run preview`) with system Chrome.
