@@ -104,6 +104,7 @@ export const SiteCopySchema = z.object({
   workbenchIntro: z.string().max(600),
   experienceIntro: z.string().max(600),
   achievementsIntro: z.string().max(600),
+  resumeUrl: z.string().max(600),
   aboutBody: z.string().max(8000),
 });
 export type SiteCopy = z.infer<typeof SiteCopySchema>;

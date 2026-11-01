@@ -13,6 +13,7 @@ const GROUPS: { title: string; fields: [string, string, "line" | "text" | "markd
     title: "Page intros",
     fields: [["labIntro", "The Lab", "text"], ["workbenchIntro", "Workbench", "text"], ["experienceIntro", "Experience", "text"], ["achievementsIntro", "Achievements", "text"]],
   },
+  { title: "Résumé", fields: [["resumeUrl", "Résumé PDF link (https://…)", "line"]] },
   { title: "About", fields: [["aboutBody", "About page (Markdown)", "markdown"]] },
 ];
 const copy = ref<SiteCopyForm | null>(null);

@@ -11,6 +11,7 @@
   "labIntro": "Experiments, useful notes, and things I'm figuring out. A technical journal, with room for the unfinished questions.",
   "workbenchIntro": "Websites, tools and the occasional piece of hardware. Some were built for other people; some just to see whether I could.",
   "experienceIntro": "From the service desk to security operations. Each role taught me something the next one needed.",
+  "resumeUrl": "https://drive.google.com/file/d/1zOHswsF6g-j5tTBCMrsQ2p4YuOekCvEC/view?usp=sharing",
   "achievementsIntro": "Certifications and badges I've picked up along the way, each linked to the original credential.",
   "aboutBody": "I'm Asad. I work in security operations, and I like knowing how the whole stack fits together: the software, the infrastructure, the cloud underneath it, and all the ways it can go wrong.\n\nMost of my side projects start with a small question: how does this work, why did it break, could it be simpler? Usually that ends in a script, a tool, or a long evening of reading.\n\nThe Lab is where I keep what I learn. The name is a nod to *Steins;Gate*, one of my favourite anime: a small, messy lab where curious people try things just to see what happens.\n\nAnd this is Storm, a fluffy tabby-and-white cat with a firm claim on any warm spot near my desk.\n\nIf you'd like to talk about something I've built or written, [say hello](mailto:contact@asad.atterkhan.com)."
 }

@@ -3,7 +3,6 @@ import { initNav } from "./behaviors/nav";
 import { initSprites } from "./behaviors/sprites";
 import { initVisibility } from "./behaviors/visibility";
 import { initArticle } from "./behaviors/article";
-import { initPrint } from "./behaviors/print";
 import { initNixie } from "./behaviors/nixie";
 import { initTheme, syncTheme } from "./behaviors/theme";
 
@@ -15,7 +14,6 @@ initNav();
 initTheme();
 initSprites();
 initArticle();
-initPrint();
 initNixie();
 
 const islands = import.meta.glob<{ default: import("vue").Component }>("./islands/*.vue");

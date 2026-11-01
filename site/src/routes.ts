@@ -204,7 +204,7 @@ export const routes: RouteRecordRaw[] = [
     component: Experience,
     meta: {
       load: async () => ({
-        props: { intro: (await getSiteCopy()).experienceIntro, ...(await getExperience()), featured: await getFeaturedAchievements() },
+        props: { intro: (await getSiteCopy()).experienceIntro, resumeUrl: (await getSiteCopy()).resumeUrl, ...(await getExperience()), featured: await getFeaturedAchievements() },
         head: { title: "Experience", description: "Career, education, and selected certifications — Asad Atterkhan.", canonical: "/experience" },
       }),
     },

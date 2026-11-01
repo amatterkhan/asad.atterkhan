@@ -35,7 +35,9 @@ type SiteCopy = {
   closingTitle: string;    // "Say hello"
   closingBody: string;     // text before the email link
   labIntro: string; workbenchIntro: string; experienceIntro: string;
-  achievementsIntro: string; aboutBody: string; // aboutBody: Markdown (sanitised like articles)
+  achievementsIntro: string;
+  resumeUrl: string;       // Experience page "Save résumé PDF" link; http(s) or empty to hide
+  aboutBody: string; // aboutBody: Markdown (sanitised like articles)
   updatedAt?: string;      // ISO, set by the server
 };
 ```

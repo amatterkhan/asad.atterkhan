@@ -627,6 +627,7 @@ html[data-motion="paused"] *::after {
   border: 2px solid var(--color-faint); background: transparent; color: var(--color-ink); transition: transform .1s, box-shadow .1s, background .15s;
 }
 .filters button:hover, .empty button:hover, .print-button:hover { box-shadow: 3px 3px 0 var(--color-faint); transform: translate(-1px, -1px); }
+a.print-button { display: inline-flex; align-items: center; text-decoration: none; }
 .filters button[aria-pressed="true"] { border-color: var(--color-accent); box-shadow: 3px 3px 0 var(--color-accent); }
 .achievement-collection li { background: transparent; border: 2px solid var(--color-faint); box-shadow: 4px 4px 0 var(--color-faint); }
 .achievement-collection li:hover { translate: -2px -2px; box-shadow: 6px 6px 0 var(--color-accent); border-color: var(--color-accent); }

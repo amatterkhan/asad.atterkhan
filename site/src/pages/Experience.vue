@@ -3,8 +3,9 @@ import PixelIcon from "../components/PixelIcon.vue";
 import RoomVignette from "../components/RoomVignette.vue";
 import { groupExperience } from "../lib/experience";
 import type { Achievement, Education, Role } from "../lib/schemas";
-const { intro, work, education, skills, featured } = defineProps<{
+const { intro, resumeUrl, work, education, skills, featured } = defineProps<{
   intro: string;
+  resumeUrl: string;
   work: Role[];
   education: Education[];
   skills: { category: string; items: string }[];
@@ -16,7 +17,7 @@ const groups = groupExperience(work);
   <p class="eyebrow">Work &amp; education</p>
   <div class="section-head">
     <h1>Experience</h1>
-    <button class="print-button" data-print>Print / save PDF</button>
+    <a v-if="/^https?:\/\//.test(resumeUrl)" class="print-button" :href="resumeUrl" target="_blank" rel="noopener noreferrer">Save résumé PDF</a>
   </div>
   <p class="page-intro">{{ intro }}</p>
   <RoomVignette corner="cv" />
