@@ -18,6 +18,12 @@ for f in ase/*.ase ase/*.aseprite; do
   "$TOOL" -b "$f" --sheet "../site/public/sprites/$n.png" --sheet-type horizontal \
     --data ".sprite-data/$n.json" --format json-array >/dev/null 2>&1
 done
+# Prebuilt outfits (drawn, not recoloured): ase/<outfit>/<state>.aseprite -> site/public/art/outfits/<outfit>/
+for f in ase/*/*.aseprite; do
+  [ -e "$f" ] || continue
+  o=$(basename "$(dirname "$f")"); n=$(basename "$f"); n=${n%.*}
+  "$TOOL" -b "$f" --sheet "../site/public/art/outfits/$o/$n.png" --sheet-type horizontal >/dev/null 2>&1
+done
 python3 - <<'PY'
 import json
 from pathlib import Path

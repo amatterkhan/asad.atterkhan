@@ -67,6 +67,22 @@ export const LabSchema = z.object({
 export type Lab = z.infer<typeof LabSchema>;
 export type LabSection = Lab["sections"][number];
 
+/** When a Thought may be said: any time, at night, with Storm near Asad, or in the Steins Gate worldline. */
+export const THOUGHT_CONTEXTS = ["general", "night", "storm", "steins-gate"] as const;
+export type ThoughtContext = (typeof THOUGHT_CONTEXTS)[number];
+/** Asad's Thoughts: the one-liners he now and then says in the homepage room (siteSettings/thoughts). */
+export const ThoughtsSchema = z
+  .object({
+    thoughts: z
+      .array(z.object({ id: slugId, text: z.string().trim().min(1).max(80), enabled: z.boolean(), context: z.enum(THOUGHT_CONTEXTS) }))
+      .max(60)
+      .refine((t) => unique(t.map((x) => x.id)), "Thought ids must be unique"),
+    featured: slugId.nullable(),
+  })
+  .refine((v) => v.featured === null || v.thoughts.some((t) => t.id === v.featured), "The featured Thought must be one of the list");
+export type Thoughts = z.infer<typeof ThoughtsSchema>;
+export type Thought = Thoughts["thoughts"][number];
+
 export const ProjectSchema = z.object({
   id: z.number(),
   title: z.string(),

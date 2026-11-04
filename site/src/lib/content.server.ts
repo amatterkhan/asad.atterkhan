@@ -12,6 +12,7 @@ import {
   RoleSchema,
   SiteCopySchema,
   SkillsSchema,
+  ThoughtsSchema,
   featuredSchema,
   type Article,
   type ArticleMeta,
@@ -21,6 +22,7 @@ import {
 } from "./schemas";
 import { renderMarkdown, type TocEntry } from "./markdown";
 import { DEFAULT_OUTFIT, resolveOutfit } from "./outfits";
+import type { PublicThought } from "./thoughts";
 
 // Build-time content gateway (Node only). CONTENT_SOURCE=git (default) reads reviewed files in
 // content/; CONTENT_SOURCE=firestore reads the snapshot written by `go run ./cmd/export` (published
@@ -93,6 +95,18 @@ export async function getLab(): Promise<Lab> {
   const exported = path.join(exportDir(), "lab.json");
   const file = contentSource() === "firestore" && (await exists(exported)) ? exported : dir("content/lab.json");
   return LabSchema.parse(await readJson(file));
+}
+/**
+ * Asad's Thoughts as the room gets them: the exported siteSettings/thoughts when
+ * CONTENT_SOURCE=firestore, else content/thoughts.json. Only enabled lines reach the page, and the
+ * featured id only if that line is enabled.
+ */
+export async function getThoughts(): Promise<{ thoughts: PublicThought[]; featured: string | null }> {
+  const exported = path.join(exportDir(), "thoughts.json");
+  const file = contentSource() === "firestore" && (await exists(exported)) ? exported : dir("content/thoughts.json");
+  const all = ThoughtsSchema.parse(await readJson(file));
+  const thoughts = all.thoughts.filter((t) => t.enabled).map(({ id, text, context }) => ({ id, text, context }));
+  return { thoughts, featured: thoughts.some((t) => t.id === all.featured) ? all.featured : null };
 }
 /** Where an article sits on the Lab map. A missing or removed section falls back to the last one;
  *  a category that is not in the section is dropped. */

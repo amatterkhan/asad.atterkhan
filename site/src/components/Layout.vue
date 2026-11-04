@@ -2,6 +2,7 @@
 import Brand from "./Brand.vue";
 import Cursor from "./Cursor.vue";
 import SiteNav from "./SiteNav.vue";
+import { site } from "../lib/site";
 const { path } = defineProps<{ path: string }>();
 const year = new Date().getFullYear();
 </script>
@@ -15,6 +16,7 @@ const year = new Date().getFullYear();
     </header>
     <main id="main"><slot /></main>
     <footer class="site-footer">
+      <p class="footer-sign"><em>{{ site.description }}</em></p>
       <p>© {{ year }} Asad Atterkhan</p>
     </footer>
   </div>

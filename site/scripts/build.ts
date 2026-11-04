@@ -36,11 +36,13 @@ const islandPreloads = (name: string) => "\n    " + [...new Set(preloadsFor(`src
 
 const server = await import(path.join(ssrOut, "entry-server.js"));
 const ctx = { dev: false, root };
-const assets = { tags, islandPreloads };
 const write = async (file: string, body: string | Buffer) => {
   await fs.mkdir(path.dirname(file), { recursive: true });
   await fs.writeFile(file, body);
 };
+// Share images first: each page links its image with the image's content hash (?v=…).
+const imageVersions = await ogImages(server, root, dist, write);
+const assets = { tags, islandPreloads, imageVersions };
 const paths: string[] = await server.prerenderPaths();
 for (const p of paths) {
   const { status, html } = await server.render(p, ctx, assets);
@@ -49,7 +51,6 @@ for (const p of paths) {
 }
 await write(path.join(dist, "404.html"), (await server.render("/404", ctx, assets)).html);
 await feeds(server, dist, write);
-await ogImages(server, root, dist, write);
 for (const [name, source] of server.thumbnailSources() as Map<string, string>) await write(path.join(dist, "lab-media", name), await fs.readFile(source));
 await fs.rm(path.join(dist, ".vite"), { recursive: true, force: true });
 console.log(`prerendered ${paths.length} pages + 404 to ${path.relative(process.cwd(), dist) || "dist"}`);

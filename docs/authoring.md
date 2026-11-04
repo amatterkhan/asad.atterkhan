@@ -4,7 +4,8 @@
 
 Sign in at `/admin` (Google + TOTP). The **Writing** tab creates drafts, saves with version checks,
 previews with the site's own renderer, and publishes or unpublishes. **Site copy** edits the hero,
-role, intros and About text. Publishing asks GitHub to rebuild; the change is live when that
+role, intros and About text. The motto and the page subtitles (Home, About, The Lab, 404) are
+fixed in `site/src/lib/site.ts`, not admin copy, so they never drift. Publishing asks GitHub to rebuild; the change is live when that
 deploy finishes (see [architecture.md](architecture.md)).
 
 ### The Lab map
@@ -21,6 +22,15 @@ one of these is a prerendered page, and the search on each covers that shelf.
   An article without a section, or whose section was removed, shows in the **last** section; a
   category that is no longer in its section is ignored. Nothing breaks the build either way.
 - **Thumbnails**: see [lab-thumbnails.md](lab-thumbnails.md).
+
+### Thoughts
+
+Now and then Asad says a one-liner in a speech bubble in the homepage room. **Thoughts** (admin
+tab) adds, edits, removes and switches lines on or off, previews them, and sets when each may come
+up: any time, at night, with Storm nearby, or in the Steins Gate worldline. One line can be
+**featured**: it is the first Thought of each visit when its context fits; after that the room picks
+at random. Switched-off lines never reach the page; with every line off, Asad says nothing. Saving
+rebuilds the site. The starting set is `site/content/thoughts.json`.
 
 ## In Git (fallback and the default content source)
 

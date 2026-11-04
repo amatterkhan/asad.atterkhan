@@ -7,6 +7,7 @@ import {
   LabSchema,
   ProjectSchema,
   SiteCopySchema,
+  ThoughtsSchema,
   featuredSchema,
 } from "../../src/lib/schemas";
 import { groupExperience } from "../../src/lib/experience";
@@ -17,12 +18,14 @@ import {
   getFeaturedAchievements,
   getActiveOutfit,
   getLab,
+  getThoughts,
   parseArticle,
   resolveShelf,
 } from "../../src/lib/content.server";
 import { thumbnailPrompt, PROMPT_HEADER } from "../../src/lib/thumbnail-prompt";
-import { DEFAULT_OUTFIT, outfitSheet } from "../../src/lib/outfits";
+import { DEFAULT_OUTFIT, isOutfit, outfitSheet, resolveOutfit } from "../../src/lib/outfits";
 import { renderHead } from "../../src/head";
+import { subtitles } from "../../src/lib/site";
 import { ICONS, ICON_SOURCES } from "../../src/lib/icons";
 
 afterEach(() => {
@@ -152,6 +155,25 @@ it("reads Asad's outfit from the export and falls back to the wardrobe default",
   expect(outfitSheet("classic", "asad-idle")).toMatch(/^\/art\/outfits\/classic\/asad-idle\.png\?v=/);
   await fs.access(path.join("public", outfitSheet(DEFAULT_OUTFIT, "asad-typing").split("?")[0]));
 });
+it("lets a worldline dress Asad in the lab coat, but never makes it his outfit", async () => {
+  // the room can show it...
+  for (const state of ["asad-typing", "asad-coffee", "asad-idle", "asad-happy", "asad-stretch", "asad-look"] as const) {
+    expect(outfitSheet("labcoat", state)).toMatch(new RegExp(`^/art/outfits/labcoat/${state}\\.png\\?v=`));
+    await fs.access(path.join("public", outfitSheet("labcoat", state).split("?")[0]));
+  }
+  // ...but the wardrobe, the admin and the export never accept it as the saved outfit
+  expect(isOutfit("labcoat")).toBe(false);
+  expect(resolveOutfit("labcoat")).toBe(DEFAULT_OUTFIT);
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "asad-wardrobe-"));
+  try {
+    process.env.CONTENT_SOURCE = "firestore";
+    process.env.CONTENT_EXPORT_DIR = dir;
+    await fs.writeFile(path.join(dir, "wardrobe.json"), JSON.stringify({ activeOutfit: "labcoat" }));
+    expect(await getActiveOutfit()).toBe(DEFAULT_OUTFIT);
+  } finally {
+    await fs.rm(dir, { recursive: true, force: true });
+  }
+});
 it("groups adjacent company roles without mutating source", () => {
   const roles = [
     {
@@ -189,6 +211,32 @@ it("escapes head tags and keeps private pages out of indexing", () => {
   expect(html).not.toContain("</script><script>");
   expect(html).toContain("og:image");
   expect(html).toContain('rel="canonical"');
+});
+it("names the site Asad.exe, with the motto as its description", () => {
+  const home = renderHead({ canonical: "/" }, true);
+  expect(home).toContain("<title>Asad.exe — Asad Atterkhan</title>");
+  expect(home).toContain('<meta property="og:site_name" content="Asad.exe">');
+  expect(home).toContain('<meta property="og:description" content="Somewhere between cloud nine and layer seven.">');
+  expect(renderHead({ title: "The Lab" }, true)).toContain("<title>The Lab · Asad.exe</title>");
+});
+it("versions the share image by its content and gives every page an og:url", () => {
+  const versions = new Map([["/opengraph-image.png", "0123456789"]]);
+  const home = renderHead({ canonical: "/" }, true, { path: "/", imageVersions: versions });
+  expect(home).toContain('<meta property="og:image" content="https://asad.atterkhan.com/opengraph-image.png?v=0123456789">');
+  expect(home).toContain('<meta name="twitter:image" content="https://asad.atterkhan.com/opengraph-image.png?v=0123456789">');
+  expect(home).toContain('<meta property="og:url" content="https://asad.atterkhan.com">');
+  expect(home).toMatch(/og:image:alt" content="A pixel-art room at night/);
+  // a page without a canonical still says where it is; the dev server (no versions) links the bare file
+  const lab = renderHead({ title: "The Lab" }, true, { path: "/lab/section/notes" });
+  expect(lab).toContain('<meta property="og:url" content="https://asad.atterkhan.com/lab/section/notes">');
+  expect(lab).toContain('content="https://asad.atterkhan.com/opengraph-image.png">');
+  expect(renderHead({}, true)).not.toContain("og:url");
+  expect(subtitles).toEqual({
+    home: "Human, allegedly.",
+    about: "Still figuring out the source code.",
+    lab: "Running experiments on reality.",
+    notFound: "Lost in thought. Found in the logs.",
+  });
 });
 it("uses exact pixelarticons package paths", async () => {
   for (const key of Object.keys(ICONS) as (keyof typeof ICONS)[]) {
@@ -262,5 +310,42 @@ describe("the Lab map", () => {
     expect(prompt).toContain("Shelf: Writeups / Hack The Box.");
     expect(prompt).toContain("wireframe cube");
     expect(thumbnailPrompt({ title: "x", description: "y", tags: [] })).toContain("Scene idea: A single object");
+  });
+});
+
+describe("Thoughts", () => {
+  const line = (id: string, enabled = true, context = "general") => ({ id, text: "A line.", enabled, context });
+  it("validates ids, text, contexts and the featured line", () => {
+    expect(ThoughtsSchema.safeParse({ thoughts: [line("a")], featured: null }).success).toBe(true);
+    expect(ThoughtsSchema.safeParse({ thoughts: [line("a"), line("a")], featured: null }).success).toBe(false);
+    expect(ThoughtsSchema.safeParse({ thoughts: [line("a", true, "lab-coat")], featured: null }).success).toBe(false);
+    expect(ThoughtsSchema.safeParse({ thoughts: [{ ...line("a"), text: "x".repeat(81) }], featured: null }).success).toBe(false);
+    expect(ThoughtsSchema.safeParse({ thoughts: [line("a")], featured: "b" }).success).toBe(false);
+  });
+  it("ships the brief's sixteen lines, nothing featured", async () => {
+    const { thoughts, featured } = await getThoughts();
+    expect(thoughts).toHaveLength(16);
+    expect(thoughts.filter((t) => t.context === "general")).toHaveLength(12);
+    expect(thoughts[0]).toEqual({ id: "human-allegedly", text: "Human, allegedly.", context: "general" });
+    expect(featured).toBeNull();
+  });
+  it("gives the page only enabled lines, and drops a disabled featured line", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "asad-thoughts-"));
+    try {
+      await fs.writeFile(
+        path.join(dir, "thoughts.json"),
+        JSON.stringify({ thoughts: [line("on"), line("off", false), line("night", true, "night")], featured: "off" }),
+      );
+      process.env.CONTENT_SOURCE = "firestore";
+      process.env.CONTENT_EXPORT_DIR = dir;
+      const { thoughts, featured } = await getThoughts();
+      expect(thoughts.map((t) => t.id)).toEqual(["on", "night"]);
+      expect(thoughts[0]).not.toHaveProperty("enabled");
+      expect(featured).toBeNull();
+      await fs.writeFile(path.join(dir, "thoughts.json"), JSON.stringify({ thoughts: [], featured: null }));
+      expect((await getThoughts()).thoughts).toEqual([]);
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true });
+    }
   });
 });

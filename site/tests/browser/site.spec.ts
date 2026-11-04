@@ -57,6 +57,254 @@ test("mobile navigation Escape and focus return", async ({
   await menu.getByRole("link", { name: "The Lab", exact: true }).click();
   await expect(page).toHaveURL(/\/lab$/);
 });
+test("the divergence meter shifts worldlines and back", async ({ page }) => {
+  await page.goto("/");
+  const room = page.locator(".room");
+  const meter = page.getByRole("button", { name: "Divergence meter" });
+  const tubes = page.locator(".room .nixie-lit");
+  const status = page.locator(".room-wrap > [role=status]");
+  const idle = () => expect(room).toHaveAttribute("data-shift", "idle", { timeout: 6000 });
+  await expect(room).toHaveAttribute("data-worldline", "normal");
+  await expect(tubes).toHaveAttribute("aria-label", /Nixie tube clock reading/);
+  await expect(meter).toHaveAccessibleDescription(/Normal worldline/);
+  const outfitBefore = (await page.locator(".actor.asad .sprite").getAttribute("style"))!.match(/\/art\/outfits\/([a-z0-9-]+)\//)![1];
+  expect(outfitBefore).not.toBe("labcoat");
+
+  // the keyboard works, and presses during a shift are ignored
+  await meter.focus();
+  await meter.press("Enter");
+  await meter.press("Enter");
+  await meter.press("Enter");
+  await expect(room).toHaveAttribute("data-worldline", "alpha");
+  await expect(tubes).toHaveAttribute("aria-label", "A divergence meter reading 0.571024");
+  await expect(page.locator(".wl-note")).toContainText("α WORLDLINE");
+  await expect(status).toHaveText("Alpha worldline, divergence 0.571024.");
+  await expect(page.locator(".wl-rain")).toBeAttached();
+  await expect(meter).toBeFocused();
+  await idle();
+  await expect(room).toHaveAttribute("data-worldline", "alpha");
+  await expect(page.locator(".wl-note")).toHaveCount(0);
+
+  for (const [w, value] of [["beta", "1.130238"], ["steins-gate", "1.048596"]]) {
+    await meter.click();
+    await expect(room).toHaveAttribute("data-worldline", w);
+    await expect(tubes).toHaveAttribute("aria-label", `A divergence meter reading ${value}`);
+    await idle();
+  }
+  await expect(page.locator(".wl-rain")).toHaveCount(0);
+  await expect(page.locator(".wl-spark").first()).toBeAttached();
+  // Steins Gate puts Asad in the lab coat, still animating, and saves nothing
+  const asad = page.locator(".actor.asad .sprite");
+  await expect(asad).toHaveAttribute("style", /\/art\/outfits\/labcoat\//);
+  await expect(asad.locator(".sprite-strip")).toHaveCSS("animation-name", "sprite-play");
+  expect(await page.evaluate(() => JSON.stringify(localStorage))).not.toMatch(/labcoat|outfit/);
+
+  // back to Normal: the live clock, his own outfit, and no worldline layer left behind
+  await meter.click();
+  await expect(room).toHaveAttribute("data-worldline", "normal");
+  await expect(tubes).toHaveAttribute("aria-label", /Nixie tube clock reading/);
+  await expect(asad).not.toHaveAttribute("style", /labcoat/);
+  await expect(asad).toHaveAttribute("style", new RegExp(`/art/outfits/${outfitBefore}/`));
+  await expect(page.locator(".wl-tint, .wl-gold, .wl-spark, .wl-rain")).toHaveCount(0);
+  await expect(page.locator(".initial-a, .initial-s")).toHaveCount(2);
+});
+test("a shift's glitch jolts the whole page, briefly, and never with Reduce Motion", async ({ page }) => {
+  for (const reduced of [false, true]) {
+    await page.emulateMedia({ reducedMotion: reduced ? "reduce" : "no-preference" });
+    await page.goto("/");
+    await page.evaluate(() => {
+      // read as the glitch starts: it only lasts 0.3 s, too short to catch from the test runner
+      const w = window as never as { glitched: number[]; moving: string[] };
+      w.glitched = [];
+      w.moving = [];
+      new MutationObserver(() => {
+        const on = document.documentElement.hasAttribute("data-glitch");
+        w.glitched.push(on ? 1 : 0);
+        if (on) w.moving.push(getComputedStyle(document.querySelector(".hero")!).animationName);
+      }).observe(document.documentElement, { attributeFilter: ["data-glitch"] });
+      // the words on screen rearrange (whatever is on screen once the meter is in view): every text
+      // change outside the room, kept
+      const main = document.querySelector("main")!;
+      const text = () => [...main.children].filter((el) => !el.querySelector(".room")).map((el) => el.textContent).join("|");
+      (w as never as { before: string; texts: string[] }).before = text();
+      (w as never as { texts: string[] }).texts = [];
+      new MutationObserver((records) => {
+        if (records.some((r) => !r.target.parentElement?.closest("[data-island]"))) (w as never as { texts: string[] }).texts.push(text());
+      }).observe(main, { characterData: true, subtree: true });
+    });
+    await page.getByRole("button", { name: "Divergence meter" }).click();
+    await expect(page.locator(".room")).toHaveAttribute("data-shift", "idle", { timeout: 6000 });
+    await expect(page.locator("html")).not.toHaveAttribute("data-glitch", /.*/);
+    const glitched = await page.evaluate(() => (window as never as { glitched: number[] }).glitched);
+    expect(glitched.includes(1)).toBe(!reduced);
+    // the hero's words were rearranged and came back exactly; never with Reduce Motion
+    const { before, texts } = await page.evaluate(() => {
+      const w = window as never as { before: string; texts: string[] };
+      return { before: w.before, texts: w.texts };
+    });
+    expect(await page.evaluate(() => [...document.querySelector("main")!.children].filter((el) => !el.querySelector(".room")).map((el) => el.textContent).join("|"))).toBe(before);
+    expect(texts.some((t) => t !== before)).toBe(!reduced);
+    // the page's own content moved, not just the room
+    if (!reduced) expect(await page.evaluate(() => (window as never as { moving: string[] }).moving)).toEqual([expect.stringMatching(/page-glitch/)]);
+  }
+});
+
+test("reduced motion shifts without the glitch, and Steins Gate says El Psy Kongroo", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  const room = page.locator(".room");
+  const meter = page.getByRole("button", { name: "Divergence meter" });
+  for (let i = 0; i < 2; i++) {
+    await meter.click();
+    await expect(room).toHaveAttribute("data-shift", "idle", { timeout: 6000 });
+  }
+  await room.evaluate((el) => {
+    (window as never as { phases: string[] }).phases = [];
+    new MutationObserver(() => (window as never as { phases: string[] }).phases.push(el.dataset.shift!)).observe(el, {
+      attributeFilter: ["data-shift"],
+    });
+  });
+  await meter.click();
+  const note = page.locator(".wl-note");
+  await expect(note).toContainText("WORLDLINE 1.048596");
+  await expect(note).toContainText("EL PSY KONGROO.");
+  await expect(note.locator("small")).toHaveText("STEINS GATE REACHED");
+  await expect(room).toHaveAttribute("data-shift", "idle", { timeout: 6000 });
+  const phases = await page.evaluate(() => (window as never as { phases: string[] }).phases);
+  expect(phases).toEqual(["settle", "note", "idle"]);
+});
+test.describe("Asad's Thoughts", () => {
+  const bubble = (page: import("@playwright/test").Page) => page.locator(".asad-thought:not(.thought-leave-active)");
+  // stepping a fake clock through minutes of the room takes a while in real time
+  test.describe.configure({ timeout: 150_000 });
+  test.beforeEach(async ({ page }) => {
+    await page.clock.install();
+    await page.goto("/");
+    await page.locator(".room").scrollIntoViewIfNeeded();
+    // the room hydrates after its code loads; only then does its scheduler (and the fake clock's count) start
+    await page.waitForFunction(() => !!(document.querySelector("[data-island=Room]") as { __vue_app__?: unknown } | null)?.__vue_app__);
+    await page.waitForTimeout(300);
+  });
+  // step the fake clock 3 s at a time (a Thought stays up at least 4 s, so none slips by) until a
+  // bubble shows; returns the seconds waited
+  const waitForThought = async (page: import("@playwright/test").Page, max: number) => {
+    for (let s = 3; s <= max + 2; s += 3) {
+      await page.clock.runFor(3000);
+      if (await bubble(page).count()) return s;
+    }
+    return Infinity;
+  };
+  test("come now and then, never on load, never twice in a row", async ({ page }) => {
+    const first = await waitForThought(page, 45);
+    expect(first).toBeGreaterThanOrEqual(20);
+    expect(first).toBeLessThanOrEqual(43);
+    await expect(bubble(page)).toHaveAttribute("aria-hidden", "true");
+    const said = await bubble(page).textContent();
+    // no controls to make him talk
+    await expect(page.locator(".room").getByRole("button", { name: /refresh|next|previous|another/i })).toHaveCount(0);
+    // the bubble stays inside the room
+    const [b, r] = await Promise.all([bubble(page).boundingBox(), page.locator(".room").boundingBox()]);
+    expect(b!.x).toBeGreaterThanOrEqual(r!.x);
+    expect(b!.x + b!.width).toBeLessThanOrEqual(r!.x + r!.width);
+    expect(b!.y).toBeGreaterThanOrEqual(r!.y);
+    await page.clock.runFor(8_500);
+    await expect(bubble(page)).toHaveCount(0);
+    const next = await waitForThought(page, 160);
+    expect(next).toBeGreaterThanOrEqual(56);
+    expect(next).toBeLessThanOrEqual(153);
+    expect(await bubble(page).textContent()).not.toBe(said);
+  });
+  test("give way to Storm and to a worldline shift, and stop while the tab is hidden", async ({ page }) => {
+    expect(await waitForThought(page, 45)).toBeLessThan(Infinity);
+    await page.getByRole("button", { name: "Pet Storm" }).click();
+    await expect(bubble(page)).toHaveCount(0);
+    await expect(page.locator(".storm-says")).toBeVisible();
+
+    expect(await waitForThought(page, 160)).toBeLessThan(Infinity);
+    await page.getByRole("button", { name: "Divergence meter" }).click();
+    await expect(bubble(page)).toHaveCount(0);
+    // nothing queued: the shift and its note pass without a Thought
+    await page.clock.runFor(3_500);
+    await expect(page.locator(".room")).toHaveAttribute("data-shift", "idle");
+    await expect(bubble(page)).toHaveCount(0);
+
+    await page.evaluate(() => {
+      Object.defineProperty(document, "hidden", { value: true, configurable: true });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    expect(await waitForThought(page, 200)).toBe(Infinity);
+  });
+});
+test.describe("Asad's walk to the window", () => {
+  test.describe.configure({ timeout: 150_000 });
+  const open = async (page: import("@playwright/test").Page) => {
+    // every pause picks the walk once it's allowed (and "idle" before then)
+    await page.addInitScript(() => (Math.random = () => 0.95));
+    await page.clock.install();
+    await page.goto("/");
+    await page.locator(".room").scrollIntoViewIfNeeded();
+    await page.waitForFunction(() => !!(document.querySelector("[data-island=Room]") as { __vue_app__?: unknown } | null)?.__vue_app__);
+    await page.waitForTimeout(300);
+  };
+  const sprite = (page: import("@playwright/test").Page) => page.locator(".actor.asad .sprite");
+  const until = async (page: import("@playwright/test").Page, done: () => Promise<boolean>, max: number) => {
+    for (let s = 0; s <= max; s += 1) {
+      if (await done()) return s;
+      await page.clock.runFor(1000);
+    }
+    return Infinity;
+  };
+  test("he gets up after a while, looks out of the window, and comes back to his laptop", async ({ page }) => {
+    await open(page);
+    const laptop = page.locator(".laptop-floor");
+    // not before the walk's gap (150 s), and soon after it
+    const up = await until(page, async () => (await sprite(page).getAttribute("class"))!.includes("asad-standup"), 200);
+    expect(up).toBeGreaterThanOrEqual(150);
+    expect(up).toBeLessThan(200);
+    await expect(sprite(page)).toHaveAttribute("data-once", "");
+    expect(await until(page, async () => (await laptop.count()) > 0, 3)).toBeLessThan(Infinity);
+    await expect(sprite(page)).toHaveClass(/asad-walk-left/);
+    await expect(page.locator(".actor.asad")).toHaveAttribute("style", /--walk: -40/);
+    expect(await until(page, async () => (await sprite(page).getAttribute("class"))!.includes("asad-window"), 3)).toBeLessThan(Infinity);
+    // standing at the window, in front of the glass (the walk is a CSS transition, on real time)
+    const middle = async () => {
+      const [a, r] = await Promise.all([sprite(page).boundingBox(), page.locator(".room").boundingBox()]);
+      return (a!.x + a!.width * (51 / 128) - r!.x) / r!.width;
+    };
+    await expect.poll(async () => Math.abs((await middle()) - 77.5 / 384), { timeout: 3000 }).toBeLessThan(0.02);
+    // back, seated, laptop picked up
+    expect(await until(page, async () => (await sprite(page).getAttribute("class"))!.includes("asad-walk-right"), 15)).toBeLessThan(Infinity);
+    expect(await until(page, async () => (await sprite(page).getAttribute("data-once")) === "reverse", 3)).toBeLessThan(Infinity);
+    await expect(laptop).toHaveCount(0);
+    await expect(page.locator(".actor.asad")).toHaveAttribute("style", /--walk: 0/);
+    expect(await until(page, async () => (await sprite(page).getAttribute("class"))!.includes("asad-typing"), 3)).toBeLessThan(Infinity);
+  });
+  test("tapped twice, he gets up, follows the pointer, and goes back when it rests", async ({ page }) => {
+    await open(page);
+    const laptop = page.locator(".laptop-floor");
+    const asad = page.getByRole("button", { name: /^Asad/ });
+    // one press does nothing
+    await asad.click();
+    await page.clock.runFor(1000);
+    await expect(sprite(page)).not.toHaveClass(/asad-standup/);
+    await asad.dblclick();
+    await expect(sprite(page)).toHaveClass(/asad-standup/);
+    await page.clock.runFor(1500);
+    await expect(laptop).toHaveCount(1);
+    // the pointer by the desk (clear of Storm): he walks right, after it
+    const r = (await page.locator(".room").boundingBox())!;
+    await page.mouse.move(r.x + r.width * (300 / 384), r.y + r.height * 0.95);
+    await page.clock.runFor(300);
+    await expect(sprite(page)).toHaveClass(/asad-walk-right/);
+    await expect(page.locator(".actor.asad")).toHaveAttribute("style", /--walk: 183/);
+    // there, he stands; the pointer rests and he goes back, sits down, picks the laptop up
+    expect(await until(page, async () => (await sprite(page).getAttribute("class"))!.endsWith("asad-stand"), 8)).toBeLessThan(Infinity);
+    expect(await until(page, async () => (await sprite(page).getAttribute("data-once")) === "reverse", 16)).toBeLessThan(Infinity);
+    await expect(laptop).toHaveCount(0);
+    expect(await until(page, async () => (await sprite(page).getAttribute("class"))!.includes("asad-typing"), 3)).toBeLessThan(Infinity);
+  });
+});
+
 test("room pet, lamp and theme interactions", async ({ page }) => {
   await page.goto("/");
   const pet = page.getByRole("button", { name: "Pet Storm" });

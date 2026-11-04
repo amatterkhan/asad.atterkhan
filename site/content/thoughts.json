@@ -1,0 +1,101 @@
+{
+  "thoughts": [
+    {
+      "id": "human-allegedly",
+      "text": "Human, allegedly.",
+      "enabled": true,
+      "context": "general"
+    },
+    {
+      "id": "still-figuring-out-the-source-code",
+      "text": "Still figuring out the source code.",
+      "enabled": true,
+      "context": "general"
+    },
+    {
+      "id": "an-ongoing-experiment-in-being-human",
+      "text": "An ongoing experiment in being human.",
+      "enabled": true,
+      "context": "general"
+    },
+    {
+      "id": "running-experiments-on-reality",
+      "text": "Running experiments on reality.",
+      "enabled": true,
+      "context": "general"
+    },
+    {
+      "id": "lost-in-thought-found-in-the-logs",
+      "text": "Lost in thought. Found in the logs.",
+      "enabled": true,
+      "context": "general"
+    },
+    {
+      "id": "thinking-outside-the-sandbox",
+      "text": "Thinking outside the sandbox.",
+      "enabled": true,
+      "context": "general"
+    },
+    {
+      "id": "reality-is-an-edge-case",
+      "text": "Reality is an edge case.",
+      "enabled": true,
+      "context": "general"
+    },
+    {
+      "id": "trust-me-i-m-verifying",
+      "text": "Trust me. I'm verifying.",
+      "enabled": true,
+      "context": "general"
+    },
+    {
+      "id": "working-as-unintended",
+      "text": "Working as unintended.",
+      "enabled": true,
+      "context": "general"
+    },
+    {
+      "id": "some-assembly-still-required",
+      "text": "Some assembly still required.",
+      "enabled": true,
+      "context": "general"
+    },
+    {
+      "id": "a-little-out-of-context",
+      "text": "A little out of context.",
+      "enabled": true,
+      "context": "general"
+    },
+    {
+      "id": "i-have-a-few-unresolved-dependencies",
+      "text": "I have a few unresolved dependencies.",
+      "enabled": true,
+      "context": "general"
+    },
+    {
+      "id": "some-thoughts-are-better-left-running-ov",
+      "text": "Some thoughts are better left running overnight.",
+      "enabled": true,
+      "context": "night"
+    },
+    {
+      "id": "management-is-inspecting-the-premises",
+      "text": "Management is inspecting the premises.",
+      "enabled": true,
+      "context": "storm"
+    },
+    {
+      "id": "this-wasn-t-in-the-documentation",
+      "text": "This wasn't in the documentation.",
+      "enabled": true,
+      "context": "steins-gate"
+    },
+    {
+      "id": "i-assure-you-this-is-science",
+      "text": "I assure you, this is science.",
+      "enabled": true,
+      "context": "steins-gate"
+    }
+  ],
+  "featured": null
+}

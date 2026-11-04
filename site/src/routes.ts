@@ -11,6 +11,7 @@ import {
   getActiveOutfit,
   getFeaturedAchievements,
   getLab,
+  getThoughts,
   getProjects,
   getSiteCopy,
   parseArticle,
@@ -97,6 +98,7 @@ export const routes: RouteRecordRaw[] = [
           articles: (await getArticles()).slice(0, 3).map(articleSummary),
           projects: (await getProjects()).filter((p) => p.featured).sort((a, b) => b.date.localeCompare(a.date)),
           outfit: await getActiveOutfit(),
+          thoughts: await getThoughts(),
         },
         head: {
           canonical: "/",

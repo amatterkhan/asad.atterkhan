@@ -6,12 +6,21 @@ import { DEFAULT_OUTFIT, spriteSheet } from "../lib/outfits";
 // slid with transform so the browser's compositor plays it (no repaint per frame, and no var() in
 // the keyframes, which WebKit resolves badly). Keyed by state, so a new state starts on frame 0.
 // behaviors/sprites.ts starts it only while it is on screen and the tab is visible. Asad's sheets
-// come from his active outfit.
-const { state, size = 128, description, outfit = DEFAULT_OUTFIT } = defineProps<{ state: SpriteState; size?: number; description?: string; outfit?: string }>();
+// come from his active outfit. `once` plays the sheet a single time and holds the last frame (Asad
+// standing up); with `reverse` it plays backwards and holds the first (sitting down).
+const {
+  state,
+  size = 128,
+  description,
+  outfit = DEFAULT_OUTFIT,
+  once = false,
+  reverse = false,
+} = defineProps<{ state: SpriteState; size?: number; description?: string; outfit?: string; once?: boolean; reverse?: boolean }>();
 const style = computed(() => ({
   "--sprite-size": `${size}px`,
   "--sprite-sheet": `url(${spriteSheet(state, outfit)})`,
   "--n": manifest.states[state].frames,
+  "--n1": manifest.states[state].frames - 1,
   "--ms": `${manifest.states[state].frameMs}ms`,
 }));
 </script>
@@ -22,5 +31,6 @@ const style = computed(() => ({
     :aria-hidden="description ? undefined : 'true'"
     :class="`sprite ${state}`"
     :style="style"
-  ><span :key="state" class="sprite-strip" /></span>
+    :data-once="once ? (reverse ? 'reverse' : '') : undefined"
+  ><span :key="`${state}${once ? (reverse ? '-down' : '-up') : ''}`" class="sprite-strip" /></span>
 </template>

@@ -32,6 +32,7 @@ export const ICONS = {
   article: [
     "M8 2h12v2H8zM6 4h2v16H6zm14 0h2v16h-2zM4 20h16v2H4zm-2-9h2v9H2zm2-2h2v2H4zm6-3h8v2h-8zm0 4h8v2h-8zm0-2h2v2h-2zm6 0h2v2h-2zm-6 5h8v2h-8zm0 3h4v2h-4z",
   ],
+  comment: ["M4 2h16v2H4zm0 14h14v2H4zM2 4h2v12H2zm18 0h2v18h-2zm-2 14h2v2h-2z"],
   shirt: [
     "M4 3h6v2H4zM2 3h2v8H2zm2 6h4v2H4z",
     "M6 9h2v10H6zm2 10h8v2H8zm8-10h2v10h-2z",
@@ -125,6 +126,7 @@ export const ICON_SOURCES: Record<IconName, string> = {
   logout: "logout",
   note: "note",
   article: "article",
+  comment: "comment",
   shirt: "shirt",
   user: "user",
   chevronLeft: "chevron-left",

@@ -2,11 +2,13 @@
 import RoomVignette from "../components/RoomVignette.vue";
 import At from "../components/At.vue";
 import Sprite from "../components/Sprite.vue";
+import { subtitles } from "../lib/site";
 const { html, outfit } = defineProps<{ html: string; outfit: string }>();
 </script>
 <template>
   <p class="eyebrow">A bit about me</p>
   <h1>About</h1>
+  <p class="page-subtitle">{{ subtitles.about }}</p>
   <RoomVignette corner="about">
     <At :x="66" :y="78">
       <div class="asad"><Sprite state="asad-coffee" :outfit="outfit" :size="128" /></div>
