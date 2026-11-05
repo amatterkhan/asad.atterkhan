@@ -2,53 +2,88 @@ name: Site preview channel
 # Same-repository pull requests get a 7-day Hosting preview channel (pr-<number>) with Git content,
 # noindex, and no API rewrites, so pull request code never talks to production data.
 # The channel is deleted when the pull request closes. Fork pull requests get no credentials.
+#
+# Credentials never share a job with untrusted code: `build` runs npm install, tests and the build
+# with no id-token permission and no auth step; `preview` and `cleanup` only install the pinned
+# firebase-tools (--ignore-scripts), authenticate as the Hosting-only preview identity and deploy.
 on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
-    paths: ['site/**', '.github/workflows/site-preview.yml', '.github/actions/site-build/**']
+    paths: ['site/**', '.github/workflows/site-preview.yml', '.github/actions/**']
 permissions:
   contents: read
 concurrency:
   group: site-preview-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 env:
-  FIREBASE_TOOLS: firebase-tools@15.34.1
   CHANNEL: pr-${{ github.event.pull_request.number }}
 jobs:
-  preview:
+  build:
     if: >-
-      github.event.action != 'closed' && vars.DEPLOY_SERVICE_ACCOUNT != ''
+      github.event.action != 'closed' && vars.PREVIEW_SERVICE_ACCOUNT != ''
       && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # no id-token: this job cannot ask for a cloud token
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/site-build
+        with:
+          site-url: ${{ vars.SITE_URL }}
+          project-id: ${{ vars.FIREBASE_PROJECT_ID }}
+          firebase-api-key: ${{ secrets.FIREBASE_WEB_API_KEY }}
+          firebase-auth-domain: ${{ vars.FIREBASE_AUTH_DOMAIN }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: site-dist
+          path: site/dist
+          retention-days: 1
+          if-no-files-found: error
+
+  preview:
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v7
-      - uses: google-github-actions/auth@v3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      # Install the pinned CLI before authenticating; --ignore-scripts keeps lifecycle scripts out.
+      - run: npm ci --ignore-scripts
+        working-directory: site
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: site-dist
+          path: site/dist
+      - uses: ./.github/actions/site-deploy-config
+        with:
+          hosting-site: ${{ vars.FIREBASE_HOSTING_SITE }}
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
           workload_identity_provider: ${{ vars.WIF_PROVIDER }}
-          service_account: ${{ vars.DEPLOY_SERVICE_ACCOUNT }}
-      - uses: ./.github/actions/site-build
-        with:
-          site-url: ${{ vars.SITE_URL }}
-          hosting-site: ${{ vars.FIREBASE_HOSTING_SITE }}
-          project-id: ${{ vars.FIREBASE_PROJECT_ID }}
-          firebase-api-key: ${{ secrets.FIREBASE_WEB_API_KEY }}
-          firebase-auth-domain: ${{ vars.FIREBASE_AUTH_DOMAIN }}
+          service_account: ${{ vars.PREVIEW_SERVICE_ACCOUNT }}
       - name: Deploy preview channel
         id: deploy
         working-directory: site
         run: |
-          out=$(npx --yes "$FIREBASE_TOOLS" hosting:channel:deploy "$CHANNEL" --expires 7d \
+          out=$(npx --no-install firebase hosting:channel:deploy "$CHANNEL" --expires 7d \
             --config firebase.ci.json --project "$PROJECT_ID" --non-interactive --json)
           url=$(jq -r '[.result[].url][0]' <<<"$out")
           test -n "$url" && test "$url" != null
           echo "url=$url" >> "$GITHUB_OUTPUT"
         env:
           PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
-      - uses: actions/github-script@v9
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           URL: ${{ steps.deploy.outputs.url }}
         with:
@@ -64,33 +99,40 @@ jobs:
 
   cleanup:
     if: >-
-      github.event.action == 'closed' && vars.DEPLOY_SERVICE_ACCOUNT != ''
+      github.event.action == 'closed' && vars.PREVIEW_SERVICE_ACCOUNT != ''
       && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
     steps:
-      # the CLI refuses to run without firebase.json, so check out just the Firebase config
-      - uses: actions/checkout@v7
+      # the CLI refuses to run without firebase.json, so check out just the Firebase config and the lockfile
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           sparse-checkout: |
             site/firebase.json
             site/firebase/
+            site/package.json
+            site/package-lock.json
           sparse-checkout-cone-mode: false
-      - uses: google-github-actions/auth@v3
-        with:
-          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
-          service_account: ${{ vars.DEPLOY_SERVICE_ACCOUNT }}
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24'
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - run: npm ci --ignore-scripts
+        working-directory: site
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.PREVIEW_SERVICE_ACCOUNT }}
       # A channel that already expired is fine; any other failure fails the job instead of
       # leaving the preview up behind a green check.
       - name: Delete preview channel
         working-directory: site
         run: |
-          if ! out=$(npx --yes "$FIREBASE_TOOLS" hosting:channel:delete "$CHANNEL" --force \
+          if ! out=$(npx --no-install firebase hosting:channel:delete "$CHANNEL" --force \
             --project "$PROJECT_ID" ${SITE:+--site "$SITE"} --non-interactive 2>&1); then
             echo "$out"
             grep -qiE "not found|404" <<<"$out" || exit 1

@@ -194,7 +194,7 @@ func (s *Server) document(w http.ResponseWriter, r *http.Request) {
 		if !strings.HasPrefix(str(v["privatePath"]), "private/"+uid+"/"+id+"/") {
 			fail(403, "Invalid document path")
 		}
-		s.sendFile(w, r, v, str(v["privatePath"]), false)
+		s.sendFile(w, r, v, str(v["privatePath"]), false, "private,no-store")
 		return
 	}
 	op, limit := "edit", int64(100)
@@ -317,7 +317,7 @@ func (s *Server) document(w http.ResponseWriter, r *http.Request) {
 	audit("document_published", id)
 	jsonResponse(w, 200, map[string]any{"ok": true, "url": "/files/" + id})
 }
-func (s *Server) sendFile(w http.ResponseWriter, r *http.Request, v map[string]any, path string, inline bool) {
+func (s *Server) sendFile(w http.ResponseWriter, r *http.Request, v map[string]any, path string, inline bool, cache string) {
 	reader, err := s.services.Bucket.Object(path).NewReader(r.Context())
 	must(err)
 	defer reader.Close()
@@ -332,7 +332,7 @@ func (s *Server) sendFile(w http.ResponseWriter, r *http.Request, v map[string]a
 		mode = "inline"
 	}
 	w.Header().Set("Content-Disposition", mode+"; filename=\""+safeName(str(v["filename"]))+"\"")
-	w.Header().Set("Cache-Control", "private,no-store")
+	w.Header().Set("Cache-Control", cache)
 	w.WriteHeader(200)
 	_, _ = w.Write(b)
 }
@@ -346,6 +346,9 @@ func (s *Server) publicFile(w http.ResponseWriter, r *http.Request) {
 				}
 				if e.Status == 429 {
 					code, message = 429, "Daily download limit reached"
+					if e.Message == "Daily operation limit reached" {
+						s.download.exhaust()
+					}
 				}
 			}
 			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -367,6 +370,9 @@ func (s *Server) publicFile(w http.ResponseWriter, r *http.Request) {
 	if v == nil || v["published"] != true || v["archived"] != false || !strings.HasPrefix(path, "published/"+id+"/"+str(v["sha256"])+"/") || len(parts) != 4 || !idPattern.MatchString(parts[3]) || !allowedTypes[str(v["mime"])] || number(v["size"]) <= 0 || number(v["size"]) > maxFile || (inline && !strings.HasPrefix(str(v["mime"]), "image/")) {
 		fail(404, "Not found")
 	}
-	s.quota(r.Context(), "public-download-bytes", 64*1024*1024, number(v["size"]))
-	s.sendFile(w, r, v, path, inline)
+	if !s.download.allow(clientIP(r), number(v["size"])) {
+		fail(429, "Daily download limit reached")
+	}
+	s.quota(r.Context(), "public-download-bytes", publicDownloadBytes, number(v["size"]))
+	s.sendFile(w, r, v, path, inline, publicCache)
 }

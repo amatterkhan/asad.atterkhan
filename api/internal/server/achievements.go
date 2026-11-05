@@ -2,8 +2,6 @@ package server
 
 import (
 	"net/http"
-	"net/url"
-	"strings"
 
 	"github.com/amatterkhan/asad.atterkhan/api/internal/content"
 )
@@ -31,7 +29,7 @@ func validateAchievements(v map[string]any) ([]any, []any) {
 		text(a, "title", 1, 200)
 		text(a, "issuer", 1, 160)
 		link := stringField(a, "link", 1, 500, true)
-		if u, err := url.Parse(link); err != nil || u.Host == "" || !strings.HasPrefix(link, "https://") {
+		if !httpsURL(link) {
 			fail(400, "Use an HTTPS credential link")
 		}
 		if d, ok := a["earnedAt"]; ok {
@@ -55,7 +53,7 @@ func validateAchievements(v map[string]any) ([]any, []any) {
 
 // achievements reads and replaces the achievements and the ones pinned to the Experience page.
 func (s *Server) achievements(w http.ResponseWriter, r *http.Request) {
-	uid := s.owner(r, "content", false)
+	uid := s.owner(r, "content", r.Method == "PUT")
 	ctx := r.Context()
 	if r.Method == "GET" {
 		s.quota(ctx, uid+":content-read", 1000, 1)

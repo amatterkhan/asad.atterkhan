@@ -10,6 +10,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -95,6 +96,7 @@ type Server struct {
 	mu       sync.Mutex
 	services *Services // set once by open, never replaced
 	client   *http.Client
+	download downloadBudget
 }
 
 func New() *Server {
@@ -136,6 +138,9 @@ func (s *Server) owner(r *http.Request, service string, recent bool) string {
 	if err != nil {
 		fail(401, "Your session has expired. Sign in again.")
 	}
+	if a := actorFrom(r.Context()); a != nil {
+		a.verified(token.UID, token.AuthTime)
+	}
 	return authorizeOwner(token, recent)
 }
 func authorizeOwner(token *auth.Token, recent bool) string {
@@ -143,7 +148,7 @@ func authorizeOwner(token *auth.Token, recent bool) string {
 		fail(403, "Owner access required")
 	}
 	if recent && time.Now().Unix()-token.AuthTime > 300 {
-		fail(401, "Sign in again before publishing or archiving")
+		fail(401, "Sign in again to confirm this change: sign out from the menu, sign back in, then retry. Your edits stay on this page.")
 	}
 	emulator := os.Getenv("FIREBASE_AUTH_EMULATOR_HOST") != "" && strings.HasPrefix(os.Getenv("FIREBASE_PROJECT_ID"), "demo-")
 	firebaseClaims, _ := token.Claims["firebase"].(map[string]any)
@@ -168,7 +173,8 @@ func (s *Server) quota(ctx context.Context, key string, limit, amount int64) {
 		if amount < 0 || count+amount > limit {
 			return &HTTPError{429, "Daily operation limit reached"}
 		}
-		return tx.Set(ref, map[string]any{"count": count + amount, "day": day})
+		// expireAt lets a Firestore TTL policy on _quotas.expireAt delete old counters (docs/security.md).
+		return tx.Set(ref, map[string]any{"count": count + amount, "day": day, "expireAt": time.Now().UTC().Add(72 * time.Hour)})
 	}, firestore.MaxAttempts(25)))
 }
 func readBody(w http.ResponseWriter, r *http.Request, max int64) []byte {
@@ -222,7 +228,14 @@ func number(v any) int64 {
 	}
 	return 0
 }
-func str(v any) string       { s, _ := v.(string); return s }
+func str(v any) string { s, _ := v.(string); return s }
+
+// httpsURL reports whether s is an absolute https:// URL with a host and no credentials.
+// It is the Go twin of isHttpsUrl in site/src/lib/safe-url.ts.
+func httpsURL(s string) bool {
+	u, err := url.Parse(s)
+	return err == nil && strings.HasPrefix(s, "https://") && u.Scheme == "https" && u.Hostname() != "" && u.User == nil
+}
 func audit(event, id string) { slog.Info(event, "id", id, "time", stamp()) }
 
 func stamp() string { return time.Now().UTC().Format("2006-01-02T15:04:05.000Z") }
@@ -251,6 +264,9 @@ func endpoint(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 					code, message = e.Status, e.Message
 				} else {
 					slog.Error("content_operation_failed", "kind", fmt.Sprintf("%T", p))
+				}
+				if a := actorFrom(r.Context()); a != nil {
+					a.denied(message)
 				}
 				jsonResponse(w, code, map[string]any{"error": message})
 			}
@@ -292,12 +308,12 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /files/{id}", endpoint(s.publicFile))
 	mux.HandleFunc("GET /media/{id}", endpoint(s.publicFile))
 	mux.HandleFunc("/", endpoint(func(w http.ResponseWriter, r *http.Request) { fail(404, "Not found") }))
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return withAudit(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("X-Frame-Options", "DENY")
 		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
 		w.Header().Set("Content-Security-Policy", "default-src 'none'; sandbox")
 		mux.ServeHTTP(w, r)
-	})
+	}))
 }

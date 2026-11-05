@@ -3,7 +3,7 @@ name: Site and API checks
 # step of site-deploy.yml on pushes to the deploy branch. Demo emulators only; no cloud credentials.
 on:
   pull_request:
-    paths: ['site/**', 'api/**', '.github/workflows/site-*.yml', '.github/actions/site-build/**']
+    paths: ['site/**', 'api/**', '.github/workflows/site-*.yml', '.github/actions/**']
   workflow_call:
   workflow_dispatch:
 permissions:
@@ -11,8 +11,6 @@ permissions:
 concurrency:
   group: site-ci-${{ github.ref }}
   cancel-in-progress: true
-env:
-  FIREBASE_TOOLS: firebase-tools@15.34.1
 jobs:
   api:
     runs-on: ubuntu-latest
@@ -20,24 +18,30 @@ jobs:
       run:
         working-directory: api
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: api/go.mod
           cache-dependency-path: api/go.sum
-      - uses: actions/setup-java@v6
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
           java-version: '21'
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24'
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      # firebase-tools comes from site/package-lock.json (pinned), not an unpinned npx download.
+      - name: Install firebase-tools
+        run: npm ci --ignore-scripts
+        working-directory: site
       - name: gofmt
         run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
       - run: go vet ./...
       - name: Unit and emulator tests (every route, exporter)
         run: >
-          npx --yes "$FIREBASE_TOOLS" emulators:exec
+          ../site/node_modules/.bin/firebase emulators:exec
           --config ../site/firebase.json --only auth,firestore,storage
           --project demo-asad-exe 'go test -race ./... -count=1'
       - name: Container image builds
@@ -49,13 +53,13 @@ jobs:
       run:
         working-directory: site
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24'
           cache: npm
           cache-dependency-path: site/package-lock.json
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - run: npm run typecheck
       - run: npm test
       - run: npm audit --omit=dev --audit-level=moderate
@@ -63,7 +67,7 @@ jobs:
       # Browser suite: production prerender + preview server, desktop/mobile, both themes,
       # axe, overflow, hydration. Uses the Chrome already installed on GitHub's runners.
       - run: npm run test:e2e
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
           name: playwright-traces

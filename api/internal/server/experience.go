@@ -84,7 +84,7 @@ func validateExperience(v map[string]any) map[string]any {
 		text(e, "university", 1, 100)
 		text(e, "classification", 0, 60)
 		text(e, "graduationDate", 0, 40)
-		if !strings.HasPrefix(stringField(e, "degreeLink", 1, 500, true), "https://") {
+		if !httpsURL(stringField(e, "degreeLink", 1, 500, true)) {
 			fail(400, "Invalid input")
 		}
 		if _, ok := e["isGraduated"].(bool); !ok {
@@ -102,7 +102,7 @@ func validateExperience(v map[string]any) map[string]any {
 
 // experience reads and replaces the Experience page: work, education and skills.
 func (s *Server) experience(w http.ResponseWriter, r *http.Request) {
-	uid := s.owner(r, "content", false)
+	uid := s.owner(r, "content", r.Method == "PUT")
 	ctx := r.Context()
 	if r.Method == "GET" {
 		s.quota(ctx, uid+":content-read", 1000, 1)

@@ -341,3 +341,31 @@ describe("Thoughts", () => {
     }
   });
 });
+
+describe("https-only link validation", () => {
+  const bad = ["javascript:alert(1)", "data:text/html,x", "http://example.com", "https://", "https:///x", "//example.com", ""];
+  it("accepts https links only for achievements, projects and education", async () => {
+    const { AchievementSchema, EducationSchema, ProjectSchema } = await import("../../src/lib/schemas");
+    const ach = { id: "a", kind: "badge", title: "t", issuer: "i" };
+    const edu = { degree: "d", field: "f", university: "u", classification: "", graduationDate: "", isGraduated: true };
+    expect(AchievementSchema.safeParse({ ...ach, link: "https://example.com/x" }).success).toBe(true);
+    expect(EducationSchema.safeParse({ ...edu, degreeLink: "https://example.com" }).success).toBe(true);
+    for (const u of bad) {
+      expect(AchievementSchema.safeParse({ ...ach, link: u }).success, `achievement ${u}`).toBe(false);
+      expect(EducationSchema.safeParse({ ...edu, degreeLink: u }).success, `education ${u}`).toBe(false);
+    }
+    expect(ProjectSchema.shape.links.element.shape.url.safeParse("javascript:alert(1)").success).toBe(false);
+  });
+  it("allows an empty or https résumé link only", () => {
+    const copy = (resumeUrl: string) => SiteCopySchema.shape.resumeUrl.safeParse(resumeUrl).success;
+    expect(copy("")).toBe(true);
+    expect(copy("https://example.com/cv.pdf")).toBe(true);
+    for (const u of bad.filter((x) => x !== "")) expect(copy(u), u).toBe(false);
+  });
+  it("safeHref drops unsafe values", async () => {
+    const { safeHref } = await import("../../src/lib/safe-url");
+    expect(safeHref("https://example.com")).toBe("https://example.com");
+    expect(safeHref("javascript:alert(1)")).toBeUndefined();
+    expect(safeHref(undefined)).toBeUndefined();
+  });
+});

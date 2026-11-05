@@ -80,7 +80,7 @@ func siteMax(key string) int {
 	return 600
 }
 func (s *Server) site(w http.ResponseWriter, r *http.Request) {
-	uid := s.owner(r, "content", false)
+	uid := s.owner(r, "content", r.Method == "PUT")
 	ctx := r.Context()
 	fallback := content.Object("site")
 	if r.Method == "GET" {
@@ -110,7 +110,7 @@ func (s *Server) site(w http.ResponseWriter, r *http.Request) {
 			fail(400, "Invalid input")
 		}
 	}
-	if u, _ := v["resumeUrl"].(string); u != "" && !strings.HasPrefix(u, "https://") && !strings.HasPrefix(u, "http://") {
+	if u, _ := v["resumeUrl"].(string); u != "" && !httpsURL(u) {
 		fail(400, "Invalid input")
 	}
 	if x, ok := v["updatedAt"]; ok {

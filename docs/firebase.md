@@ -2,7 +2,7 @@
 
 ## Current state (verified 2026-10-27)
 
-Firebase project **Asad's Lab** (`asad-atterkhan`, number `840582082351`) belongs to `dev@asad.atterkhan.com`. The user chose a neutral project name and intends to use this project for staging and production. Both deployment environments still need deliberate data and service-identity isolation before production onboarding.
+Firebase project **Asad's Lab** (`asad-atterkhan`) belongs to the owner account. The user chose a neutral project name and intends to use this project for staging and production. Both deployment environments still need deliberate data and service-identity isolation before production onboarding.
 
 Provisioned on 2026-10-26 and deployment setup verified on 2026-10-27:
 
@@ -12,10 +12,10 @@ Provisioned on 2026-10-26 and deployment setup verified on 2026-10-27:
 - Google is the only enabled sign-in provider. Identity Platform and TOTP are enabled; one adjacent TOTP interval is accepted. No SMS factor is configured.
 - Authorized domains: `localhost`, `127.0.0.1`, and Firebase's default project domains. `asad-atterkhan.web.app` and `asad.atterkhan.com` are authorized.
 - Browser API key restricted to the Auth, token, Firestore and Firebase Storage APIs and `http://localhost:4180/*`, `http://127.0.0.1:4180/*`, `https://asad-atterkhan.firebaseapp.com/*` and (added 27 October) `https://asad-atterkhan.web.app/*` and `https://asad.atterkhan.com/*`. The four API restrictions were preserved.
-- The only human project IAM principal is `dev@asad.atterkhan.com` with Owner. Other IAM principals include Firebase/Google service identities and the two site service accounts listed below.
+- The only human project IAM principal is the owner account, with Owner. Other IAM principals include Firebase/Google service identities and the two site service accounts listed below.
 - Billing: Blaze via Google Cloud Free Trial; project budget alerts at US$1, US$3 and US$5. Alerts are not spending caps.
 
-The first real Google sign-in for `dev@asad.atterkhan.com` succeeded, the Admin SDK granted that UID `admin: true`, and TOTP enrollment was verified. Never paste OAuth secrets into chat or the repository.
+The first real Google sign-in for the owner account succeeded, the Admin SDK granted that UID `admin: true`, and TOTP enrollment was verified. Never paste OAuth secrets into chat or the repository.
 
 ## Cost
 
@@ -23,7 +23,7 @@ Planning estimate: US$0–5/month at roughly 1,000 visits/month, about 1 GB of s
 
 ## Owner onboarding
 
-The owner UID, `admin` claim and TOTP enrollment are already set up for `dev@asad.atterkhan.com`. Signup is disabled; no browser can grant claims. The original one-shot tool that opened signup briefly and granted the claim was part of the retired Next.js app and was not ported: `git show legacy-final:platform/scripts/firebase-owner.ts`. Granting a claim to a new owner is a privileged Admin SDK call (`setCustomUserClaims(uid, { admin: true })`), followed by TOTP enrollment in `/admin`. Do not download service-account JSON; use ADC (`gcloud auth application-default login`) or a managed identity.
+The owner UID, `admin` claim and TOTP enrollment are already set up for the owner account. Signup is disabled (re-check it after any Identity Platform change: [docs/security.md](security.md)); no browser can grant claims. The original one-shot tool that opened signup briefly and granted the claim was part of the retired Next.js app and was not ported: `git show legacy-final:platform/scripts/firebase-owner.ts`. Granting a claim to a new owner is a privileged Admin SDK call (`setCustomUserClaims(uid, { admin: true })`), followed by TOTP enrollment in `/admin`. Do not download service-account JSON; use ADC (`gcloud auth application-default login`) or a managed identity.
 
 ## Content in Firestore
 
@@ -53,14 +53,19 @@ To switch production over: enable `ENABLE_CONTENT_ADMIN` once owner TOTP sign-in
 Keyless GitHub deployment setup is provisioned in this project only:
 
 - Workload Identity pool/provider `github`, restricted to repository ID `1045770351`.
-- `github-deployer@asad-atterkhan.iam.gserviceaccount.com`: Hosting/rules administration,
-  Firestore index administration and read/export access, Cloud Run rollout, service usage and
-  API-key lookup and Firebase Storage metadata read. Repository-scoped image write access,
+- `github-deployer@asad-atterkhan.iam.gserviceaccount.com`: production deploys, usable only by jobs in
+  the `site-production` environment (main). Hosting/rules administration, Firestore index
+  administration and read access, `roles/run.developer` on `asad-api` (not `run.admin`), service
+  usage and API-key lookup and Firebase Storage metadata read. Repository-scoped image write access,
   runtime-account impersonation and bucket-scoped GCS metadata read.
+- `github-exporter@asad-atterkhan.iam.gserviceaccount.com`: read-only Firestore and Storage metadata
+  access for the content export; usable only by jobs in the `site-export` environment (main).
+- `github-preview@asad-atterkhan.iam.gserviceaccount.com`: Hosting only, for pull request preview
+  channels. No Cloud Run, rules, Firestore or Storage access.
 - `asad-api@asad-atterkhan.iam.gserviceaccount.com`: Firestore read/write, Firebase Auth read,
   object administration on the private site bucket. No service-account keys were created.
 - Artifact Registry Docker repository `asad` in `us-central1`.
-- GitHub environment `site-production`, branch policies for `frontend-redesign` and `main`.
+- GitHub environments `site-production` and `site-export`, each with a branch policy for `main` only.
 - Billing enabled. Budget read-back confirms USD 5/month, project-scoped, current-spend
   thresholds 20%, 60%, 100% ($1/$3/$5). No budget settings were changed.
 

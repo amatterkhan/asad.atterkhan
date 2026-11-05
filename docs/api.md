@@ -16,7 +16,7 @@ off unless its flag is `true`: `content` (`ENABLE_CONTENT_ADMIN`), `documents`
 
 Errors are JSON `{ "error": string }` with status 400, 401, 403, 404, 409, 413, 415, 429, 500 or
 503. Unexpected failures return a generic message; details go to structured logs only. Responses
-carry `Cache-Control: no-store`. Unknown JSON keys are rejected with 400.
+carry `Cache-Control: no-store` (published `/files` and `/media` are the exception: `public, max-age=300, s-maxage=3600`). Unknown JSON keys are rejected with 400. Every `/api/admin/*` request is logged (uid, auth time, client IP, user agent, status).
 
 ## 1. Site copy: `siteSettings/public` (one document)
 
@@ -46,7 +46,7 @@ type SiteCopy = {
 
 - `GET /api/admin/site` → `SiteCopy` (stored fields over `content/site.json`; no `updatedAt` until
   the first save, so the editor always starts from what the site shows)
-- `PUT /api/admin/site` body `SiteCopy` (each string ≤ 600 chars, aboutBody
+- `PUT /api/admin/site` (`recent`) body `SiteCopy` (each string ≤ 600 chars, aboutBody
   ≤ 8000, same lengths as `SiteCopySchema`; unknown keys or control characters → 400; a sent
   `updatedAt` is ignored) → `SiteCopy`; then requests a rebuild (the copy appears on every page).
 - Public read: the exporter writes `siteSettings/public` into the build snapshot when
@@ -199,7 +199,7 @@ type Experience = {
 ```
 
 - `GET /api/admin/experience` (service `content`) → `Experience`
-- `PUT /api/admin/experience` body `{ work, education, skills }` (duplicate role ids, a promotion
+- `PUT /api/admin/experience` (`recent`) body `{ work, education, skills }` (duplicate role ids, a promotion
   from an unknown role, unknown keys, non-https links, or control characters → 400) → `Experience`;
   then requests a rebuild.
 - Public read: the exporter writes it to `experience.json` in the build snapshot.
@@ -225,7 +225,7 @@ type Achievements = {
 ```
 
 - `GET /api/admin/achievements` → `Achievements`
-- `PUT /api/admin/achievements` body `{ achievements, featuredIds }` (duplicate ids, non-https links,
+- `PUT /api/admin/achievements` (`recent`) body `{ achievements, featuredIds }` (duplicate ids, non-https links,
   bad dates or kinds, unknown keys, a pin not in the list, more than 6 pins → 400) → `Achievements`;
   then requests a rebuild. (This replaces the old `PATCH` that only set `featuredIds`.)
 - Public read: the exporter writes it to `achievements.json` in the build snapshot.

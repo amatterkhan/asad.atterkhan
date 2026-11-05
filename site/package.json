@@ -30,6 +30,7 @@
     "@types/pngjs": "^6.0.5",
     "@vitejs/plugin-vue": "^6.0.10",
     "@vue/test-utils": "^2.4.6",
+    "firebase-tools": "15.34.1",
     "github-slugger": "^2.0.0",
     "gray-matter": "^4.0.3",
     "happy-dom": "^21.0.4",
