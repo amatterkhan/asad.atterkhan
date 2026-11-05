@@ -5,13 +5,14 @@ import matter from "gray-matter";
 import { z } from "zod";
 import {
   AchievementSchema,
+  AchievementsSchema,
   ArticleSchema,
   ExperienceSchema,
   LabSchema,
   ProjectSchema,
   SiteCopySchema,
   ThoughtsSchema,
-  featuredSchema,
+  type Achievements,
   type Article,
   type Experience,
   type ArticleMeta,
@@ -177,20 +178,25 @@ export async function getSiteCopy(): Promise<SiteCopy> {
   return SiteCopySchema.parse({ ...fallback, ...stored });
 }
 
-export async function getAchievements() {
-  return z.array(AchievementSchema).parse(await readJson(dir("content/achievements.json")));
-}
-
-/** Achievements chosen for Experience: the exported siteSettings/achievements, else the Git seed. */
-export async function getFeaturedAchievements() {
-  const achievements = await getAchievements();
-  const schema = featuredSchema(achievements);
+/**
+ * The achievements and the ones pinned to Experience: the exported siteSettings/achievements when
+ * CONTENT_SOURCE=firestore (its list when saved, else the Git list with the exported pins), else
+ * content/achievements.json with content/achievement-settings.json.
+ */
+export async function getAchievementSettings(): Promise<Achievements> {
+  const seed = z.array(AchievementSchema).parse(await readJson(dir("content/achievements.json")));
+  const pins = z.object({ featuredIds: z.array(z.string()) }).parse(await readJson(dir("content/achievement-settings.json")));
   const exported = path.join(exportDir(), "achievements.json");
-  const settings =
-    contentSource() === "firestore" && (await exists(exported))
-      ? schema.parse(await readJson(exported))
-      : schema.parse(await readJson(dir("content/achievement-settings.json")));
-  return settings.featuredIds.flatMap((id) => achievements.filter((a) => a.id === id));
+  const stored = contentSource() === "firestore" && (await exists(exported)) ? await readJson(exported) : {};
+  return AchievementsSchema.parse({ achievements: seed, featuredIds: pins.featuredIds, ...stored });
+}
+export async function getAchievements() {
+  return (await getAchievementSettings()).achievements;
+}
+/** Achievements pinned to Experience, in the order they were pinned. */
+export async function getFeaturedAchievements() {
+  const { achievements, featuredIds } = await getAchievementSettings();
+  return featuredIds.flatMap((id) => achievements.filter((a) => a.id === id));
 }
 
 /** Work, education and skills: the exported siteSettings/experience when CONTENT_SOURCE=firestore,

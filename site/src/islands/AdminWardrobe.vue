@@ -21,7 +21,7 @@ const save = async () => {
       body: JSON.stringify({ activeOutfit: picked.value }),
     });
     state.value = { ...state.value!, ...saved };
-    note.value = "Saved. The site rebuilds with it in a minute or two.";
+    note.value = "Saved.";
   } catch (e) {
     note.value = (e as Error).message;
   }

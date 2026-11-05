@@ -125,39 +125,6 @@ func (s *Server) site(w http.ResponseWriter, r *http.Request) {
 	s.rebuild(ctx, "site")
 	jsonResponse(w, 200, v)
 }
-func (s *Server) achievements(w http.ResponseWriter, r *http.Request) {
-	uid := s.owner(r, "achievements", false)
-	ctx := r.Context()
-	var v map[string]any
-	if r.Method == "GET" {
-		s.quota(ctx, uid+":achievements-read", 500, 1)
-		v = s.get(ctx, "siteSettings", "achievements")
-		if v == nil {
-			v = content.Object("achievement-settings")
-		}
-		if ids, ok := v["featuredIds"].([]string); ok {
-			a := make([]any, len(ids))
-			for i, id := range ids {
-				a[i] = id
-			}
-			v["featuredIds"] = a
-		}
-		validateFeatured(v)
-		jsonResponse(w, 200, map[string]any{"achievements": content.Achievements(), "featuredIds": v["featuredIds"]})
-		return
-	}
-	v = input(w, r, 4096, "featuredIds")
-	validateFeatured(v)
-	s.quota(ctx, uid+":achievements-write", 100, 1)
-	stored := clone(v)
-	stored["ownerUid"] = uid
-	stored["updatedAt"] = stamp()
-	_, err := s.services.DB.Collection("siteSettings").Doc("achievements").Set(ctx, stored)
-	must(err)
-	audit("experience_achievements_selected", "achievements")
-	s.rebuild(ctx, "achievements")
-	jsonResponse(w, 200, v)
-}
 
 // wardrobe picks Asad's outfit (siteSettings/wardrobe). Outfits are files in the site; an id that
 // is missing or no longer in the index reads as the default.
@@ -198,19 +165,6 @@ func (s *Server) wardrobe(w http.ResponseWriter, r *http.Request) {
 	s.rebuild(ctx, "wardrobe")
 	jsonResponse(w, 200, map[string]any{"activeOutfit": stored["activeOutfit"], "updatedAt": stored["updatedAt"]})
 }
-func validateFeatured(v map[string]any) {
-	ids := tags(v, "featuredIds", true, 6)
-	known := map[string]bool{}
-	for _, a := range content.Achievements() {
-		known[str(a["id"])] = true
-	}
-	for _, id := range ids {
-		if !known[id] {
-			fail(400, "Invalid input")
-		}
-	}
-}
-
 func draft(v map[string]any) map[string]any {
 	n := map[string]any{}
 	for _, k := range []string{"slug", "title", "description", "body", "tags", "section", "category", "thumbnail", "featured", "status", "publishedAt", "updatedAt", "version", "modifiedAt", "publishedVersion"} {

@@ -135,16 +135,14 @@ export const AchievementSchema = z.object({
 });
 export type Achievement = z.infer<typeof AchievementSchema>;
 
-export const featuredSchema = (achievements: Achievement[]) =>
-  z
-    .object({
-      featuredIds: z
-        .array(z.string())
-        .max(6)
-        .refine((ids) => new Set(ids).size === ids.length, "Choose each achievement once")
-        .refine((ids) => ids.every((id) => achievements.some((a) => a.id === id)), "Unknown achievement"),
-    })
-    .strict();
+/** The achievements and the ones pinned to Experience (siteSettings/achievements). */
+export const AchievementsSchema = z
+  .object({ achievements: z.array(AchievementSchema).max(100), featuredIds: z.array(z.string()).max(6) })
+  .strict()
+  .refine((v) => new Set(v.achievements.map((a) => a.id)).size === v.achievements.length, "Achievement ids must be unique")
+  .refine((v) => new Set(v.featuredIds).size === v.featuredIds.length, "Choose each achievement once")
+  .refine((v) => v.featuredIds.every((id) => v.achievements.some((a) => a.id === id)), "Unknown achievement");
+export type Achievements = z.infer<typeof AchievementsSchema>;
 
 export const RoleSchema = z.object({
   id: z.number(),

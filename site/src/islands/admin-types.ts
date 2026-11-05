@@ -39,3 +39,6 @@ export type ExperienceState = {
   skills: { category: string; items: string }[];
   updatedAt?: string;
 };
+export type AchievementKind = "certification" | "badge" | "award";
+export type AchievementRecord = { id: string; kind: AchievementKind; title: string; issuer: string; link: string; earnedAt?: string };
+export type AchievementsState = { achievements: AchievementRecord[]; featuredIds: string[]; updatedAt?: string };
