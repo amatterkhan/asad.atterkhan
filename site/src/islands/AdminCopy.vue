@@ -23,7 +23,7 @@ const save = async () => {
   note.value = "Saving…";
   try {
     copy.value = await api<SiteCopyForm>("/api/admin/site", { method: "PUT", body: JSON.stringify(copy.value) });
-    note.value = "Saved. The site rebuilds with it in a minute or two.";
+    note.value = "Saved.";
   } catch (e) {
     note.value = (e as Error).message;
   }

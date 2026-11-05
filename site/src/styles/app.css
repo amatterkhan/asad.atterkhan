@@ -870,7 +870,17 @@ html[data-cursor="box"] .cursor-dot span { background: var(--color-accent); }
 .admin-locked input, .console input:not([type="checkbox"]):not([type="radio"]), .console textarea {
   width: 100%; background: var(--color-bg); color: var(--color-ink-strong); border: 2px solid var(--color-faint); border-radius: 0; padding: 10px 12px; font: 16px/1.5 var(--font-sans);
 }
-.console select { width: 100%; font: inherit; color: var(--color-ink-strong); background: var(--color-bg); border: 2px solid var(--color-faint); padding: 10px 12px; min-height: 46px; border-radius: 0; }
+.console select {
+  width: 100%; font: inherit; color: var(--color-ink-strong); border: 2px solid var(--color-faint); padding: 10px 44px 10px 14px; min-height: 46px; border-radius: 0; cursor: pointer;
+  appearance: none; -webkit-appearance: none;
+  background: var(--color-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' shape-rendering='crispEdges'%3E%3Cpath fill='%238a8f98' d='M0 0h2v2H0zm2 2h2v2H2zm2 2h4v2H4zm4-2h2v2H8zm2-2h2v2h-2zM4 6h4v2H4z'/%3E%3C/svg%3E") no-repeat right 16px center;
+}
+.console input[type="month"] { color-scheme: dark; min-height: 46px; }
+:root[data-theme="light"] .console input[type="month"] { color-scheme: light; }
+.console input:disabled { opacity: .5; cursor: not-allowed; }
+.admin-experience .admin-row > label { min-width: 0; }
+.admin-experience fieldset { gap: 18px; padding-top: 28px; }
+.admin-experience .admin-lab-order button { min-width: 38px; }
 .console select:disabled { opacity: .5; }
 .console textarea { resize: vertical; }
 .console select:focus { outline: none; border-color: var(--color-accent); }
@@ -1176,7 +1186,7 @@ body:has(.console) main { padding: 0; min-height: 100vh; animation: none; }
 .admin-thought-list input:not([type]), .admin-thought-list select, .admin-thoughts .admin-lab-add select {
   padding: 6px 10px !important; font-size: 14px !important; min-height: 34px;
 }
-.admin-thought-list select, .admin-thoughts .admin-lab-add select { border: 2px solid var(--color-faint); background: var(--color-bg); color: var(--color-ink); font: 12px var(--font-mono); }
+.admin-thought-list select, .admin-thoughts .admin-lab-add select { border: 2px solid var(--color-faint); background-color: var(--color-bg); color: var(--color-ink); font: 12px var(--font-mono); }
 .admin-thought-list li > button {
   min-height: 34px; min-width: 34px; padding: 4px 10px; border: 2px solid var(--color-faint); background: var(--color-bg); color: var(--color-ink); font: 12px var(--font-mono);
   display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
