@@ -6,15 +6,14 @@ import { z } from "zod";
 import {
   AchievementSchema,
   ArticleSchema,
-  EducationSchema,
+  ExperienceSchema,
   LabSchema,
   ProjectSchema,
-  RoleSchema,
   SiteCopySchema,
-  SkillsSchema,
   ThoughtsSchema,
   featuredSchema,
   type Article,
+  type Experience,
   type ArticleMeta,
   type Lab,
   type Project,
@@ -194,12 +193,12 @@ export async function getFeaturedAchievements() {
   return settings.featuredIds.flatMap((id) => achievements.filter((a) => a.id === id));
 }
 
-export async function getExperience() {
-  return {
-    work: z.array(RoleSchema).parse(await readJson(dir("content/workExpData.json"))),
-    education: z.array(EducationSchema).parse(await readJson(dir("content/educationData.json"))),
-    skills: SkillsSchema.parse(await readJson(dir("content/commandsData.json"))).skills,
-  };
+/** Work, education and skills: the exported siteSettings/experience when CONTENT_SOURCE=firestore,
+ *  else content/experience.json. */
+export async function getExperience(): Promise<Experience> {
+  const exported = path.join(exportDir(), "experience.json");
+  const file = contentSource() === "firestore" && (await exists(exported)) ? exported : dir("content/experience.json");
+  return ExperienceSchema.parse(await readJson(file));
 }
 
 /** Asad's outfit: the exported siteSettings/wardrobe when CONTENT_SOURCE=firestore, else (or when

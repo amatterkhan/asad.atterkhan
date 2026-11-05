@@ -171,3 +171,11 @@ export type Education = z.infer<typeof EducationSchema>;
 export const SkillsSchema = z.object({
   skills: z.array(z.object({ category: z.string(), items: z.string() })),
 });
+
+/** The Experience page: roles (oldest first), education and skills (siteSettings/experience). */
+export const ExperienceSchema = z.object({
+  work: z.array(RoleSchema),
+  education: z.array(EducationSchema),
+  skills: SkillsSchema.shape.skills,
+});
+export type Experience = z.infer<typeof ExperienceSchema>;
