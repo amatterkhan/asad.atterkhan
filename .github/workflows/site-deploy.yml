@@ -1,14 +1,19 @@
 name: Deploy site and API
-# Pushes to the deploy branch: checks → API (Cloud Run, when enabled and api/ changed) → Hosting.
-# content-published (sent by the API after site-copy saves and article publish/unpublish) and
-# manual runs rebuild Hosting from the deploy branch. GitHub only delivers repository_dispatch to
-# workflows on the default branch, so content rebuilds start working once this file is on main.
+# Pushes to main: checks → API (Cloud Run, when enabled and api/ changed) → Hosting.
+# content-published (sent by the API after content saves) and manual runs rebuild Hosting from the
+# deploy branch (main unless the SITE_DEPLOY_BRANCH variable says otherwise). GitHub only delivers
+# repository_dispatch to workflows on the default branch.
 #
 # Nothing deploys until the one-time setup has set the repository variables (docs/ci-cd.md).
+#
+# Credentials never share a job with npm or the build:
+#   export  (CONTENT_SOURCE=firestore only) read-only identity, Go only, writes a snapshot artifact
+#   build   no id-token permission, no auth step: npm ci --ignore-scripts, tests, build → dist artifact
+#   hosting installs the pinned firebase-tools without scripts, then authenticates and deploys
 on:
   push:
-    branches: [main, frontend-redesign]
-    paths: ['site/**', 'api/**', '.github/workflows/site-*.yml', '.github/actions/site-build/**']
+    branches: [main]
+    paths: ['site/**', 'api/**', '.github/workflows/site-*.yml', '.github/actions/**']
   repository_dispatch:
     types: [content-published]
   workflow_dispatch:
@@ -19,26 +24,23 @@ on:
         default: false
 permissions:
   contents: read
-concurrency:
-  # Newest wins: every build contains all published content, so an older one is never needed.
-  group: site-deploy
-  cancel-in-progress: true
+# No workflow-level concurrency: a content rebuild must never cancel an API rollout. The API job queues
+# (never cancelled); the Hosting deploy is newest-wins because every build contains all published content.
 env:
-  FIREBASE_TOOLS: firebase-tools@15.34.1
-  DEPLOY_BRANCH: ${{ vars.SITE_DEPLOY_BRANCH || 'frontend-redesign' }}
+  DEPLOY_BRANCH: ${{ vars.SITE_DEPLOY_BRANCH || 'main' }}
   # Pushes deploy the pushed commit; dispatches and manual runs deploy the deploy branch head.
-  DEPLOY_REF: ${{ github.event_name == 'push' && github.sha || vars.SITE_DEPLOY_BRANCH || 'frontend-redesign' }}
+  DEPLOY_REF: ${{ github.event_name == 'push' && github.sha || vars.SITE_DEPLOY_BRANCH || 'main' }}
   REGION: ${{ vars.API_REGION || 'us-central1' }}
 jobs:
   changes:
     runs-on: ubuntu-latest
     # Only the deploy branch deploys; other pushes are ignored (pull requests run site-ci.yml).
-    if: github.event_name != 'push' || github.ref_name == (vars.SITE_DEPLOY_BRANCH || 'frontend-redesign')
+    if: github.event_name != 'push' || github.ref_name == (vars.SITE_DEPLOY_BRANCH || 'main')
     outputs:
       api: ${{ steps.diff.outputs.api }}
       site: ${{ steps.diff.outputs.site }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.DEPLOY_REF }}
           fetch-depth: 0
@@ -77,20 +79,23 @@ jobs:
       && vars.API_ENABLED == 'true' && vars.DEPLOY_SERVICE_ACCOUNT != ''
     runs-on: ubuntu-latest
     environment: site-production
+    concurrency:
+      group: site-deploy-api
+      cancel-in-progress: false
     permissions:
       contents: read
       id-token: write
     env:
       PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.DEPLOY_REF }}
-      - uses: google-github-actions/auth@v3
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
           workload_identity_provider: ${{ vars.WIF_PROVIDER }}
           service_account: ${{ vars.DEPLOY_SERVICE_ACCOUNT }}
-      - uses: google-github-actions/setup-gcloud@v3
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
       - name: Build and push image
         id: image
         working-directory: api
@@ -100,15 +105,15 @@ jobs:
           docker build --tag "$image" .
           docker push "$image"
           echo "image=$image" >> "$GITHUB_OUTPUT"
-      - uses: google-github-actions/deploy-cloudrun@v3
+      - uses: google-github-actions/deploy-cloudrun@2028e2d7d30a78c6910e0632e48dd561b064884d # v3.0.1
         with:
           service: asad-api
           region: ${{ env.REGION }}
           image: ${{ steps.image.outputs.image }}
-          # Public invoker so Hosting rewrites can reach it; every owner route checks the
-          # Firebase ID token, owner UID, admin claim and TOTP itself.
+          # The service must already allow public invocation (allUsers → run.invoker, set once by the owner
+          # in docs/ci-cd.md) so Hosting rewrites can reach it; every owner route checks the Firebase ID
+          # token, owner UID, admin claim and TOTP itself. The deployer cannot change IAM (run.developer).
           flags: >-
-            --allow-unauthenticated
             --service-account=${{ vars.API_SERVICE_ACCOUNT || format('asad-api@{0}.iam.gserviceaccount.com', vars.FIREBASE_PROJECT_ID) }}
             --min-instances=0 --max-instances=2 --concurrency=8 --cpu=1 --memory=512Mi
           env_vars_update_strategy: overwrite
@@ -127,47 +132,131 @@ jobs:
           # The dispatch token lives in Secret Manager, never in GitHub or the image.
           secrets: ${{ vars.REBUILD_HOOK == 'github' && 'GITHUB_TOKEN=asad-api-github-token:latest' || '' }}
 
-  hosting:
+  export:
     needs: [changes, checks, api]
     if: >-
       always() && !cancelled() && needs.changes.result == 'success'
       && needs.checks.result != 'failure' && needs.api.result != 'failure'
       && needs.changes.outputs.site == 'true' && vars.DEPLOY_SERVICE_ACCOUNT != ''
+      && vars.CONTENT_SOURCE == 'firestore'
     runs-on: ubuntu-latest
-    environment:
-      name: site-production
-      url: ${{ vars.SITE_URL }}
+    # Read-only identity (Firestore + Storage read); the environment has its own branch rule, no approvals.
+    environment: site-export
     permissions:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.DEPLOY_REF }}
-      - uses: google-github-actions/auth@v3
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: api/go.mod
+          cache-dependency-path: api/go.sum
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
           workload_identity_provider: ${{ vars.WIF_PROVIDER }}
-          service_account: ${{ vars.DEPLOY_SERVICE_ACCOUNT }}
+          service_account: ${{ vars.EXPORT_SERVICE_ACCOUNT }}
+      - name: Export published content
+        working-directory: api
+        run: go run ./cmd/export
+        env:
+          CONTENT_EXPORT_DIR: ${{ runner.temp }}/content-export
+          FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+          FIREBASE_STORAGE_BUCKET: ${{ vars.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_OWNER_UID: ${{ secrets.FIREBASE_OWNER_UID }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: content-export
+          path: ${{ runner.temp }}/content-export
+          retention-days: 1
+          if-no-files-found: error
+
+  build:
+    needs: [changes, checks, api, export]
+    # Firestore content without a successful export must fail the deploy, not publish an empty site.
+    if: >-
+      always() && !cancelled() && needs.changes.result == 'success'
+      && needs.checks.result != 'failure' && needs.api.result != 'failure'
+      && needs.changes.outputs.site == 'true' && vars.DEPLOY_SERVICE_ACCOUNT != ''
+      && (needs.export.result == 'success' || (needs.export.result == 'skipped' && vars.CONTENT_SOURCE != 'firestore'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # no id-token: this job cannot ask for a cloud token
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.DEPLOY_REF }}
+          persist-credentials: false
+      - if: vars.CONTENT_SOURCE == 'firestore'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: content-export
+          path: ${{ runner.temp }}/content-export
       - uses: ./.github/actions/site-build
         with:
           content-source: ${{ vars.CONTENT_SOURCE || 'git' }}
+          content-export-dir: ${{ runner.temp }}/content-export
           index-site: ${{ vars.INDEX_SITE || 'false' }}
           site-url: ${{ vars.SITE_URL }}
+          project-id: ${{ vars.FIREBASE_PROJECT_ID }}
+          firebase-api-key: ${{ secrets.FIREBASE_WEB_API_KEY }}
+          firebase-auth-domain: ${{ vars.FIREBASE_AUTH_DOMAIN }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: site-dist
+          path: site/dist
+          retention-days: 1
+          if-no-files-found: error
+
+  hosting:
+    needs: [build]
+    if: always() && !cancelled() && needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    environment:
+      name: site-production
+      url: ${{ vars.SITE_URL }}
+    concurrency:
+      group: site-deploy-hosting
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.DEPLOY_REF }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      # Install the pinned CLI before authenticating; --ignore-scripts keeps lifecycle scripts out.
+      - run: npm ci --ignore-scripts
+        working-directory: site
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: site-dist
+          path: site/dist
+      - uses: ./.github/actions/site-deploy-config
+        with:
           api-enabled: ${{ vars.API_ENABLED || 'false' }}
           api-region: ${{ env.REGION }}
           hosting-site: ${{ vars.FIREBASE_HOSTING_SITE }}
-          project-id: ${{ vars.FIREBASE_PROJECT_ID }}
-          storage-bucket: ${{ vars.FIREBASE_STORAGE_BUCKET }}
-          owner-uid: ${{ secrets.FIREBASE_OWNER_UID }}
-          firebase-api-key: ${{ secrets.FIREBASE_WEB_API_KEY }}
-          firebase-auth-domain: ${{ vars.FIREBASE_AUTH_DOMAIN }}
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.DEPLOY_SERVICE_ACCOUNT }}
       - name: Deploy Hosting and security rules
         working-directory: site
         run: |
           only=hosting,firestore
           [ -n "$BUCKET" ] && only="$only,storage"
-          npx --yes "$FIREBASE_TOOLS" deploy --only "$only" --config firebase.ci.json \
-            --project "$PROJECT_ID" --non-interactive --message "$(git rev-parse --short HEAD) ${{ github.event_name }}"
+          npx --no-install firebase deploy --only "$only" --config firebase.ci.json \
+            --project "$PROJECT_ID" --non-interactive --message "$(git rev-parse --short HEAD) $EVENT"
         env:
           PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
           BUCKET: ${{ vars.FIREBASE_STORAGE_BUCKET }}
+          EVENT: ${{ github.event_name }}

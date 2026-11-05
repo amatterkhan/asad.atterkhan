@@ -1,0 +1,35 @@
+name: Write Firebase deploy config
+description: >
+  Writes site/firebase.ci.json (the deploy config for this run) from the checked-out firebase.json.
+  The deploy job generates it itself, so nothing a build job produced can add Firebase CLI hooks.
+inputs:
+  api-enabled:
+    description: Keep the /api, /files and /media rewrites to Cloud Run
+    default: 'false'
+  api-region:
+    description: Cloud Run region for the rewrites
+    default: us-central1
+  hosting-site:
+    description: Hosting site ID; empty deploys to the project's default site
+    default: ''
+runs:
+  using: composite
+  steps:
+    # Until the API is deployed, drop the Cloud Run rewrites: Hosting refuses to deploy rewrites
+    # to a service that does not exist, and the static pages do not need them.
+    - name: Write deploy config
+      shell: bash
+      working-directory: site
+      run: |
+        jq --arg site "$HOSTING_SITE" --arg region "$API_REGION" --argjson api "$API_ENABLED" '
+          del(.emulators)
+          | (if $site != "" then .hosting.site = $site else . end)
+          | .hosting.rewrites |= (
+              if $api then map(if .run then .run.region = $region else . end)
+              else map(select(.run == null)) end)
+        ' firebase.json > firebase.ci.json
+        jq '.hosting | {site, rewrites}' firebase.ci.json
+      env:
+        HOSTING_SITE: ${{ inputs.hosting-site }}
+        API_REGION: ${{ inputs.api-region }}
+        API_ENABLED: ${{ inputs.api-enabled == 'true' }}

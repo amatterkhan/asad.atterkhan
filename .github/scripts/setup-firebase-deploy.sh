@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # One-time setup for .github/workflows/site-{ci,deploy,preview}.yml (see docs/ci-cd.md).
-# Creates keyless GitHub → Google Cloud authentication (Workload Identity Federation), a deploy
-# identity, the API's runtime identity and an image repository, then stores the non-secret
-# configuration as GitHub repository variables. Safe to re-run. Needs gcloud and gh, signed in
+# Creates keyless GitHub → Google Cloud authentication (Workload Identity Federation), three
+# narrow GitHub identities (production deployer, read-only content exporter, Hosting-only preview),
+# the API's runtime identity and an image repository, then stores the non-secret configuration as
+# GitHub repository variables. Safe to re-run, and re-running tightens an older setup. Needs gcloud and gh, signed in
 # as the project owner. Review before running: it changes IAM on the project.
 #
 #   PROJECT_ID=asad-atterkhan REPO=amatterkhan/asad.atterkhan \
@@ -18,6 +19,8 @@ SITE_URL=${SITE_URL:-https://$PROJECT_ID.web.app}
 POOL=github
 PROVIDER=github
 DEPLOYER=github-deployer@$PROJECT_ID.iam.gserviceaccount.com
+EXPORTER=github-exporter@$PROJECT_ID.iam.gserviceaccount.com
+PREVIEWER=github-preview@$PROJECT_ID.iam.gserviceaccount.com
 RUNTIME=asad-api@$PROJECT_ID.iam.gserviceaccount.com
 
 run() { printf '+ %s\n' "$*" >&2; "$@"; }
@@ -46,27 +49,78 @@ exists gcloud iam workload-identity-pools providers describe "$PROVIDER" --proje
     --attribute-condition "assertion.repository_id == '$REPO_ID'"
 WIF_PROVIDER=projects/$NUMBER/locations/global/workloadIdentityPools/$POOL/providers/$PROVIDER
 
-for sa in github-deployer:"GitHub deploys" asad-api:"asad-api Cloud Run runtime"; do
+for sa in github-deployer:"GitHub production deploys" github-exporter:"GitHub content export (read-only)" \
+  github-preview:"GitHub PR previews (Hosting only)" asad-api:"asad-api Cloud Run runtime"; do
   name=${sa%%:*}
   exists gcloud iam service-accounts describe "$name@$PROJECT_ID.iam.gserviceaccount.com" --project "$PROJECT_ID" ||
     run gcloud iam service-accounts create "$name" --project "$PROJECT_ID" --display-name "${sa#*:}"
 done
 
-# Only workflows from this repository may act as the deployer.
-run gcloud iam service-accounts add-iam-policy-binding "$DEPLOYER" --project "$PROJECT_ID" \
+# Who may act as which identity (the pool already only admits this repository).
+# Deployer and exporter: only jobs that run in their GitHub environment, whose branch policy (below)
+# admits main alone. A pull request branch, a stray workflow or another branch cannot impersonate them.
+POOL_PATH=projects/$NUMBER/locations/global/workloadIdentityPools/$POOL
+bind_environment() { # service account, environment
+  run gcloud iam service-accounts add-iam-policy-binding "$1" --project "$PROJECT_ID" \
+    --role roles/iam.workloadIdentityUser \
+    --member "principal://iam.googleapis.com/$POOL_PATH/subject/repo:$REPO:environment:$2" \
+    --condition None >/dev/null
+}
+bind_environment "$DEPLOYER" site-production
+bind_environment "$EXPORTER" site-export
+# Remove the older repository-wide binding that let any workflow run (including a PR branch) mint the deployer token.
+gcloud iam service-accounts remove-iam-policy-binding "$DEPLOYER" --project "$PROJECT_ID" \
   --role roles/iam.workloadIdentityUser \
-  --member "principalSet://iam.googleapis.com/projects/$NUMBER/locations/global/workloadIdentityPools/$POOL/attribute.repository_id/$REPO_ID" \
+  --member "principalSet://iam.googleapis.com/$POOL_PATH/attribute.repository_id/$REPO_ID" \
+  --condition None >/dev/null 2>&1 || true
+# Previews run for same-repository pull requests, so they are bound repository-wide, but the identity can only touch Hosting.
+run gcloud iam service-accounts add-iam-policy-binding "$PREVIEWER" --project "$PROJECT_ID" \
+  --role roles/iam.workloadIdentityUser \
+  --member "principalSet://iam.googleapis.com/$POOL_PATH/attribute.repository_id/$REPO_ID" \
   --condition None >/dev/null
 
-# Deployer: Hosting + rules, read published content for the export, roll out the API.
+# Deployer (production, main only): Hosting + rules + indexes, roll out the API, push images.
 for role in roles/firebasehosting.admin roles/firebaserules.admin roles/datastore.indexAdmin \
-  roles/datastore.viewer roles/run.admin roles/serviceusage.serviceUsageConsumer \
+  roles/datastore.viewer roles/serviceusage.serviceUsageConsumer \
   roles/serviceusage.apiKeysViewer roles/firebasestorage.viewer; do
   run gcloud projects add-iam-policy-binding "$PROJECT_ID" --member "serviceAccount:$DEPLOYER" \
     --role "$role" --condition None >/dev/null
 done
+# Cloud Run: roles/run.developer (deploy revisions; cannot change IAM) instead of roles/run.admin.
+# Once the service exists, grant it on the service only and drop the project-wide grants.
+if exists gcloud run services describe asad-api --project "$PROJECT_ID" --region "$REGION"; then
+  run gcloud run services add-iam-policy-binding asad-api --project "$PROJECT_ID" --region "$REGION" \
+    --member "serviceAccount:$DEPLOYER" --role roles/run.developer >/dev/null
+  for role in roles/run.admin roles/run.developer; do
+    gcloud projects remove-iam-policy-binding "$PROJECT_ID" --member "serviceAccount:$DEPLOYER" \
+      --role "$role" --condition None >/dev/null 2>&1 || true
+  done
+  # The deploy no longer passes --allow-unauthenticated (that needs setIamPolicy), so make the public
+  # invoker binding once here: Hosting rewrites reach the service, and every owner route checks tokens itself.
+  run gcloud run services add-iam-policy-binding asad-api --project "$PROJECT_ID" --region "$REGION" \
+    --member allUsers --role roles/run.invoker >/dev/null
+else
+  echo "asad-api does not exist yet: granting roles/run.developer project-wide for the first deploy; re-run this script afterwards to scope it to the service." >&2
+  run gcloud projects add-iam-policy-binding "$PROJECT_ID" --member "serviceAccount:$DEPLOYER" \
+    --role roles/run.developer --condition None >/dev/null
+  gcloud projects remove-iam-policy-binding "$PROJECT_ID" --member "serviceAccount:$DEPLOYER" \
+    --role roles/run.admin --condition None >/dev/null 2>&1 || true
+fi
 run gcloud iam service-accounts add-iam-policy-binding "$RUNTIME" --project "$PROJECT_ID" \
   --role roles/iam.serviceAccountUser --member "serviceAccount:$DEPLOYER" --condition None >/dev/null
+
+# Exporter (CONTENT_SOURCE=firestore builds): read published content only. No write, deploy or IAM roles.
+for role in roles/datastore.viewer roles/serviceusage.serviceUsageConsumer roles/firebasestorage.viewer; do
+  run gcloud projects add-iam-policy-binding "$PROJECT_ID" --member "serviceAccount:$EXPORTER" \
+    --role "$role" --condition None >/dev/null
+done
+
+# Previewer (pull request channels): Hosting only. No Cloud Run, rules, Firestore or Storage roles.
+# roles/firebasehosting.admin cannot be limited to preview channels; the real fence is that nothing else is granted.
+for role in roles/firebasehosting.admin roles/serviceusage.serviceUsageConsumer roles/serviceusage.apiKeysViewer; do
+  run gcloud projects add-iam-policy-binding "$PROJECT_ID" --member "serviceAccount:$PREVIEWER" \
+    --role "$role" --condition None >/dev/null
+done
 
 exists gcloud artifacts repositories describe asad --project "$PROJECT_ID" --location "$REGION" ||
   run gcloud artifacts repositories create asad --project "$PROJECT_ID" --location "$REGION" \
@@ -92,12 +146,15 @@ for role in roles/datastore.user roles/firebaseauth.viewer; do
 done
 if [ -n "$BUCKET" ]; then
   # Firebase's default-bucket lookup also needs underlying GCS metadata access.
-  run gcloud storage buckets add-iam-policy-binding "gs://$BUCKET" \
-    --member "serviceAccount:$DEPLOYER" --role roles/storage.bucketViewer >/dev/null
+  for sa in "$DEPLOYER" "$EXPORTER"; do
+    run gcloud storage buckets add-iam-policy-binding "gs://$BUCKET" \
+      --member "serviceAccount:$sa" --role roles/storage.bucketViewer >/dev/null
+  done
   run gcloud storage buckets add-iam-policy-binding "gs://$BUCKET" \
     --member "serviceAccount:$RUNTIME" --role roles/storage.objectAdmin >/dev/null
 fi
-# Optional rebuild hook token (fine-grained PAT for this repository, Contents: read and write).
+# Optional rebuild hook token (fine-grained PAT for this repository). Today the API sends repository_dispatch,
+# which needs Contents: read and write; docs/security.md describes moving to a token with Actions: write only.
 if ! exists gcloud secrets describe asad-api-github-token --project "$PROJECT_ID"; then
   echo "Later, for REBUILD_HOOK=github: printf %s \"\$TOKEN\" | gcloud secrets create asad-api-github-token --project $PROJECT_ID --data-file=-" >&2
 fi
@@ -107,11 +164,14 @@ exists gcloud secrets describe asad-api-github-token --project "$PROJECT_ID" &&
 
 # GitHub: a protected environment for deploys, and the configuration as repository variables
 # (job conditions can only read repository-level variables). None of these are secrets.
-run gh api -X PUT "repos/$REPO/environments/site-production" --silent \
-  -F 'deployment_branch_policy[protected_branches]=false' -F 'deployment_branch_policy[custom_branch_policies]=true'
-for branch in frontend-redesign main; do
-  gh api -X POST "repos/$REPO/environments/site-production/deployment-branch-policies" \
-    -f name="$branch" -f type=branch --silent 2>/dev/null || true
+for env in site-production site-export; do
+  run gh api -X PUT "repos/$REPO/environments/$env" --silent \
+    -F 'deployment_branch_policy[protected_branches]=false' -F 'deployment_branch_policy[custom_branch_policies]=true'
+  gh api -X POST "repos/$REPO/environments/$env/deployment-branch-policies" \
+    -f name=main -f type=branch --silent 2>/dev/null || true
+  # Only main may deploy: drop any other branch policy (an older setup also allowed frontend-redesign).
+  gh api "repos/$REPO/environments/$env/deployment-branch-policies" --jq '.branch_policies[] | select(.name != "main") | .id' |
+    while read -r id; do run gh api -X DELETE "repos/$REPO/environments/$env/deployment-branch-policies/$id" --silent; done
 done
 set_var() {
   if [ -n "$2" ]; then
@@ -121,6 +181,8 @@ set_var() {
 }
 set_var WIF_PROVIDER "$WIF_PROVIDER"
 set_var DEPLOY_SERVICE_ACCOUNT "$DEPLOYER"
+set_var EXPORT_SERVICE_ACCOUNT "$EXPORTER"
+set_var PREVIEW_SERVICE_ACCOUNT "$PREVIEWER"
 set_var API_SERVICE_ACCOUNT "$RUNTIME"
 set_var FIREBASE_PROJECT_ID "$PROJECT_ID"
 set_var FIREBASE_AUTH_DOMAIN "$PROJECT_ID.firebaseapp.com"
@@ -135,7 +197,8 @@ set_var API_REGION "$REGION"
 set_var SITE_URL "$SITE_URL"
 cat >&2 <<EOF
 
-Done. Still to set by hand (gh variable set NAME --repo $REPO --body VALUE):
+Done. Still to do by hand: docs/security.md (required reviewers on site-production, branch protection on main,
+the Actions-only dispatch token). Still to set by hand (gh variable set NAME --repo $REPO --body VALUE):
   FIREBASE_WEB_API_KEY   from: firebase apps:sdkconfig web --project $PROJECT_ID
   API_ENABLED=true       after Blaze billing, Storage and Auth are ready (first API deploy)
   CONTENT_SOURCE=firestore, INDEX_SITE=true, ENABLE_*_ADMIN=true   when you are ready for each
