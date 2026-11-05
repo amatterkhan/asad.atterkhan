@@ -166,7 +166,7 @@ p { margin: 0 0 1em; }
 
 /* ---------- home ---------- */
 .hero { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px 48px; align-items: end; padding: 24px 0 28px; }
-.hero h1 { font-size: clamp(52px, 8vw, 88px); }
+.hero h1 { font-size: clamp(64px, 11vw, 132px); line-height: 1.02; }
 .hero h1 em { color: var(--color-accent); font-style: italic; }
 .lede { font: 24px/1.35 var(--font-serif); color: var(--color-ink-strong); margin: 0 0 12px; max-width: 26ch; }
 .hero-sub { color: var(--color-muted); max-width: 46ch; }
@@ -512,7 +512,7 @@ html[data-motion="paused"] *::after {
 @media (max-width: 420px) {
   .sprite-scene > .sprite { --sprite-size: 200px !important; }
   .sprite-scene .storm-btn .sprite { --sprite-size: 100px !important; }
-  .hero h1 { font-size: 56px; }
+  .hero h1 { font-size: 68px; }
 }
 
 /* ---------- the room: LibreSprite layers at 384x216 ---------- */

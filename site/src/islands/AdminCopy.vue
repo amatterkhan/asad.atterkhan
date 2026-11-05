@@ -3,7 +3,6 @@ import { onMounted, ref } from "vue";
 import type { Api, SiteCopyForm } from "./admin-types";
 const { api } = defineProps<{ api: Api }>();
 const GROUPS: { title: string; fields: [string, string, "line" | "text" | "markdown"][] }[] = [
-  { title: "Who", fields: [["role", "Role", "line"], ["company", "Company", "line"], ["location", "Location", "line"]] },
   { title: "Hero", fields: [["heroTitle", "Title", "line"], ["heroLede", "Lead sentence", "text"], ["heroBody", "Paragraph", "text"]] },
   {
     title: "Room and closing",
