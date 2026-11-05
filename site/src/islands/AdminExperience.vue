@@ -118,7 +118,7 @@ const save = async () => {
       <label class="admin-check"><input v-model="r.isCurrent" type="checkbox" @change="touch" /><span>Current role</span></label>
       <label class="text"><span>Description</span><textarea v-model="r.duties" rows="6" @input="touch" /></label>
     </fieldset>
-    <button type="button" class="admin-lab-new" :disabled="roles.length >= 12" @click="addRole">Add role</button>
+    <button type="button" class="admin-add" :disabled="roles.length >= 12" @click="addRole">+ Add role</button>
 
     <fieldset v-for="(e, i) in education" :key="i" class="admin-lab-section">
       <legend>{{ e.degree || "New degree" }}</legend>
@@ -141,7 +141,7 @@ const save = async () => {
       </div>
       <label class="admin-check"><input v-model="e.isGraduated" type="checkbox" @change="touch" /><span>Graduated</span></label>
     </fieldset>
-    <button type="button" class="admin-lab-new" :disabled="education.length >= 6" @click="addEducation">Add degree</button>
+    <button type="button" class="admin-add" :disabled="education.length >= 6" @click="addEducation">+ Add degree</button>
 
     <fieldset v-for="(k, i) in skills" :key="i" class="admin-lab-section">
       <legend>{{ k.category || "New group" }}</legend>
@@ -153,7 +153,7 @@ const save = async () => {
       <label class="line"><span>Group</span><input v-model="k.category" maxlength="60" @input="touch" /></label>
       <label class="text"><span>Skills</span><textarea v-model="k.items" rows="3" maxlength="500" @input="touch" /></label>
     </fieldset>
-    <button type="button" class="admin-lab-new" :disabled="skills.length >= 10" @click="addSkill">Add group</button>
+    <button type="button" class="admin-add" :disabled="skills.length >= 10" @click="addSkill">+ Add skill group</button>
 
     <div class="admin-actions">
       <button class="primary" :disabled="!dirty">Save</button>

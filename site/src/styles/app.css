@@ -878,6 +878,12 @@ html[data-cursor="box"] .cursor-dot span { background: var(--color-accent); }
 .console input[type="month"] { color-scheme: dark; min-height: 46px; }
 :root[data-theme="light"] .console input[type="month"] { color-scheme: light; }
 .console input:disabled { opacity: .5; cursor: not-allowed; }
+.console .admin-add {
+  display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin: 0 0 32px; padding: 0 18px;
+  border: 2px dashed var(--color-faint); background: transparent; color: var(--color-muted); font: 13px var(--font-mono); letter-spacing: .02em; cursor: pointer;
+}
+.console .admin-add:hover:not(:disabled), .console .admin-add:focus-visible { border-color: var(--color-accent); color: var(--color-accent); outline: none; }
+.console .admin-add:disabled { opacity: .4; cursor: not-allowed; }
 .admin-experience .admin-row > label { min-width: 0; }
 .admin-experience fieldset { gap: 18px; padding-top: 28px; }
 .admin-experience .admin-lab-order button { min-width: 38px; }
