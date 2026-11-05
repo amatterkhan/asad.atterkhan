@@ -173,7 +173,8 @@ func (s *Server) quota(ctx context.Context, key string, limit, amount int64) {
 		if amount < 0 || count+amount > limit {
 			return &HTTPError{429, "Daily operation limit reached"}
 		}
-		return tx.Set(ref, map[string]any{"count": count + amount, "day": day})
+		// expireAt lets a Firestore TTL policy on _quotas.expireAt delete old counters (docs/security.md).
+		return tx.Set(ref, map[string]any{"count": count + amount, "day": day, "expireAt": time.Now().UTC().Add(72 * time.Hour)})
 	}, firestore.MaxAttempts(25)))
 }
 func readBody(w http.ResponseWriter, r *http.Request, max int64) []byte {

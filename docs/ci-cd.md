@@ -7,13 +7,34 @@ set the repository variables. Until then the deploy and preview jobs are skipped
 | Workflow | Runs on | Does |
 | --- | --- | --- |
 | `site-ci.yml` | Pull requests touching `site/`, `api/` or the workflows; called by deploy | gofmt, `go vet`, Go tests against Auth/Firestore/Storage emulators with `-race`, API Docker build; site typecheck, Vitest, `npm audit`, build, Playwright suite |
-| `site-deploy.yml` | Push to the deploy branch, `content-published` dispatch, manual | Checks → API to Cloud Run (when enabled and `api/` changed) → Hosting + Firestore/Storage rules |
+| `site-deploy.yml` | Push to `main`, `content-published` dispatch, manual | Checks → API to Cloud Run (when enabled and `api/` changed) → [export →] build → Hosting + Firestore/Storage rules |
 | `site-preview.yml` | Same-repository pull requests touching `site/` | 7-day preview channel `pr-<n>` with Git content, noindex and no API; link posted on the PR; deleted on close |
-| `.github/actions/site-build` | Used by deploy and preview | Optional Firestore export, `npm ci`/typecheck/test/build, writes `site/firebase.ci.json` |
+| `.github/actions/site-build` | Used by deploy and preview | `npm ci --ignore-scripts`, typecheck, test, build. Runs with no cloud credentials |
+| `.github/actions/site-deploy-config` | Used by deploy and preview | Writes `site/firebase.ci.json` from the checked-out `firebase.json` |
 
-`site-deploy.yml` replaces the earlier `site-rebuild.yml`: code pushes and content rebuilds now use
-one build path and one concurrency group (`site-deploy`). The newest run wins, because every build
-contains all published content.
+`site-deploy.yml` replaces the earlier `site-rebuild.yml`: code pushes and content rebuilds use one
+build path. Hosting deploys are newest-wins (job concurrency `site-deploy-hosting`), because every
+build contains all published content. The API job has its own group (`site-deploy-api`) with
+`cancel-in-progress: false`, so a content rebuild can never cancel an API rollout.
+
+### Credentials never share a job with npm or the build
+
+Untrusted code (npm packages and their scripts, the Vitest and Vite configs, the build) runs only in
+jobs with no `id-token` permission and no Google auth step, so there is no token to steal:
+
+| Job | Permissions | Identity | Runs |
+| --- | --- | --- | --- |
+| `export` (only when `CONTENT_SOURCE=firestore`) | `id-token` | `EXPORT_SERVICE_ACCOUNT`, read-only, environment `site-export` | `go run ./cmd/export`, uploads the snapshot as an artifact |
+| `build` | none | none | `npm ci --ignore-scripts`, typecheck, tests, build; uploads `dist` |
+| `hosting` | `id-token` | `DEPLOY_SERVICE_ACCOUNT`, environment `site-production` | installs the pinned `firebase-tools` from the lockfile (`--ignore-scripts`), writes the deploy config itself, authenticates, deploys |
+| preview `build` / `preview` / `cleanup` | none / `id-token` / `id-token` | `PREVIEW_SERVICE_ACCOUNT` (Hosting only) | same split |
+
+The deploy jobs generate `firebase.ci.json` themselves and take only `dist/` from the build artifact,
+so nothing the build produced can add Firebase CLI hooks that run with credentials. All third-party
+actions are pinned to full commit SHAs (version in a trailing comment); Dependabot
+(`.github/dependabot.yml`) proposes updates for actions, npm, Go modules and the Docker base images.
+`firebase-tools` is a pinned devDependency of `site/` (run with `npx --no-install firebase`), not an
+`npx --yes` download.
 
 ## How the pieces connect
 
@@ -25,9 +46,9 @@ push to deploy branch -> checks -> Cloud Run (asad-api) -> Hosting + rules
 owner publishes in /admin -> API sends repository_dispatch -> export -> build -> Hosting
 ```
 
-- **Deploy branch:** `frontend-redesign`, or the `SITE_DEPLOY_BRANCH` variable. Pushes to other
-  branches are ignored. GitHub Pages is disabled; the default-branch workflow cleanup is
-  checked again before the merge to `main`.
+- **Deploy branch:** `main`. Pushes to other branches are ignored, and the `site-production` and
+  `site-export` environments only admit `main`. `SITE_DEPLOY_BRANCH` can override the branch that
+  content rebuilds build (leave it unset, or set it to `main`); the push trigger itself is `main` only.
 - **Content rebuilds:** GitHub delivers `repository_dispatch` only to workflows on the **default
   branch (`main`)**, so publish-triggered rebuilds start once `site-deploy.yml` is on `main`. The
   workflow still checks out the deploy branch, not `main`. Until then, run it manually
@@ -41,8 +62,8 @@ owner publishes in /admin -> API sends repository_dispatch -> export -> build ->
 
 Needs `gcloud` and `gh`, signed in as the project owner. Read the script first, because it changes IAM.
 
-1. Push this branch: `git remote add origin https://github.com/amatterkhan/asad.atterkhan.git`,
-   then `git push -u origin frontend-redesign`.
+1. Push `main`: `git remote add origin https://github.com/amatterkhan/asad.atterkhan.git`,
+   then `git push -u origin main`.
 2. Run the setup:
 
    ```bash
@@ -51,15 +72,28 @@ Needs `gcloud` and `gh`, signed in as the project owner. Read the script first, 
 
    It creates:
    - the `github` identity pool, restricted to this repository's numeric ID;
-   - `github-deployer` (Hosting, rules, read Firestore for the export, Cloud Run rollout, image push);
+   - `github-deployer` (Hosting, rules, Cloud Run rollout with `roles/run.developer` scoped to the
+     `asad-api` service once it exists, image push), impersonable only by jobs in the `site-production`
+     environment (the Workload Identity binding names the environment subject, not the whole repository);
+   - `github-exporter`, read-only Firestore and Storage metadata, impersonable only from `site-export`;
+   - `github-preview`, Hosting only, for pull request preview channels;
+   - a one-time `allUsers` → `roles/run.invoker` binding on `asad-api` (the deploy no longer passes
+     `--allow-unauthenticated`, which needs IAM-editing rights the deployer no longer has);
    - `asad-api` as the runtime identity (Firestore read/write, token verification, the private bucket
      when `BUCKET` is set);
    - the `asad` Artifact Registry repository;
-   - a `site-production` environment limited to `frontend-redesign` and `main`;
+   - `site-production` and `site-export` environments limited to `main` (other branch policies are removed);
    - the repository variables listed below.
 3. Set `FIREBASE_WEB_API_KEY` from `firebase apps:sdkconfig web --project asad-atterkhan`.
 4. Push, or run the deploy workflow by hand. The first deploy is static Hosting with Git content
    at `SITE_URL` (default `https://asad-atterkhan.web.app`), noindex.
+
+Re-running the script on an existing setup tightens it: it removes the old repository-wide binding on the
+deployer and the project-wide `run.admin` grant, and creates the exporter and preview identities. Run it,
+and check the new variables (`EXPORT_SERVICE_ACCOUNT`, `PREVIEW_SERVICE_ACCOUNT`), **before** merging
+changes to the workflows: otherwise Firestore exports fail to authenticate and previews are skipped.
+Manual hardening that cannot be scripted (required reviewers, branch protection, token scope) is in
+[security.md](security.md).
 
 Then turn things on one at a time, each with `gh variable set NAME --body VALUE`:
 
@@ -99,7 +133,7 @@ from Firestore: `site/content/` and the API's embedded `site.json` are only fall
 changes go live by saving them in `/admin`, not by editing those files.
 
 Configuration names set during launch (values of UID/key omitted):
-`WIF_PROVIDER`, `DEPLOY_SERVICE_ACCOUNT`, `API_SERVICE_ACCOUNT`, `FIREBASE_PROJECT_ID`,
+`WIF_PROVIDER`, `DEPLOY_SERVICE_ACCOUNT`, `EXPORT_SERVICE_ACCOUNT`, `PREVIEW_SERVICE_ACCOUNT`, `API_SERVICE_ACCOUNT`, `FIREBASE_PROJECT_ID`,
 `FIREBASE_AUTH_DOMAIN`, `FIREBASE_STORAGE_BUCKET`, `FIREBASE_OWNER_UID`, `API_REGION`,
 `SITE_URL`, `FIREBASE_WEB_API_KEY`, `API_ENABLED`, `CONTENT_SOURCE`, `INDEX_SITE`, `REBUILD_HOOK`,
 `SITE_DEPLOY_BRANCH`, `ENABLE_CONTENT_ADMIN`, `ENABLE_ACHIEVEMENT_ADMIN`, `ENABLE_DOCUMENT_ADMIN`,
@@ -108,7 +142,7 @@ GitHub secrets: `FIREBASE_OWNER_UID`, `FIREBASE_WEB_API_KEY`. The Secret Manager
 `asad-api-github-token` (fine-grained token, Contents: read and write, this repository only) is
 mounted into Cloud Run when `REBUILD_HOOK=github`. It expires, so set a reminder and rotate it
 with `gcloud secrets versions add asad-api-github-token --data-file=-` plus an API redeploy.
-Rapid admin saves each start a run; the workflow's concurrency group cancels superseded ones.
+Rapid admin saves each start a run; the Hosting deploy's concurrency group cancels superseded ones.
 
 Cost follow-up: Cloud Run scales to zero with maximum two instances. The `asad` Artifact
 Registry repository keeps the five newest image versions and deletes older ones after 14 days

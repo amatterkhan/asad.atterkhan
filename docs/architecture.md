@@ -73,7 +73,7 @@ Documents accept PDF, PNG, JPEG and WebP signatures, up to 8 MiB, with 25 upload
 Publication uses a new object path, verifies the source size/digest, and checks the document's
 update time again inside a transaction. The bounded copy works with GCS and the Storage emulator.
 Failed publication removes its unused copy. Archive removes public access and retains the private
-original. Public delivery has a shared 64 MiB/day byte quota and never uses public bucket ACLs.
+original. Public delivery is CDN-cacheable (`max-age=300, s-maxage=3600`), has a shared 1 GiB/day byte quota plus a per-client share, and never uses public bucket ACLs (see [security.md](security.md)).
 
 ## Rebuild hook
 
