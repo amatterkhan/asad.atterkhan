@@ -175,8 +175,35 @@ type Thoughts = {
 - Public read: the exporter writes it to `thoughts.json` in the build snapshot. The site passes
   only enabled lines (and the featured id, if that line is enabled) to the room.
 
+## 7. Experience: `siteSettings/experience` (one document)
+
+The Experience page: work, education and skills. Falls back to `content/experience.json` until the
+first save.
+
+```ts
+type Experience = {
+  work: {                     // ≤ 12, oldest first; consecutive roles at one company are grouped
+    id: number;               // unique; promotionFrom refers to it
+    title: string; company: string; dateRange: string;   // 1–100 / 1–100 / 1–60
+    responsibilities: string[];                          // 1–10 lines of ≤ 500; the first is the summary
+    promotionFrom?: number;   // id of another role (an internal move)
+    isCurrent?: boolean;
+  }[];
+  education: { degree: string; field: string; university: string; classification: string;
+               degreeLink: string /* https */; graduationDate: string; isGraduated: boolean }[]; // ≤ 6
+  skills: { category: string; items: string }[];         // ≤ 10
+  updatedAt?: string;         // ISO, set by the server
+};
+```
+
+- `GET /api/admin/experience` (service `content`) → `Experience`
+- `PUT /api/admin/experience` body `{ work, education, skills }` (duplicate role ids, a promotion
+  from an unknown role, unknown keys, non-https links, or control characters → 400) → `Experience`;
+  then requests a rebuild.
+- Public read: the exporter writes it to `experience.json` in the build snapshot.
+
 ## Rebuild requests
 
-Site-copy saves, article publish/unpublish, achievement, wardrobe, Lab map and Thoughts changes ask GitHub to rebuild
+Site-copy saves, article publish/unpublish, achievement, wardrobe, Lab map, Thoughts and Experience changes ask GitHub to rebuild
 the site (`repository_dispatch` `content-published`; see [architecture.md](architecture.md)).
 Article draft saves and previews do not. Published documents change visibility immediately.

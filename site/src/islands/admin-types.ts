@@ -33,3 +33,9 @@ export const slugify = (s: string) =>
 export type ThoughtContext = "general" | "night" | "storm" | "steins-gate";
 export type ThoughtLine = { id: string; text: string; enabled: boolean; context: ThoughtContext };
 export type ThoughtsState = { thoughts: ThoughtLine[]; featured: string | null; updatedAt?: string };
+export type ExperienceState = {
+  work: { id: number; title: string; company: string; dateRange: string; responsibilities: string[]; promotionFrom?: number; isCurrent?: boolean }[];
+  education: { degree: string; field: string; university: string; classification: string; degreeLink: string; graduationDate: string; isGraduated: boolean }[];
+  skills: { category: string; items: string }[];
+  updatedAt?: string;
+};

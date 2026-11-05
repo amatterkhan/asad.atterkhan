@@ -1,0 +1,86 @@
+{
+  "work": [
+    {
+      "id": 0,
+      "title": "Software Trainee",
+      "company": "GammaTech Ltd (Gamma)",
+      "dateRange": "June 2023 - May 2024",
+      "responsibilities": [
+        "Contributed to software development, SQL database operations, research, testing, automation, and technical support."
+      ]
+    },
+    {
+      "id": 1,
+      "title": "IT Support Engineer",
+      "company": "Tropic Knits Group Ltd (CIEL Textile)",
+      "dateRange": "May 2024 - March 2025",
+      "responsibilities": [
+        "Administered enterprise infrastructure, including Active Directory, Group Policy, Windows/Linux systems, Microsoft 365, and networking equipment.",
+        "Managed endpoint security, infrastructure troubleshooting, identity administration, and IT operations across corporate and industrial environments."
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Engineer I, IT Service Desk",
+      "company": "Checkout.com",
+      "dateRange": "May 2025 - August 2025",
+      "responsibilities": [
+        "Supported global IT operations, administering identities, endpoints, and enterprise applications across Okta, Google Workspace, and Microsoft 365.",
+        "Automated support workflows and managed user lifecycle operations, access provisioning, and IT service delivery."
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Security Operations Analyst",
+      "company": "Checkout.com",
+      "dateRange": "August 2025 - Present",
+      "promotionFrom": 2,
+      "isCurrent": true,
+      "responsibilities": [
+        "Designed and built internal security tooling, including a vulnerability management platform, browser extensions, and AI-powered agents that automate security operations, vulnerability management, and audit workflows.",
+        "Built SOC investigation workbooks and automations to speed up investigations and reduce manual effort.",
+        "Operated within a 24/7 global SOC, investigating and responding to high-severity incidents, including analysis, containment, root cause analysis, and remediation.",
+        "Engineered and tuned SIEM detection rules, Netskope DLP policies, SentinelOne controls, and automated alerting workflows to strengthen threat detection and response.",
+        "Ran vulnerability and patch management, including firewall reviews (Qualys) and pentest remediation coordinated with DevOps, plus security audits and compliance assessments."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "Master of Science",
+      "field": "Computer Science",
+      "university": "Georgia Institute of Technology",
+      "classification": "In Progress",
+      "degreeLink": "https://www.cc.gatech.edu/degree-programs/master-science-computer-science/",
+      "graduationDate": "Present",
+      "isGraduated": false
+    },
+    {
+      "degree": "Bachelor of Science (Hons)",
+      "field": "Computer Science (Systems Engineering)",
+      "university": "Middlesex University",
+      "classification": "First Class Honours",
+      "degreeLink": "https://verify.mdx.ac.uk/?reference=13446879-01-JWYD",
+      "graduationDate": "July 2025",
+      "isGraduated": true
+    }
+  ],
+  "skills": [
+    {
+      "category": "Security Operations & Response",
+      "items": "Incident Response, Threat Detection & Triage, Root Cause Analysis, Security Audits & Compliance"
+    },
+    {
+      "category": "Vulnerability & Exposure Management",
+      "items": "Vulnerability Management, Patch Management, Penetration Test Remediation, Firewall Configuration Review, Risk Prioritisation"
+    },
+    {
+      "category": "Security Engineering & Automation",
+      "items": "Detection Engineering, SIEM Rules & Alerting, DLP Policy Management, Security Automation, Internal Tooling, Programming, REST APIs, SQL"
+    },
+    {
+      "category": "Platforms & Infrastructure",
+      "items": "Qualys, Nipper, SentinelOne, Netskope, Wiz, Cloudflare, Okta, AWS, Azure, Active Directory, Windows, Linux, Jira"
+    }
+  ]
+}

@@ -23,6 +23,10 @@ one of these is a prerendered page, and the search on each covers that shelf.
   category that is no longer in its section is ignored. Nothing breaks the build either way.
 - **Thumbnails**: see [lab-thumbnails.md](lab-thumbnails.md).
 
+### Experience
+
+**Experience** (admin tab) edits the roles, education and skills on `/experience`: add, reorder and remove them, mark the current role and internal moves. Saving rebuilds the site. The starting set is `site/content/experience.json`. Certifications on that page are the achievements picked under Achievements.
+
 ### Thoughts
 
 Now and then Asad says a one-liner in a speech bubble in the homepage room. **Thoughts** (admin
