@@ -62,7 +62,7 @@ const save = async () => {
   try {
     const body = { thoughts: lines.value!.map(({ id, text, enabled, context }) => ({ id, text: text.trim(), enabled, context })), featured: featured.value };
     load(await api<ThoughtsState>("/api/admin/thoughts", { method: "PUT", body: JSON.stringify(body) }));
-    note.value = "Saved. Asad says the new lines once the site rebuild finishes.";
+    note.value = "Saved.";
   } catch (e) {
     note.value = (e as Error).message;
   }
@@ -113,7 +113,7 @@ const save = async () => {
     </fieldset>
     <div class="admin-actions">
       <button class="primary" :disabled="!dirty">Save Thoughts</button>
-      <span class="admin-status" role="status">{{ note || problem || (dirty ? "Unsaved changes." : updatedAt ? `Last saved ${new Date(updatedAt).toLocaleString()}` : "Showing the starting set.") }}</span>
+      <span class="admin-status" role="status">{{ note || problem || (dirty ? "Unsaved changes." : updatedAt ? `Last saved ${new Date(updatedAt).toLocaleString()}` : "") }}</span>
     </div>
   </form>
 </template>

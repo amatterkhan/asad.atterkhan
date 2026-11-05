@@ -1,11 +1,18 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import PixelIcon from "../components/PixelIcon.vue";
 import type { Api, ExperienceState } from "./admin-types";
-// The Experience page: roles (oldest first, as on the page's timeline source), education and
-// skills. Saving rebuilds the site. Responsibilities are one per line; the first is the summary.
+// The Experience page: roles (oldest first), education and skills. The description is one line per
+// bullet; the first line is the summary shown on the page.
 const { api } = defineProps<{ api: Api }>();
-type EditRole = { id: number; title: string; company: string; dateRange: string; duties: string; promotionFrom: number | ""; isCurrent: boolean };
+// Dates are stored as "May 2025 - August 2025" (or "… - Present") and edited as months.
+type EditRole = { id: number; title: string; company: string; from: string; to: string; duties: string; promotionFrom: number | ""; isCurrent: boolean };
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const toMonth = (text: string) => {
+  const m = /^([A-Za-z]+)\s+(\d{4})$/.exec(text.trim());
+  const i = m ? MONTHS.findIndex((n) => n.slice(0, 3).toLowerCase() === m[1].slice(0, 3).toLowerCase()) : -1;
+  return i < 0 ? "" : `${m![2]}-${String(i + 1).padStart(2, "0")}`;
+};
+const fromMonth = (v: string) => (/^\d{4}-\d{2}$/.test(v) ? `${MONTHS[Number(v.slice(5)) - 1]} ${v.slice(0, 4)}` : "");
 const roles = ref<EditRole[] | null>(null);
 const education = ref<ExperienceState["education"]>([]);
 const skills = ref<ExperienceState["skills"]>([]);
@@ -15,7 +22,7 @@ const dirty = ref(false);
 const touch = () => (dirty.value = true);
 
 const load = (s: ExperienceState) => {
-  roles.value = s.work.map((r) => ({ id: r.id, title: r.title, company: r.company, dateRange: r.dateRange, duties: r.responsibilities.join("\n"), promotionFrom: r.promotionFrom ?? "", isCurrent: !!r.isCurrent }));
+  roles.value = s.work.map((r) => ({ id: r.id, title: r.title, company: r.company, from: toMonth(r.dateRange.split(" - ")[0]), to: toMonth(r.dateRange.split(" - ")[1] ?? ""), duties: r.responsibilities.join("\n"), promotionFrom: r.promotionFrom ?? "", isCurrent: !!r.isCurrent }));
   education.value = s.education.map((e) => ({ ...e }));
   skills.value = s.skills.map((k) => ({ ...k }));
   updatedAt.value = s.updatedAt;
@@ -31,7 +38,7 @@ const move = (list: unknown[], i: number, by: number) => {
 };
 const addRole = () => {
   const id = Math.max(-1, ...roles.value!.map((r) => r.id)) + 1;
-  roles.value!.push({ id, title: "", company: "", dateRange: "", duties: "", promotionFrom: "", isCurrent: false });
+  roles.value!.push({ id, title: "", company: "", from: "", to: "", duties: "", promotionFrom: "", isCurrent: false });
   touch();
 };
 const removeRole = (i: number) => {
@@ -54,7 +61,7 @@ const splice = (list: unknown[], i: number) => {
 };
 const lines = (s: string) => s.split("\n").map((l) => l.trim()).filter(Boolean);
 const problem = computed(() => {
-  for (const r of roles.value ?? []) if (!r.title.trim() || !r.company.trim() || !r.dateRange.trim() || !lines(r.duties).length) return "Every role needs a title, company, dates and at least one line.";
+  for (const r of roles.value ?? []) if (!r.title.trim() || !r.company.trim() || !r.from || (!r.isCurrent && !r.to) || !lines(r.duties).length) return "Every role needs a title, company, dates and a description.";
   for (const e of education.value) if (!e.degree.trim() || !e.field.trim() || !e.university.trim() || !/^https:\/\//.test(e.degreeLink)) return "Every degree needs a name, field, university and an https link.";
   for (const k of skills.value) if (!k.category.trim() || !k.items.trim()) return "Every skill group needs a name and items.";
   return "";
@@ -68,7 +75,7 @@ const save = async () => {
         id: r.id,
         title: r.title.trim(),
         company: r.company.trim(),
-        dateRange: r.dateRange.trim(),
+        dateRange: `${fromMonth(r.from)} - ${r.isCurrent ? "Present" : fromMonth(r.to)}`,
         responsibilities: lines(r.duties),
         ...(r.promotionFrom !== "" ? { promotionFrom: r.promotionFrom } : {}),
         ...(r.isCurrent ? { isCurrent: true } : {}),
@@ -77,70 +84,80 @@ const save = async () => {
       skills: skills.value,
     };
     load(await api<ExperienceState>("/api/admin/experience", { method: "PUT", body: JSON.stringify(body) }));
-    note.value = "Saved. The Experience page updates once the site rebuild finishes.";
+    note.value = "Saved.";
   } catch (e) {
     note.value = (e as Error).message;
   }
 };
 </script>
 <template>
-  <p v-if="!roles" class="admin-status" role="status">{{ note || "Loading Experience…" }}</p>
-  <form v-else class="admin-form" @submit.prevent="save">
-    <p class="admin-lede">The Experience page. Roles run oldest first; the page groups consecutive roles at one company. One line per bullet: the first is the summary shown on the page.</p>
-    <fieldset v-for="(r, i) in roles" :key="r.id">
-      <legend>Role {{ i + 1 }}{{ r.title ? ` · ${r.title}` : "" }}</legend>
-      <label class="line"><span>Title</span><input v-model="r.title" maxlength="100" @input="touch" /></label>
-      <label class="line"><span>Company</span><input v-model="r.company" maxlength="100" @input="touch" /></label>
-      <label class="line"><span>Dates (e.g. May 2025 - August 2025)</span><input v-model="r.dateRange" maxlength="60" @input="touch" /></label>
-      <label class="text"><span>Bullets (one per line)</span><textarea v-model="r.duties" rows="6" @input="touch" /></label>
-      <label class="line">
-        <span>Internal move from</span>
-        <select v-model="r.promotionFrom" @change="touch">
-          <option value="">Not an internal move</option>
-          <option v-for="o in roles.filter((x) => x.id !== r.id)" :key="o.id" :value="o.id">{{ o.title || `Role ${o.id}` }}</option>
-        </select>
-      </label>
+  <p v-if="!roles" class="admin-status" role="status">{{ note || "Loading…" }}</p>
+  <form v-else class="admin-form admin-experience" @submit.prevent="save">
+    <fieldset v-for="(r, i) in roles" :key="r.id" class="admin-lab-section">
+      <legend>{{ r.title || "New role" }}</legend>
+      <div class="admin-lab-order">
+        <button type="button" :disabled="i === 0" aria-label="Move role up" @click="move(roles, i, -1)">↑</button>
+        <button type="button" :disabled="i === roles.length - 1" aria-label="Move role down" @click="move(roles, i, 1)">↓</button>
+        <button type="button" class="danger" @click="removeRole(i)">Remove</button>
+      </div>
+      <div class="admin-row">
+        <label class="grow"><span>Title</span><input v-model="r.title" maxlength="100" @input="touch" /></label>
+        <label class="grow"><span>Company</span><input v-model="r.company" maxlength="100" @input="touch" /></label>
+      </div>
+      <div class="admin-row">
+        <label class="grow"><span>From</span><input v-model="r.from" type="month" @input="touch" /></label>
+        <label class="grow"><span>To</span><input v-model="r.to" type="month" :disabled="r.isCurrent" :placeholder="r.isCurrent ? 'Present' : ''" @input="touch" /></label>
+        <label class="grow">
+          <span>Internal move from</span>
+          <select v-model="r.promotionFrom" @change="touch">
+            <option value="">None</option>
+            <option v-for="o in roles.filter((x) => x.id !== r.id)" :key="o.id" :value="o.id">{{ o.title || `Role ${o.id}` }}</option>
+          </select>
+        </label>
+      </div>
       <label class="admin-check"><input v-model="r.isCurrent" type="checkbox" @change="touch" /><span>Current role</span></label>
-      <div class="admin-actions">
-        <button type="button" :disabled="i === 0" @click="move(roles, i, -1)">Move up</button>
-        <button type="button" :disabled="i === roles.length - 1" @click="move(roles, i, 1)">Move down</button>
-        <button type="button" :aria-label="`Remove ${r.title || 'role'}`" @click="removeRole(i)"><PixelIcon name="close" /></button>
-      </div>
+      <label class="text"><span>Description</span><textarea v-model="r.duties" rows="6" @input="touch" /></label>
     </fieldset>
-    <button type="button" :disabled="roles.length >= 12" @click="addRole">Add role</button>
+    <button type="button" class="admin-add" :disabled="roles.length >= 12" @click="addRole">+ Add role</button>
 
-    <fieldset v-for="(e, i) in education" :key="i">
-      <legend>Education {{ i + 1 }}{{ e.degree ? ` · ${e.degree}` : "" }}</legend>
-      <label class="line"><span>Degree</span><input v-model="e.degree" maxlength="100" @input="touch" /></label>
-      <label class="line"><span>Field</span><input v-model="e.field" maxlength="100" @input="touch" /></label>
-      <label class="line"><span>University</span><input v-model="e.university" maxlength="100" @input="touch" /></label>
-      <label class="line"><span>Link (https://…)</span><input v-model="e.degreeLink" maxlength="500" @input="touch" /></label>
-      <label class="line"><span>Classification</span><input v-model="e.classification" maxlength="60" @input="touch" /></label>
-      <label class="line"><span>Graduation date</span><input v-model="e.graduationDate" maxlength="40" @input="touch" /></label>
+    <fieldset v-for="(e, i) in education" :key="i" class="admin-lab-section">
+      <legend>{{ e.degree || "New degree" }}</legend>
+      <div class="admin-lab-order">
+        <button type="button" :disabled="i === 0" aria-label="Move degree up" @click="move(education, i, -1)">↑</button>
+        <button type="button" :disabled="i === education.length - 1" aria-label="Move degree down" @click="move(education, i, 1)">↓</button>
+        <button type="button" class="danger" @click="splice(education, i)">Remove</button>
+      </div>
+      <div class="admin-row">
+        <label class="grow"><span>Degree</span><input v-model="e.degree" maxlength="100" @input="touch" /></label>
+        <label class="grow"><span>Field</span><input v-model="e.field" maxlength="100" @input="touch" /></label>
+      </div>
+      <div class="admin-row">
+        <label class="grow"><span>University</span><input v-model="e.university" maxlength="100" @input="touch" /></label>
+        <label class="grow"><span>Link</span><input v-model="e.degreeLink" type="url" maxlength="500" @input="touch" /></label>
+      </div>
+      <div class="admin-row">
+        <label class="grow"><span>Classification</span><input v-model="e.classification" maxlength="60" @input="touch" /></label>
+        <label class="grow"><span>Graduation</span><input v-model="e.graduationDate" maxlength="40" @input="touch" /></label>
+      </div>
       <label class="admin-check"><input v-model="e.isGraduated" type="checkbox" @change="touch" /><span>Graduated</span></label>
-      <div class="admin-actions">
-        <button type="button" :disabled="i === 0" @click="move(education, i, -1)">Move up</button>
-        <button type="button" :disabled="i === education.length - 1" @click="move(education, i, 1)">Move down</button>
-        <button type="button" :aria-label="`Remove ${e.degree || 'degree'}`" @click="splice(education, i)"><PixelIcon name="close" /></button>
-      </div>
     </fieldset>
-    <button type="button" :disabled="education.length >= 6" @click="addEducation">Add degree</button>
+    <button type="button" class="admin-add" :disabled="education.length >= 6" @click="addEducation">+ Add degree</button>
 
-    <fieldset v-for="(k, i) in skills" :key="i">
-      <legend>Skills {{ i + 1 }}{{ k.category ? ` · ${k.category}` : "" }}</legend>
-      <label class="line"><span>Group</span><input v-model="k.category" maxlength="60" @input="touch" /></label>
-      <label class="text"><span>Items (comma separated)</span><textarea v-model="k.items" rows="3" maxlength="500" @input="touch" /></label>
-      <div class="admin-actions">
-        <button type="button" :disabled="i === 0" @click="move(skills, i, -1)">Move up</button>
-        <button type="button" :disabled="i === skills.length - 1" @click="move(skills, i, 1)">Move down</button>
-        <button type="button" :aria-label="`Remove ${k.category || 'group'}`" @click="splice(skills, i)"><PixelIcon name="close" /></button>
+    <fieldset v-for="(k, i) in skills" :key="i" class="admin-lab-section">
+      <legend>{{ k.category || "New group" }}</legend>
+      <div class="admin-lab-order">
+        <button type="button" :disabled="i === 0" aria-label="Move group up" @click="move(skills, i, -1)">↑</button>
+        <button type="button" :disabled="i === skills.length - 1" aria-label="Move group down" @click="move(skills, i, 1)">↓</button>
+        <button type="button" class="danger" @click="splice(skills, i)">Remove</button>
       </div>
+      <label class="line"><span>Group</span><input v-model="k.category" maxlength="60" @input="touch" /></label>
+      <label class="text"><span>Skills</span><textarea v-model="k.items" rows="3" maxlength="500" @input="touch" /></label>
     </fieldset>
-    <button type="button" :disabled="skills.length >= 10" @click="addSkill">Add skill group</button>
+    <button type="button" class="admin-add" :disabled="skills.length >= 10" @click="addSkill">+ Add skill group</button>
 
     <div class="admin-actions">
-      <button class="primary" :disabled="!dirty">Save Experience</button>
-      <span class="admin-status" role="status">{{ note || problem || (dirty ? "Unsaved changes." : updatedAt ? `Last saved ${new Date(updatedAt).toLocaleString()}` : "Showing the starting set.") }}</span>
+      <button class="primary" :disabled="!dirty">Save</button>
+      <span class="admin-status" role="status">{{ note || problem || (dirty ? "Unsaved changes." : updatedAt ? `Saved ${new Date(updatedAt).toLocaleString()}` : "") }}</span>
     </div>
   </form>
 </template>

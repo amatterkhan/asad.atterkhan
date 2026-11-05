@@ -3,7 +3,6 @@ import { onMounted, ref } from "vue";
 import type { Api, SiteCopyForm } from "./admin-types";
 const { api } = defineProps<{ api: Api }>();
 const GROUPS: { title: string; fields: [string, string, "line" | "text" | "markdown"][] }[] = [
-  { title: "Who", fields: [["role", "Role", "line"], ["company", "Company", "line"], ["location", "Location", "line"]] },
   { title: "Hero", fields: [["heroTitle", "Title", "line"], ["heroLede", "Lead sentence", "text"], ["heroBody", "Paragraph", "text"]] },
   {
     title: "Room and closing",
@@ -23,7 +22,7 @@ const save = async () => {
   note.value = "Saving…";
   try {
     copy.value = await api<SiteCopyForm>("/api/admin/site", { method: "PUT", body: JSON.stringify(copy.value) });
-    note.value = "Saved. The site rebuilds with it in a minute or two.";
+    note.value = "Saved.";
   } catch (e) {
     note.value = (e as Error).message;
   }

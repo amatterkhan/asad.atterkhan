@@ -90,7 +90,7 @@ const save = async () => {
   try {
     const body = { sections: sections.value!.map(({ id, name, blurb, icon, categories }) => ({ id, name, blurb, icon, categories })) };
     load(await api<LabMap>("/api/admin/lab", { method: "PUT", body: JSON.stringify(body) }));
-    note.value = "Saved. The Lab updates when the site rebuild finishes.";
+    note.value = "Saved.";
   } catch (e) {
     note.value = (e as Error).message;
   }

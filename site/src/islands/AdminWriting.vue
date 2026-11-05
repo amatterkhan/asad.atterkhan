@@ -76,7 +76,7 @@ const act = (verb: "publish" | "unpublish") =>
     draft.value = await api<Draft>(`/api/admin/articles/${slug}/${verb}`, { method: "POST" });
     await refresh();
     note.value =
-      verb === "publish" ? `Published. /lab/${slug} goes live when the site rebuild finishes.` : "Unpublished. The rebuild removes it from the site.";
+      verb === "publish" ? "Published." : "Unpublished.";
   });
 const remove = () =>
   run("Deleting…", async () => {
