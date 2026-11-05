@@ -68,6 +68,17 @@ func (s *Server) get(ctx context.Context, collection, id string) map[string]any 
 	must(err)
 	return d.Data()
 }
+
+// siteMax is the longest a Site copy field may be (the site's SiteCopySchema).
+func siteMax(key string) int {
+	switch {
+	case key == "aboutBody":
+		return 8000
+	case strings.HasPrefix(key, "share"):
+		return 200
+	}
+	return 600
+}
 func (s *Server) site(w http.ResponseWriter, r *http.Request) {
 	uid := s.owner(r, "content", r.Method == "PUT")
 	ctx := r.Context()
@@ -81,11 +92,7 @@ func (s *Server) site(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		for k := range content.Object("site") {
-			max := 600
-			if k == "aboutBody" {
-				max = 8000
-			}
-			stringField(fallback, k, 0, max, false)
+			stringField(fallback, k, 0, siteMax(k), false)
 		}
 		if v, ok := stored["updatedAt"].(string); ok {
 			fallback["updatedAt"] = v
@@ -99,11 +106,7 @@ func (s *Server) site(w http.ResponseWriter, r *http.Request) {
 	}
 	v := input(w, r, 64*1024, allowed...)
 	for k := range fallback {
-		max := 600
-		if k == "aboutBody" {
-			max = 8000
-		}
-		if controlPattern.MatchString(stringField(v, k, 0, max, false)) {
+		if controlPattern.MatchString(stringField(v, k, 0, siteMax(k), false)) {
 			fail(400, "Invalid input")
 		}
 	}

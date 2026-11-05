@@ -38,6 +38,8 @@ type SiteCopy = {
   achievementsIntro: string;
   resumeUrl: string;       // Experience page "Save résumé PDF" link; http(s) or empty to hide
   aboutBody: string; // aboutBody: Markdown (sanitised like articles)
+  shareHome: string; shareAbout: string; shareLab: string;       // the line under a page's title in a link
+  shareWorkbench: string; shareExperience: string; shareAchievements: string; // preview (≤ 200 chars)
   updatedAt?: string;      // ISO, set by the server
 };
 ```
