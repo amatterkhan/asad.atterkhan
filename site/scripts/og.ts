@@ -10,8 +10,8 @@ import { NIXIE_X, NIXIE_Y, divergenceTubes, glyph, plinthWidth, readingPath, unl
 // Open Graph images, built before the pages so each page can link its image with a content hash
 // (?v=…; every platform caches previews by image URL). /opengraph-image.png is a postcard from the
 // room: the night room at 3x, drawn from the same layers and sprite sheets (first frame), with the
-// divergence meter reading 1.048596, beside a dark-green panel with the Asad.exe wordmark (Departure
-// Mono, rasterised once at its native 11px into scripts/assets/og-wordmark.png). Lab articles keep
+// divergence meter reading 1.048596, beside a dark-green panel with the name (Asad / Atterkhan, large) and a small .exe under it
+// (Departure Mono, rasterised once at its native 11px into scripts/assets/og-wordmark*.png). Lab articles keep
 // their own text cards (satori + resvg, the Geist font next/og falls back to).
 type Server = { getArticles(): Promise<Article[]>; getActiveOutfit(): Promise<string> };
 type Write = (file: string, body: Buffer) => Promise<void>;
@@ -40,7 +40,7 @@ export async function ogImages(server: Server, root: string, dist: string, write
         div(frame, [
           div({ color: "#accfb8", fontSize: 28 }, "~/lab"),
           div({ fontSize: 56 }, a.title),
-          div({ color: "#c3b2ed", fontSize: 26 }, "Asad.exe · The Lab"),
+          div({ color: "#c3b2ed", fontSize: 26 }, "Asad Atterkhan · The Lab"),
         ]),
       ),
     );
@@ -95,14 +95,18 @@ async function postcard(root: string, outfit: string) {
     ${await layer("night")}${await layer("glow")}${await layer("bulb")}
     ${lit}${lights}
   </svg>`;
-  // the wordmark at 5x, in the panel's lower half, left-aligned with a generous margin
-  const mark = { w: 54 * 5, h: 8 * 5 };
+  // the name at 5x with a small ".exe" under it, in the panel's middle (Departure Mono bitmaps)
+  const name = { w: 62 * 5, h: 20 * 5 };
+  const exe = { w: 27 * 3, h: 8 * 3 };
   const panelX = ROOM.w * ROOM.scale;
+  const markX = panelX + 46;
+  const markY = Math.round(315 - (name.h + 28 + exe.h) / 2);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
     <rect width="1200" height="630" fill="${PANEL}"/>
     ${room}
     <rect x="${panelX}" y="0" width="6" height="630" fill="${SEAM}"/>
-    <image href="${await file(path.join(root, "scripts/assets/og-wordmark.png"))}" x="${panelX + 66}" y="${315 - mark.h / 2}" width="${mark.w}" height="${mark.h}" image-rendering="optimizeSpeed"/>
+    <image href="${await file(path.join(root, "scripts/assets/og-wordmark.png"))}" x="${markX}" y="${markY}" width="${name.w}" height="${name.h}" image-rendering="optimizeSpeed"/>
+    <image href="${await file(path.join(root, "scripts/assets/og-wordmark-exe.png"))}" x="${markX}" y="${markY + name.h + 28}" width="${exe.w}" height="${exe.h}" image-rendering="optimizeSpeed"/>
   </svg>`;
   const r = new Resvg(svg, { fitTo: { mode: "width", value: 1200 } }).render();
   return opaquePng(r.width, r.height, r.pixels);

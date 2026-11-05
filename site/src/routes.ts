@@ -65,7 +65,7 @@ const labPage =
     if (scope === "all")
       return {
         props: { intro, sections, articles: articles.map(articleCard), devPreview: ctx.dev },
-        head: { title: "The Lab", description: "Writeups, tooling, experiments, technical notes, and things Asad is figuring out.", canonical: "/lab" },
+        head: { title: "The Lab", description: (await getSiteCopy()).shareLab, canonical: "/lab" },
       };
     const section = sections.find((s) => s.id === sectionId);
     const category = scope === "category" ? section?.categories.find((c) => c.id === categoryId) : undefined;
@@ -101,6 +101,7 @@ export const routes: RouteRecordRaw[] = [
           thoughts: await getThoughts(),
         },
         head: {
+          description: (await getSiteCopy()).shareHome,
           canonical: "/",
           jsonLd: { "@context": "https://schema.org", "@type": "Person", name: site.name, url: site.url, sameAs: [site.github, site.linkedin] },
         },
@@ -182,7 +183,7 @@ export const routes: RouteRecordRaw[] = [
             .sort((a, b) => b.date.localeCompare(a.date))
             .map(({ slug, title, description, tags, categories }) => ({ slug, title, description, tags, categories })),
         },
-        head: { title: "Workbench", canonical: "/workbench" },
+        head: { title: "Workbench", description: (await getSiteCopy()).shareWorkbench, canonical: "/workbench" },
       }),
     },
   },
@@ -207,7 +208,7 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       load: async () => ({
         props: { intro: (await getSiteCopy()).experienceIntro, resumeUrl: (await getSiteCopy()).resumeUrl, ...(await getExperience()), featured: await getFeaturedAchievements() },
-        head: { title: "Experience", description: "Career, education, and selected certifications — Asad Atterkhan.", canonical: "/experience" },
+        head: { title: "Experience", description: (await getSiteCopy()).shareExperience, canonical: "/experience" },
       }),
     },
   },
@@ -217,7 +218,7 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       load: async () => ({
         props: { intro: (await getSiteCopy()).achievementsIntro, records: await getAchievements() },
-        head: { title: "Achievements", description: "Certifications, badges, and other milestones — Asad Atterkhan.", canonical: "/achievements" },
+        head: { title: "Achievements", description: (await getSiteCopy()).shareAchievements, canonical: "/achievements" },
       }),
     },
   },
@@ -227,7 +228,7 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       load: async () => ({
         props: { html: (await renderMarkdown((await getSiteCopy()).aboutBody)).html, outfit: await getActiveOutfit() },
-        head: { title: "About", canonical: "/about" },
+        head: { title: "About", description: (await getSiteCopy()).shareAbout, canonical: "/about" },
       }),
     },
   },

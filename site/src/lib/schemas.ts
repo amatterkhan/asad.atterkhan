@@ -122,6 +122,13 @@ export const SiteCopySchema = z.object({
   achievementsIntro: z.string().max(600),
   resumeUrl: z.string().max(600),
   aboutBody: z.string().max(8000),
+  // the line under each page's title in a link preview (Open Graph, Twitter, search)
+  shareHome: z.string().max(200),
+  shareAbout: z.string().max(200),
+  shareLab: z.string().max(200),
+  shareWorkbench: z.string().max(200),
+  shareExperience: z.string().max(200),
+  shareAchievements: z.string().max(200),
 });
 export type SiteCopy = z.infer<typeof SiteCopySchema>;
 
