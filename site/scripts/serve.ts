@@ -51,6 +51,7 @@ createServer(async (req, res) => {
   }[]) {
     const matches =
       rule.source === "**" ||
+      rule.source === p ||
       (rule.source === "/@(admin|calendar)" &&
         /^\/(admin|calendar)$/.test(p)) ||
       (rule.source.endsWith("/**") && p.startsWith(rule.source.slice(0, -2)));
