@@ -107,7 +107,7 @@ func (s *Server) site(w http.ResponseWriter, r *http.Request) {
 			fail(400, "Invalid input")
 		}
 	}
-	if u, _ := v["resumeUrl"].(string); u != "" && !strings.HasPrefix(u, "https://") && !strings.HasPrefix(u, "http://") {
+	if u, _ := v["resumeUrl"].(string); u != "" && !httpsURL(u) {
 		fail(400, "Invalid input")
 	}
 	if x, ok := v["updatedAt"]; ok {

@@ -2,6 +2,7 @@
 import PixelIcon from "../components/PixelIcon.vue";
 import RoomVignette from "../components/RoomVignette.vue";
 import { groupExperience } from "../lib/experience";
+import { isHttpsUrl, safeHref } from "../lib/safe-url";
 import type { Achievement, Education, Role } from "../lib/schemas";
 const { intro, resumeUrl, work, education, skills, featured } = defineProps<{
   intro: string;
@@ -17,7 +18,7 @@ const groups = groupExperience(work);
   <p class="eyebrow">Work &amp; education</p>
   <div class="section-head">
     <h1>Experience</h1>
-    <a v-if="/^https?:\/\//.test(resumeUrl)" class="print-button" :href="resumeUrl" target="_blank" rel="noopener noreferrer">Save résumé PDF</a>
+    <a v-if="isHttpsUrl(resumeUrl)" class="print-button" :href="safeHref(resumeUrl)" target="_blank" rel="noopener noreferrer">Save résumé PDF</a>
   </div>
   <p class="page-intro">{{ intro }}</p>
   <RoomVignette corner="cv" />
@@ -53,7 +54,7 @@ const groups = groupExperience(work);
     <article v-for="e in education" :key="e.degree" class="education-entry">
       <div>
         <h3>{{ e.degree }} · {{ e.field }}</h3>
-        <p><a :href="e.degreeLink">{{ e.university }} ↗</a></p>
+        <p><a :href="safeHref(e.degreeLink)">{{ e.university }} ↗</a></p>
       </div>
       <div>
         <p class="meta">{{ e.isGraduated ? e.graduationDate : "In progress" }}</p>
@@ -68,7 +69,7 @@ const groups = groupExperience(work);
     </div>
     <ul v-if="featured.length" class="featured-credentials">
       <li v-for="c in featured" :key="c.id">
-        <a :href="c.link">{{ c.title }} ↗</a>
+        <a :href="safeHref(c.link)">{{ c.title }} ↗</a>
         <span>{{ c.issuer }}</span>
       </li>
     </ul>

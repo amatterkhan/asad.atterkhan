@@ -84,7 +84,7 @@ func validateExperience(v map[string]any) map[string]any {
 		text(e, "university", 1, 100)
 		text(e, "classification", 0, 60)
 		text(e, "graduationDate", 0, 40)
-		if !strings.HasPrefix(stringField(e, "degreeLink", 1, 500, true), "https://") {
+		if !httpsURL(stringField(e, "degreeLink", 1, 500, true)) {
 			fail(400, "Invalid input")
 		}
 		if _, ok := e["isGraduated"].(bool); !ok {

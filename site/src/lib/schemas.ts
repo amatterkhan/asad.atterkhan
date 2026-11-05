@@ -1,5 +1,9 @@
 import { z } from "zod";
 import { SECTION_ICONS } from "./icons";
+import { isHttpsUrl } from "./safe-url";
+
+/** The one URL type for admin-editable links: absolute https with a host (no javascript:, data:, http:). */
+export const httpsUrl = z.string().max(500).refine(isHttpsUrl, "Use an HTTPS link");
 
 // Content schemas. Every record from Git or from a Firestore export passes these before it reaches a page.
 
@@ -100,7 +104,7 @@ export const ProjectSchema = z.object({
   links: z.array(
     z.object({
       type: z.string(),
-      url: z.url().refine((u) => u.startsWith("https://")),
+      url: httpsUrl,
     }),
   ),
 });
@@ -120,7 +124,7 @@ export const SiteCopySchema = z.object({
   workbenchIntro: z.string().max(600),
   experienceIntro: z.string().max(600),
   achievementsIntro: z.string().max(600),
-  resumeUrl: z.string().max(600),
+  resumeUrl: z.union([z.literal(""), httpsUrl]),
   aboutBody: z.string().max(8000),
 });
 export type SiteCopy = z.infer<typeof SiteCopySchema>;
@@ -130,7 +134,7 @@ export const AchievementSchema = z.object({
   kind: z.enum(["certification", "badge", "award"]),
   title: z.string().min(1).max(200),
   issuer: z.string().min(1).max(160),
-  link: z.url().refine((url) => url.startsWith("https://"), "Use an HTTPS credential link"),
+  link: httpsUrl,
   earnedAt: z.iso.date().optional(),
 });
 export type Achievement = z.infer<typeof AchievementSchema>;
@@ -160,7 +164,7 @@ export const EducationSchema = z.object({
   field: z.string(),
   university: z.string(),
   classification: z.string(),
-  degreeLink: z.url(),
+  degreeLink: httpsUrl,
   graduationDate: z.string(),
   isGraduated: z.boolean(),
 });

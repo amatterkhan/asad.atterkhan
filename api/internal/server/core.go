@@ -10,6 +10,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -222,7 +223,14 @@ func number(v any) int64 {
 	}
 	return 0
 }
-func str(v any) string       { s, _ := v.(string); return s }
+func str(v any) string { s, _ := v.(string); return s }
+
+// httpsURL reports whether s is an absolute https:// URL with a host and no credentials.
+// It is the Go twin of isHttpsUrl in site/src/lib/safe-url.ts.
+func httpsURL(s string) bool {
+	u, err := url.Parse(s)
+	return err == nil && strings.HasPrefix(s, "https://") && u.Scheme == "https" && u.Hostname() != "" && u.User == nil
+}
 func audit(event, id string) { slog.Info(event, "id", id, "time", stamp()) }
 
 func stamp() string { return time.Now().UTC().Format("2006-01-02T15:04:05.000Z") }

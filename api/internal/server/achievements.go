@@ -2,8 +2,6 @@ package server
 
 import (
 	"net/http"
-	"net/url"
-	"strings"
 
 	"github.com/amatterkhan/asad.atterkhan/api/internal/content"
 )
@@ -31,7 +29,7 @@ func validateAchievements(v map[string]any) ([]any, []any) {
 		text(a, "title", 1, 200)
 		text(a, "issuer", 1, 160)
 		link := stringField(a, "link", 1, 500, true)
-		if u, err := url.Parse(link); err != nil || u.Host == "" || !strings.HasPrefix(link, "https://") {
+		if !httpsURL(link) {
 			fail(400, "Use an HTTPS credential link")
 		}
 		if d, ok := a["earnedAt"]; ok {
