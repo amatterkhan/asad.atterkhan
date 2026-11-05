@@ -69,7 +69,7 @@ func (s *Server) get(ctx context.Context, collection, id string) map[string]any 
 	return d.Data()
 }
 func (s *Server) site(w http.ResponseWriter, r *http.Request) {
-	uid := s.owner(r, "content", false)
+	uid := s.owner(r, "content", r.Method == "PUT")
 	ctx := r.Context()
 	fallback := content.Object("site")
 	if r.Method == "GET" {

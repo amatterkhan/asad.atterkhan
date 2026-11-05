@@ -463,6 +463,11 @@ func TestEmulatorRoutes(t *testing.T) {
 	if code != 401 {
 		t.Fatal("stale auth allowed", code)
 	}
+	for _, p := range []string{"/api/admin/site", "/api/admin/experience", "/api/admin/achievements"} {
+		if code, _ := call("PUT", p, nil, strings.Join(parts, ".")); code != 401 {
+			t.Fatal("stale auth allowed to save", p, code)
+		}
+	}
 	// one more than before: saving Thoughts publishes too
 	if hooks.Load() != 7 {
 		t.Errorf("rebuild hook calls got %d want 7", hooks.Load())

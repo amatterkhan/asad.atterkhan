@@ -53,7 +53,7 @@ func validateAchievements(v map[string]any) ([]any, []any) {
 
 // achievements reads and replaces the achievements and the ones pinned to the Experience page.
 func (s *Server) achievements(w http.ResponseWriter, r *http.Request) {
-	uid := s.owner(r, "content", false)
+	uid := s.owner(r, "content", r.Method == "PUT")
 	ctx := r.Context()
 	if r.Method == "GET" {
 		s.quota(ctx, uid+":content-read", 1000, 1)

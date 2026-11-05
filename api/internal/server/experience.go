@@ -102,7 +102,7 @@ func validateExperience(v map[string]any) map[string]any {
 
 // experience reads and replaces the Experience page: work, education and skills.
 func (s *Server) experience(w http.ResponseWriter, r *http.Request) {
-	uid := s.owner(r, "content", false)
+	uid := s.owner(r, "content", r.Method == "PUT")
 	ctx := r.Context()
 	if r.Method == "GET" {
 		s.quota(ctx, uid+":content-read", 1000, 1)
