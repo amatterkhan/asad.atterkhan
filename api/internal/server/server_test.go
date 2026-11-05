@@ -73,7 +73,7 @@ type route struct{ method, path string }
 
 func protectedRoutes() []route {
 	id := "12345678-1234-4234-8234-123456789012"
-	return []route{{"GET", "/api/admin/site"}, {"PUT", "/api/admin/site"}, {"GET", "/api/admin/wardrobe"}, {"PUT", "/api/admin/wardrobe"}, {"GET", "/api/admin/lab"}, {"PUT", "/api/admin/lab"}, {"GET", "/api/admin/thoughts"}, {"PUT", "/api/admin/thoughts"}, {"POST", "/api/admin/thumbnails"}, {"GET", "/api/admin/thumbnails/" + strings.Repeat("a", 64) + ".webp"}, {"GET", "/api/admin/articles"}, {"POST", "/api/admin/articles"}, {"GET", "/api/admin/articles/test"}, {"PUT", "/api/admin/articles/test"}, {"DELETE", "/api/admin/articles/test"}, {"POST", "/api/admin/articles/test/publish"}, {"POST", "/api/admin/articles/test/unpublish"}, {"POST", "/api/admin/preview"}, {"GET", "/api/admin/achievements"}, {"PATCH", "/api/admin/achievements"}, {"GET", "/api/admin/documents"}, {"POST", "/api/admin/documents"}, {"PATCH", "/api/admin/documents/" + id}, {"DELETE", "/api/admin/documents/" + id}, {"POST", "/api/admin/documents/" + id + "/publish"}, {"GET", "/api/admin/documents/" + id + "/download"}}
+	return []route{{"GET", "/api/admin/site"}, {"PUT", "/api/admin/site"}, {"GET", "/api/admin/wardrobe"}, {"PUT", "/api/admin/wardrobe"}, {"GET", "/api/admin/lab"}, {"PUT", "/api/admin/lab"}, {"GET", "/api/admin/thoughts"}, {"PUT", "/api/admin/thoughts"}, {"POST", "/api/admin/thumbnails"}, {"GET", "/api/admin/thumbnails/" + strings.Repeat("a", 64) + ".webp"}, {"GET", "/api/admin/articles"}, {"POST", "/api/admin/articles"}, {"GET", "/api/admin/articles/test"}, {"PUT", "/api/admin/articles/test"}, {"DELETE", "/api/admin/articles/test"}, {"POST", "/api/admin/articles/test/publish"}, {"POST", "/api/admin/articles/test/unpublish"}, {"POST", "/api/admin/preview"}, {"GET", "/api/admin/achievements"}, {"PUT", "/api/admin/achievements"}, {"GET", "/api/admin/documents"}, {"POST", "/api/admin/documents"}, {"PATCH", "/api/admin/documents/" + id}, {"DELETE", "/api/admin/documents/" + id}, {"POST", "/api/admin/documents/" + id + "/publish"}, {"GET", "/api/admin/documents/" + id + "/download"}}
 }
 func TestShiftRotation(t *testing.T) {
 	for date, want := range map[string]string{"2025-11-24": "night", "2025-11-26": "off", "2025-12-03": "night", "2025-12-05": "off", "2025-12-22": "day", "2025-11-19": "day"} {
@@ -323,9 +323,13 @@ func TestEmulatorRoutes(t *testing.T) {
 		t.Fatalf("thoughts read back: %v", got)
 	}
 	check("GET", "/api/admin/achievements", nil, 200)
-	check("PATCH", "/api/admin/achievements", map[string]any{"featuredIds": []string{"unknown"}}, 400)
-	check("PATCH", "/api/admin/achievements", map[string]any{"featuredIds": []string{"4", "4"}}, 400)
-	check("PATCH", "/api/admin/achievements", map[string]any{"featuredIds": []string{"5"}}, 200)
+	seed := check("GET", "/api/admin/achievements", nil, 200)
+	save := func(featured []string, want int) map[string]any {
+		return check("PUT", "/api/admin/achievements", map[string]any{"achievements": seed["achievements"], "featuredIds": featured}, want)
+	}
+	save([]string{"unknown"}, 400)
+	save([]string{"4", "4"}, 400)
+	save([]string{"5"}, 200)
 	upload := func(b []byte, name string, want int) map[string]any {
 		t.Helper()
 		var buf bytes.Buffer

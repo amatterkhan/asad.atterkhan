@@ -9,6 +9,7 @@ import AdminWardrobe from "./AdminWardrobe.vue";
 import AdminLab from "./AdminLab.vue";
 import AdminThoughts from "./AdminThoughts.vue";
 import AdminExperience from "./AdminExperience.vue";
+import AdminAchievements from "./AdminAchievements.vue";
 import { syncTheme } from "../behaviors/theme";
 import { ownerAuth } from "../lib/firebase-client";
 import type { Api, Authed } from "./admin-types";
@@ -24,6 +25,7 @@ const SECTIONS = [
   { id: "lab", label: "Lab map", hint: "Sections and categories of The Lab", icon: "map" },
   { id: "copy", label: "Site copy", hint: "The words on the site", icon: "article" },
   { id: "experience", label: "Experience", hint: "Work, education and skills", icon: "briefcase" },
+  { id: "achievements", label: "Achievements", hint: "Certifications, and which show on Experience", icon: "medal" },
   { id: "wardrobe", label: "Wardrobe", hint: "What Asad is wearing", icon: "shirt" },
   { id: "thoughts", label: "Thoughts", hint: "What Asad says in the room", icon: "comment" },
 ] as const;
@@ -159,6 +161,7 @@ const api: Api = async <T,>(path: string, init: RequestInit = {}): Promise<T> =>
       <div class="console-body">
         <AdminCopy v-if="tab === 'copy'" :api="api" />
         <AdminExperience v-else-if="tab === 'experience'" :api="api" />
+        <AdminAchievements v-else-if="tab === 'achievements'" :api="api" />
         <AdminWardrobe v-else-if="tab === 'wardrobe'" :api="api" />
         <AdminLab v-else-if="tab === 'lab'" :api="api" />
         <AdminThoughts v-else-if="tab === 'thoughts'" :api="api" />

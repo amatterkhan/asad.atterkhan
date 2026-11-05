@@ -8,7 +8,7 @@ import {
   ProjectSchema,
   SiteCopySchema,
   ThoughtsSchema,
-  featuredSchema,
+  AchievementsSchema,
 } from "../../src/lib/schemas";
 import { groupExperience } from "../../src/lib/experience";
 import {
@@ -79,20 +79,12 @@ describe("content boundaries", () => {
     expect(
       SiteCopySchema.safeParse({ heroTitle: "x".repeat(601) }).success,
     ).toBe(false);
-    const schema = featuredSchema([
-      {
-        id: "a",
-        kind: "badge",
-        title: "A",
-        issuer: "Issuer",
-        link: "https://example.com",
-      },
-    ]);
-    expect(schema.parse({ featuredIds: ["a"] })).toEqual({
-      featuredIds: ["a"],
-    });
+    const record = { id: "a", kind: "badge", title: "A", issuer: "Issuer", link: "https://example.com" };
+    expect(AchievementsSchema.parse({ achievements: [record], featuredIds: ["a"] }).featuredIds).toEqual(["a"]);
     for (const featuredIds of [["unknown"], ["a", "a"]])
-      expect(schema.safeParse({ featuredIds }).success).toBe(false);
+      expect(AchievementsSchema.safeParse({ achievements: [record], featuredIds }).success).toBe(false);
+    expect(AchievementsSchema.safeParse({ achievements: [record, record], featuredIds: [] }).success).toBe(false);
+    expect(AchievementsSchema.safeParse({ achievements: [{ ...record, link: "http://example.com" }], featuredIds: [] }).success).toBe(false);
   });
   it("derives article reading time and strips code from search", () => {
     const a = parseArticle(
