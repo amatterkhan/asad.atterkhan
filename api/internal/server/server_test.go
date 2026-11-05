@@ -375,13 +375,13 @@ func TestEmulatorRoutes(t *testing.T) {
 		}
 		b, _ := io.ReadAll(res.Body)
 		res.Body.Close()
-		if res.StatusCode != 200 || !bytes.Equal(b, image) || res.Header.Get("Cache-Control") != "private,no-store" {
+		if res.StatusCode != 200 || !bytes.Equal(b, image) || res.Header.Get("Cache-Control") != publicCache {
 			t.Fatal("public file mismatch")
 		}
 	}
 	hashBytes := sha256.Sum256([]byte("public-download-bytes" + today()))
 	downloadQuota := services.DB.Collection("_quotas").Doc(hex.EncodeToString(hashBytes[:]))
-	_, err = downloadQuota.Set(ctx, map[string]any{"count": int64(64 * 1024 * 1024), "day": today()})
+	_, err = downloadQuota.Set(ctx, map[string]any{"count": int64(publicDownloadBytes), "day": today()})
 	if err != nil {
 		t.Fatal(err)
 	}
