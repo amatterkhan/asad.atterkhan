@@ -55,7 +55,7 @@ archiving require authentication within the last 300 seconds. Service flags defa
 | --- | --- |
 | `ENABLE_CONTENT_ADMIN` | Site copy, article drafts, publication, Markdown preview, the Lab map, thumbnails, the wardrobe (Asad's outfit) and Asad's Thoughts |
 | `ENABLE_DOCUMENT_ADMIN` | Private uploads, metadata, publication, downloads and archive |
-| `ENABLE_ACHIEVEMENT_ADMIN` | Featured achievement selection |
+| `ENABLE_ACHIEVEMENT_ADMIN` | Unused: achievements are edited under `ENABLE_CONTENT_ADMIN` |
 | `ENABLE_PUBLIC_FILES` | Published `/files/{id}` and image-only `/media/{id}` |
 
 Disabled admin services return 503; disabled public files return 404, as the API's own

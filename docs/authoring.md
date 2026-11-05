@@ -25,7 +25,11 @@ one of these is a prerendered page, and the search on each covers that shelf.
 
 ### Experience
 
-**Experience** (admin tab) edits the roles, education and skills on `/experience`: add, reorder and remove them, mark the current role and internal moves. Saving rebuilds the site. The starting set is `site/content/experience.json`. Certifications on that page are the achievements picked under Achievements.
+**Experience** (admin tab) edits the roles, education and skills on `/experience`: add, reorder and remove them, mark the current role and internal moves. Saving rebuilds the site. The starting set is `site/content/experience.json`. Certifications on that page are the achievements pinned under Achievements.
+
+### Achievements
+
+**Achievements** (admin tab) adds, edits, reorders and removes certifications, badges and awards (title, issuer, https credential link, type, optional date) and pins up to six to the Experience page, in the order listed under *Pinned*. Saving rebuilds the site. The starting set is `site/content/achievements.json` with the pins in `achievement-settings.json`.
 
 ### Thoughts
 

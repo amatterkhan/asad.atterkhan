@@ -202,6 +202,32 @@ type Experience = {
   then requests a rebuild.
 - Public read: the exporter writes it to `experience.json` in the build snapshot.
 
+## 8. Achievements: `siteSettings/achievements` (one document)
+
+Certifications, badges and awards on `/achievements`, and the ones pinned to Experience. Falls back
+to `content/achievements.json` and `content/achievement-settings.json` until the first save. Uses
+the `content` service (`ENABLE_CONTENT_ADMIN`); `ENABLE_ACHIEVEMENT_ADMIN` is no longer read.
+
+```ts
+type Achievements = {
+  achievements: {             // ≤ 100, in display order
+    id: string;               // slug, unique; made from the title once, then fixed (pins refer to it)
+    kind: "certification" | "badge" | "award";
+    title: string; issuer: string;   // 1–200 / 1–160
+    link: string;             // https credential URL
+    earnedAt?: string;        // YYYY-MM-DD
+  }[];
+  featuredIds: string[];      // ≤ 6 ids from the list, in the order shown on Experience
+  updatedAt?: string;         // ISO, set by the server
+};
+```
+
+- `GET /api/admin/achievements` → `Achievements`
+- `PUT /api/admin/achievements` body `{ achievements, featuredIds }` (duplicate ids, non-https links,
+  bad dates or kinds, unknown keys, a pin not in the list, more than 6 pins → 400) → `Achievements`;
+  then requests a rebuild. (This replaces the old `PATCH` that only set `featuredIds`.)
+- Public read: the exporter writes it to `achievements.json` in the build snapshot.
+
 ## Rebuild requests
 
 Site-copy saves, article publish/unpublish, achievement, wardrobe, Lab map, Thoughts and Experience changes ask GitHub to rebuild
