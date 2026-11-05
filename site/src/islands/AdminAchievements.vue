@@ -96,14 +96,14 @@ const save = async () => {
     <fieldset>
       <legend>Pinned on Experience <small>{{ pins.length }} of {{ MAX_PINS }}</small></legend>
       <p v-if="!pinned.length" class="admin-status">Nothing pinned. Pin up to {{ MAX_PINS }} below.</p>
-      <ol v-else class="admin-pins">
+      <ul v-else class="admin-pins">
         <li v-for="(a, i) in pinned" :key="a.key">
           <span class="grow">{{ a.title || "Untitled" }} <small>{{ a.issuer }}</small></span>
           <button type="button" :disabled="i === 0" aria-label="Move pin up" @click="move(pins, i, -1)">↑</button>
           <button type="button" :disabled="i === pinned.length - 1" aria-label="Move pin down" @click="move(pins, i, 1)">↓</button>
           <button type="button" @click="togglePin(a)">Unpin</button>
         </li>
-      </ol>
+      </ul>
     </fieldset>
 
     <button type="button" class="admin-add" @click="add">+ Add achievement</button>
@@ -135,7 +135,7 @@ const save = async () => {
 
     <div class="admin-actions">
       <button class="primary" :disabled="!dirty">Save</button>
-      <span class="admin-status" role="status">{{ note || problem || (dirty ? "Unsaved changes." : updatedAt ? `Saved ${new Date(updatedAt).toLocaleString()}` : "") }}</span>
+      <span class="admin-status" role="status">{{ note || (dirty ? "Unsaved changes." : updatedAt ? `Saved ${new Date(updatedAt).toLocaleString()}` : "") }}</span>
     </div>
   </form>
 </template>

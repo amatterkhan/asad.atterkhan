@@ -884,7 +884,17 @@ html[data-cursor="box"] .cursor-dot span { background: var(--color-accent); }
 }
 .console .admin-add:hover:not(:disabled), .console .admin-add:focus-visible { border-color: var(--color-accent); color: var(--color-accent); outline: none; }
 .console .admin-add:disabled { opacity: .4; cursor: not-allowed; }
-.admin-experience .admin-row > label { min-width: 0; }
+.admin-pins { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.admin-pins li { display: flex; align-items: center; gap: 6px; padding: 8px 10px 8px 14px; border: 2px solid var(--color-faint); background: var(--color-bg); }
+.admin-pins li .grow { flex: 1; min-width: 0; margin-right: 8px; overflow-wrap: anywhere; }
+.admin-pins li .grow small { display: block; margin: 2px 0 0; }
+.admin-pins small, .admin-form legend small { color: var(--color-muted); font: 11px var(--font-mono); }
+.admin-form legend small { margin-left: 6px; }
+.admin-pins button { min-height: 34px; min-width: 34px; padding: 4px 10px; border: 2px solid var(--color-faint); font: 12px var(--font-mono); }
+.admin-pins button:hover:not(:disabled) { border-color: var(--color-accent); }
+.admin-pins button:disabled { opacity: .4; cursor: not-allowed; }
+.admin-experience .admin-row { flex-wrap: wrap; }
+.admin-experience .admin-row > label { flex: 1 1 200px; min-width: 0; }
 .admin-experience fieldset { gap: 18px; padding-top: 28px; }
 .admin-experience .admin-lab-order button { min-width: 38px; }
 .console select:disabled { opacity: .5; }

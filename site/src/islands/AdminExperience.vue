@@ -106,7 +106,8 @@ const save = async () => {
       </div>
       <div class="admin-row">
         <label class="grow"><span>From</span><input v-model="r.from" type="month" @input="touch" /></label>
-        <label class="grow"><span>To</span><input v-model="r.to" type="month" :disabled="r.isCurrent" :placeholder="r.isCurrent ? 'Present' : ''" @input="touch" /></label>
+        <label class="grow"><span>To</span><input v-if="r.isCurrent" value="Present" disabled aria-label="To: Present" />
+          <input v-else v-model="r.to" type="month" @input="touch" /></label>
         <label class="grow">
           <span>Internal move from</span>
           <select v-model="r.promotionFrom" @change="touch">
@@ -157,7 +158,7 @@ const save = async () => {
 
     <div class="admin-actions">
       <button class="primary" :disabled="!dirty">Save</button>
-      <span class="admin-status" role="status">{{ note || problem || (dirty ? "Unsaved changes." : updatedAt ? `Saved ${new Date(updatedAt).toLocaleString()}` : "") }}</span>
+      <span class="admin-status" role="status">{{ note || (dirty ? "Unsaved changes." : updatedAt ? `Saved ${new Date(updatedAt).toLocaleString()}` : "") }}</span>
     </div>
   </form>
 </template>
