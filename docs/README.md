@@ -10,8 +10,6 @@
 | [firebase.md](firebase.md) | The Firebase project: current state, collections, security, cost |
 | [deployment.md](deployment.md) | Production deployment sequence |
 | [ci-cd.md](ci-cd.md) | GitHub → Firebase workflows and one-time setup |
-| [verification.md](verification.md) | Last recorded verification results and known gaps |
-| [asad-exe-evolution.md](asad-exe-evolution.md) | Build progress for the worldlines and identity work; decisions live on the wayfinder map |
 | [decisions/](decisions/) | Design decisions and the original rebuild proposal |
 
 Pixel-art tooling is documented in [../art/README.md](../art/README.md).

@@ -26,3 +26,6 @@ playwright-report/
 # Art pipeline
 art/scripts/__pycache__/
 art/pixellab/build/
+
+# Claude Code local state (worktrees, launch config)
+.claude/
