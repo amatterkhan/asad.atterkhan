@@ -1,6 +1,5 @@
-/** Progressive enhancements for article pages: code headers with copy, scrollable tables, Mermaid
- *  diagrams (loaded only when a page has one), a reading-progress bar and the current section
- *  highlighted in the table of contents. */
+/** Progressive enhancements for article pages: code headers with copy, scrollable tables, a
+ *  reading-progress bar and the current section highlighted in the table of contents. */
 export function initArticle() {
   const articles = document.querySelectorAll<HTMLElement>("[data-article]");
   if (!articles.length) return;
@@ -40,7 +39,6 @@ export function initArticle() {
     table.parentNode?.insertBefore(wrapper, table);
     wrapper.append(table);
   });
-  renderDiagrams(document);
 
   const bar = document.querySelector<HTMLElement>(".read-progress");
   const article = articles[0];
@@ -68,45 +66,4 @@ export function initArticle() {
     { rootMargin: "0px 0px -70% 0px" },
   );
   document.querySelectorAll("[data-article] h2[id], [data-article] h3[id]").forEach((h) => io.observe(h));
-}
-
-/** Renders ```mermaid blocks (left as readable source by the build) with the site palette. */
-export async function renderDiagrams(scope: ParentNode) {
-  const diagrams = [...scope.querySelectorAll<HTMLElement>(".mermaid-diagram:not([data-state])")];
-  if (!diagrams.length) return;
-  diagrams.forEach((fig) => {
-    fig.dataset.state = "pending";
-    fig.dataset.src = fig.querySelector(".mermaid-src")?.textContent || "";
-  });
-  const { default: mermaid } = await import("mermaid");
-  const css = getComputedStyle(document.documentElement);
-  const v = (name: string) => css.getPropertyValue(name).trim();
-  mermaid.initialize({
-    startOnLoad: false,
-    securityLevel: "strict",
-    theme: "base",
-    fontFamily: "Departure, ui-monospace, monospace",
-    themeVariables: {
-      background: "transparent",
-      primaryColor: v("--color-bg-2"),
-      primaryTextColor: v("--color-ink-strong"),
-      primaryBorderColor: v("--color-accent"),
-      lineColor: v("--color-accent"),
-      secondaryColor: v("--color-bg"),
-      tertiaryColor: v("--color-bg"),
-      textColor: v("--color-ink"),
-      noteBkgColor: v("--color-bg-2"),
-      noteTextColor: v("--color-ink"),
-    },
-  });
-  for (const [i, fig] of diagrams.entries()) {
-    try {
-      const { svg } = await mermaid.render(`mermaid-${Date.now().toString(36)}-${i}`, fig.dataset.src || "");
-      fig.innerHTML = svg;
-      fig.dataset.state = "done";
-      fig.classList.add("is-rendered");
-    } catch {
-      fig.classList.add("is-error");
-    }
-  }
 }
