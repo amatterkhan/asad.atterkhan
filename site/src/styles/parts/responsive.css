@@ -1,0 +1,33 @@
+/* ---------- responsive ---------- */
+@media (max-width: 860px) {
+  .article-grid { grid-template-columns: minmax(0, 1fr); }
+  .toc { display: none; }
+  .mobile-toc { display: block; }
+  .company-group { grid-template-columns: 1fr; }
+  .about-grid { grid-template-columns: 1fr; gap: 32px; }
+}
+@media (max-width: 760px) {
+  body { font-size: 16px; }
+  .wrap { padding: 0 20px; }
+  .header-end { gap: 10px; }
+  .desktop-nav { display: none; }
+  .menu-trigger { display: inline-flex; align-items: center; }
+  main { padding-top: 20px; }
+  .hero { grid-template-columns: 1fr; gap: 28px; padding-top: 20px; }
+  .hero .companion-scene { order: -1; justify-self: start; }
+  .lede { font-size: 22px; }
+  .block { margin-top: 64px; }
+  .plain-list li { grid-template-columns: 1fr; gap: 0; }
+  .showcase li { grid-template-columns: 1fr; gap: 0; }
+  .showcase .num { padding: 0 0 4px; }
+  .entry { grid-template-columns: 1fr; gap: 6px; padding: 20px 0; }
+  .lab-heading { flex-direction: column; align-items: flex-start; gap: 0; }
+  .lab-companion { align-self: flex-end; margin-top: -20px; }
+  .prose { font-size: 18px; }
+  .prose blockquote { font-size: 19px; }
+  .flow-diagram li + li { margin-left: 22px !important; }
+  .flow-diagram li + li::after { left: -19px; width: 12px; }
+  .page-intro, .opening, .article-lead { font-size: 19px; }
+  .achievement-collection { grid-template-columns: 1fr; }
+}
+@media print { body { background: #fff; color: #000; } .site-header, .site-footer, .print-button { display: none; } a { color: #000; } h1, h2, h3, h4 { color: #000; } }

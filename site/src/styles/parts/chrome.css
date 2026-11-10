@@ -1,0 +1,61 @@
+/* ---------- shell ---------- */
+.wrap { max-width: 1040px; margin: 0 auto; padding: 0 28px; }
+main { padding: 36px 0 72px; min-height: 70vh; animation: arrive 0.5s ease both; }
+.site-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 22px 0 0;
+}
+.brand { font: 20px var(--font-mono); color: var(--color-ink-strong); text-decoration: none; letter-spacing: -0.02em; }
+.brand span { color: var(--color-accent); }
+.brand:hover { color: var(--color-ink-strong); }
+.header-end { display: flex; align-items: center; gap: 22px; }
+.desktop-nav { display: flex; gap: 6px; }
+.desktop-nav { gap: 22px; }
+.desktop-nav a {
+  color: var(--color-muted); text-decoration: none; font: 13px var(--font-mono);
+  padding: 8px 0; border-bottom: 2px dashed transparent; transition: color .2s, border-color .2s;
+}
+.desktop-nav a:hover { color: var(--color-ink-strong); border-color: var(--color-faint); }
+.desktop-nav a[aria-current="page"] { color: var(--color-accent); border-color: var(--color-accent); }
+.theme-toggle {
+  display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px;
+  box-sizing: border-box; padding: 0; line-height: 0;
+  color: var(--color-muted); border: 2px solid var(--color-faint); transition: color .2s, border-color .2s;
+}
+.theme-toggle[hidden] { display: none; }
+.theme-toggle:hover { color: var(--color-ink-strong); border-color: var(--color-accent); }
+.theme-toggle .pixel-icon { width: 24px; height: 24px; display: block; flex: none; margin: 0; }
+/* show the icon of the theme you would switch to */
+.theme-toggle .icon-moon, :root[data-theme="light"] .theme-toggle .icon-sun { display: none; }
+:root[data-theme="light"] .theme-toggle .icon-moon { display: block; }
+.menu-trigger {
+  display: none; font: 13px var(--font-mono); color: var(--color-ink-strong);
+  min-height: 44px; min-width: 44px; padding: 0 16px; border-radius: 0;
+  background: var(--color-bg-2);
+}
+.mobile-menu {
+  border: 0; padding: 22px 28px; width: 100%; max-width: none; height: 100%;
+  max-height: none; background: var(--color-bg); color: var(--color-ink); margin: 0;
+}
+.mobile-menu::backdrop { background: rgba(0,0,0,.5); }
+.mobile-menu[open] { animation: arrive .25s ease both; }
+.mobile-menu-head { display: flex; justify-content: space-between; align-items: center; }
+.mobile-menu-head button { font-size: 32px; min-width: 44px; min-height: 44px; color: var(--color-muted); }
+.mobile-menu nav { display: grid; margin-top: 28px; }
+.mobile-menu nav a {
+  font: 34px/1.2 var(--font-serif); color: var(--color-ink-strong); text-decoration: none;
+  padding: 12px 0; min-height: 56px;
+}
+.mobile-menu nav a[aria-current="page"] { color: var(--color-accent); font-style: italic; }
+.mobile-menu-links { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 32px; }
+.mobile-menu-links a { color: var(--color-muted); min-height: 44px; display: inline-flex; align-items: center; }
+.noscript-nav { display: flex; flex-wrap: wrap; gap: 14px; padding: 12px 0; }
+/* the motto, then the copyright under it */
+.site-footer {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 6px; padding: 28px 0 44px; color: var(--color-muted); font-size: 14px; text-align: center;
+}
+.site-footer p { margin: 0; }
+.footer-sign em { font-family: var(--font-serif); }
+.motion-control { color: var(--color-muted); font: 12px var(--font-mono); min-height: 44px; }
+.motion-control:hover { color: var(--color-accent); }

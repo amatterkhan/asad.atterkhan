@@ -1,0 +1,76 @@
+/* ---------- admin: Lab map and thumbnails ---------- */
+.admin-lede { color: var(--color-muted); margin: 0 0 18px; max-width: 70ch; }
+.admin-lab-section { position: relative; }
+.admin-lab-section legend { display: inline-flex; align-items: center; gap: 8px; }
+.admin-lab-section legend .pixel-icon { width: 16px; height: 16px; margin: 0; }
+.admin-lab-order { position: absolute; top: -4px; right: 14px; display: flex; gap: 4px; background: var(--color-bg-2); padding: 0 6px; }
+.admin-lab-order button, .admin-lab-cats li button, .admin-lab-add button, .admin-lab-new, .admin-thumb-buttons button, .admin-file span {
+  min-height: 34px; min-width: 34px; padding: 4px 10px; border: 2px solid var(--color-faint); background: var(--color-bg); color: var(--color-ink); font: 12px var(--font-mono);
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;
+}
+.admin-lab-order button:hover:not(:disabled), .admin-lab-cats li button:hover:not(:disabled), .admin-lab-add button:hover:not(:disabled), .admin-lab-new:hover:not(:disabled), .admin-thumb-buttons button:hover, .admin-file:hover span { border-color: var(--color-accent); }
+:is(.admin-lab-order, .admin-lab-cats, .admin-lab-add) button:disabled, .admin-lab-new:disabled { opacity: .4; cursor: not-allowed; }
+.admin-lab-order .danger { color: #e58f8f; }
+:root[data-theme="light"] .admin-lab-order .danger { color: #a63b3b; }
+.admin-lab-cats li button .pixel-icon { width: 14px; height: 14px; margin: 0; }
+.admin-lab-id { display: flex; align-items: center; min-height: 46px; font: 12px var(--font-mono); color: var(--color-muted); overflow-wrap: anywhere; }
+.admin-lab-icons { display: flex; flex-wrap: wrap; gap: 6px; }
+.admin-lab-icons label { display: grid !important; place-items: center; width: 40px; height: 40px; border: 2px solid var(--color-faint); background: var(--color-bg); color: var(--color-muted); cursor: pointer; }
+.admin-lab-icons label:hover { color: var(--color-ink-strong); }
+.admin-lab-icons label.is-picked { border-color: var(--color-accent); color: var(--color-accent); box-shadow: 3px 3px 0 var(--color-faint); }
+.admin-lab-icons label:has(input:focus-visible) { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.admin-lab-icons input { position: absolute; opacity: 0; pointer-events: none; }
+.admin-lab-icons .pixel-icon { width: 20px; height: 20px; margin: 0; }
+.admin-lab-label { font: 11px var(--font-mono); color: var(--color-muted); display: flex; gap: 10px; flex-wrap: wrap; }
+.admin-lab-label small { opacity: .75; }
+.admin-lab-cats { display: grid; gap: 8px; }
+.admin-lab-cats ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.admin-lab-cats li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto auto; gap: 6px; align-items: center; }
+.admin-lab-cats li input { padding: 6px 10px !important; font-size: 14px !important; }
+.admin-lab-cats li small { font: 11px var(--font-mono); color: var(--color-muted); white-space: nowrap; }
+.admin-lab-add { display: flex; gap: 6px; }
+.admin-lab-add input { padding: 6px 10px !important; font-size: 14px !important; }
+.admin-lab-new { margin: 0 0 20px; min-height: 44px; padding: 0 18px; }
+/* Thoughts: one row per line (on, words, when, featured, preview, remove) */
+.admin-thoughts legend small { opacity: .75; margin-left: 6px; }
+.admin-check { display: inline-flex !important; align-items: center; gap: 8px; min-height: 34px; cursor: pointer; }
+.admin-check .pixel-icon { width: 16px; height: 16px; margin: 0; color: var(--color-muted); }
+.admin-check:has(input:checked) .pixel-icon { color: var(--color-accent); }
+.admin-thought-list { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 6px; }
+.admin-thought-list li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto auto auto; gap: 6px; align-items: center; }
+.admin-thought-list li.is-off > input { opacity: .55; }
+.admin-thought-list input:not([type]), .admin-thought-list select, .admin-thoughts .admin-lab-add select {
+  padding: 6px 10px !important; font-size: 14px !important; min-height: 34px;
+}
+.admin-thought-list select, .admin-thoughts .admin-lab-add select { border: 2px solid var(--color-faint); background-color: var(--color-bg); color: var(--color-ink); font: 12px var(--font-mono); }
+.admin-thought-list li > button {
+  min-height: 34px; min-width: 34px; padding: 4px 10px; border: 2px solid var(--color-faint); background: var(--color-bg); color: var(--color-ink); font: 12px var(--font-mono);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.admin-thought-list li > button:hover, .admin-thought-list li > button[aria-pressed="true"] { border-color: var(--color-accent); }
+.admin-thought-list li > button .pixel-icon { width: 14px; height: 14px; margin: 0; }
+.admin-thought-preview { grid-column: 1 / -1; margin: 4px 0 10px; padding: 18px 16px 14px; background: var(--color-bg); border: 2px dashed var(--color-faint); }
+.thought-preview { display: inline-block; max-width: 30ch; }
+.admin-thoughts .admin-lab-add input { flex: 1; }
+.admin-list-shelf { font: 10px var(--font-mono) !important; color: var(--color-peach) !important; text-transform: uppercase; letter-spacing: .06em; }
+.admin-thumb { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 18px; align-items: start; padding: 14px; border: 2px solid var(--color-faint); background: var(--color-bg-2); }
+.admin-thumb-frame { aspect-ratio: 16 / 9; display: grid; place-items: center; background: var(--color-bg); border: 2px solid var(--color-faint); overflow: hidden; color: var(--color-muted); font: 11px var(--font-mono); }
+.admin-thumb-frame img { width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; display: block; }
+.admin-thumb-frame span { display: inline-flex; align-items: center; gap: 6px; }
+.admin-thumb-frame .pixel-icon { width: 16px; height: 16px; margin: 0; }
+.admin-thumb-tools { display: grid; gap: 10px; align-content: start; }
+.admin-thumb-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+.admin-file { position: relative; display: inline-flex !important; }
+.admin-file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.admin-file:has(input:focus-visible) span { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.admin-file span { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-bg); font-weight: 600; }
+.admin-thumb .check { min-height: 0 !important; font-size: 13px; }
+@media (max-width: 860px) {
+  .admin-thumb { grid-template-columns: minmax(0, 1fr); }
+  .admin-lab-order { position: static; justify-content: flex-end; padding: 0; background: none; }
+  .admin-lab-cats li { grid-template-columns: minmax(0, 1fr) auto auto auto; }
+  .admin-lab-cats li small { grid-column: 1 / -1; grid-row: 2; }
+  .admin-thought-list li { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+  .admin-thought-list li > select { grid-column: 2; }
+  .admin-thoughts .admin-lab-add { flex-wrap: wrap; }
+}

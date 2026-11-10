@@ -1,0 +1,49 @@
+/* ---------- shift calendar ---------- */
+.calendar-status { color: var(--color-muted); font: 13px var(--font-mono); }
+.calendar-next { margin-bottom: 36px; }
+.calendar-next ol { list-style: none; padding: 0; margin: 8px 0 12px; display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 6px; }
+.calendar-next li { display: grid; justify-items: center; gap: 2px; padding: 8px 2px; border: 2px solid var(--color-faint); font: 11px var(--font-mono); color: var(--color-muted); }
+.calendar-next .n { font: 20px/1 var(--font-serif); color: var(--color-ink-strong); }
+.calendar-next .s { font-size: 14px; }
+.calendar-toolbar { display: flex; align-items: center; gap: 10px; margin: 0 0 18px; }
+.calendar-toolbar h2 { min-width: 9.5em; text-align: center; font-size: 28px; }
+.calendar-toolbar button { min-width: 44px; min-height: 44px; border: 2px solid var(--color-faint); color: var(--color-ink); font: 14px var(--font-mono); }
+.calendar-toolbar button:hover { border-color: var(--color-accent); box-shadow: 3px 3px 0 var(--color-faint); }
+.calendar-today { margin-left: auto; padding: 0 16px; }
+.calendar-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 0 0 18px; }
+.calendar-summary > div { border: 2px solid var(--color-faint); padding: 10px 14px; }
+.calendar-summary dt { font: 11px var(--font-mono); color: var(--color-muted); text-transform: uppercase; letter-spacing: .08em; }
+.calendar-summary dd { margin: 2px 0 0; font: 30px/1.1 var(--font-serif); color: var(--color-ink-strong); }
+.calendar-grid { width: 100%; border-collapse: separate; border-spacing: 6px; table-layout: fixed; margin: 0 -6px; }
+.calendar-grid th { font: 11px var(--font-mono); color: var(--color-muted); font-weight: 400; text-align: left; padding: 0 4px; }
+.calendar-grid td { height: 86px; vertical-align: top; padding: 8px; border: 2px solid var(--color-faint); position: relative; }
+.calendar-grid td.calendar-blank { border-color: transparent; }
+.calendar-grid time { font: 16px var(--font-mono); color: var(--color-ink-strong); }
+.calendar-grid .chip { position: absolute; left: 8px; bottom: 8px; font: 11px var(--font-mono); padding: 2px 7px; }
+.calendar-grid td.shift-off time { color: var(--color-muted); }
+.shift-night .chip, .calendar-next li.shift-night, .calendar-summary .shift-night { background: #2b2f6b; color: #dfe2ff; border-color: #3d4290; }
+.shift-night .chip { background: #3d4290; }
+.shift-day .chip, .calendar-next li.shift-day, .calendar-summary .shift-day { background: #f6dfae; color: #4a3417; border-color: #e3c27f; }
+.shift-day .chip { background: #e9bf6a; }
+.calendar-summary .shift-night dt, .calendar-summary .shift-night dd { color: #dfe2ff; }
+.calendar-summary .shift-day dt, .calendar-summary .shift-day dd { color: #4a3417; }
+.calendar-next li.shift-night .n, .calendar-next li.shift-night .d { color: #dfe2ff; }
+.calendar-next li.shift-day .n, .calendar-next li.shift-day .d { color: #4a3417; }
+.calendar-grid td.shift-night { background: rgba(61, 66, 144, .28); }
+.calendar-grid td.shift-day { background: rgba(233, 191, 106, .16); }
+.calendar-grid td.is-today, .calendar-next li.is-today { outline: 2px solid var(--color-ink-strong); outline-offset: 2px; }
+.calendar-note { color: var(--color-muted); font: 12px/1.6 var(--font-mono); }
+@media (max-width: 760px) {
+  .calendar-next ol { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .calendar-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .calendar-grid { border-spacing: 3px; margin: 0 -3px; }
+  .calendar-grid td { height: 58px; padding: 4px; }
+  .calendar-grid time { font-size: 13px; }
+  .calendar-grid .chip { left: 3px; right: 3px; bottom: 3px; padding: 1px 2px; text-align: center; font-size: 0; }
+  .calendar-grid .chip .pixel-icon { width: 14px; height: 14px; margin: 0; }
+  .calendar-toolbar h2 { font-size: 22px; min-width: 0; flex: 1; }
+}
+
+.owner-form, .owner-auth, .achievement-manager, .document-record { display: grid; gap: 12px; margin: 20px 0; }
+.owner-form input, .owner-form select, .owner-form textarea { background: var(--color-bg-2); border: 1px solid var(--color-faint); border-radius: 0; padding: 10px 14px; }
+.owner-form button, .owner-auth button { background: var(--color-accent); color: var(--color-bg); padding: 10px 20px; border-radius: 0; min-height: 44px; }

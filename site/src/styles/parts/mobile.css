@@ -1,0 +1,82 @@
+/* ---------- mobile pass: tap targets, small text, the admin console on a phone ---------- */
+/* long unbroken strings (a URL in a note, a long word in a title) wrap instead of widening the page */
+h1, h2, h3, h4, .prose, .lab-card-desc, .entry p, .showcase p, .article-lead, .page-intro { overflow-wrap: break-word; }
+/* a heading and its button wrap instead of pushing the page wider on a 320px phone */
+.section-head { flex-wrap: wrap; }
+@media (max-width: 760px) {
+  /* 44px tap targets without moving anything: the hit area grows past the visible link */
+  .block-head a, .text-links a, .path a, .article-crumb a, .section-head > a, .featured-credentials a, .article-end a, .project-facts a { position: relative; }
+  :is(.block-head a, .text-links a, .path a, .article-crumb a, .section-head > a, .featured-credentials a, .article-end a, .project-facts a)::after {
+    content: ""; position: absolute; inset: -12px -6px;
+  }
+  .plain-list li { padding: 2px 0; }
+  .plain-list a { display: inline-block; padding: 8px 0; }
+  .role-details summary { min-height: 44px; }
+  .lab-cats a { min-height: 44px; }
+  /* the menu sheet lines up with the page gutter, and fills the screen even under the iOS toolbar */
+  .mobile-menu { padding: 14px 20px 22px; height: 100dvh; overflow-y: auto; }
+  .mobile-menu-head { min-height: 44px; }
+  /* 11px mono is too small to read on a phone */
+  .shelf-note, .lab-room-count, .lab-card-shelf, .lab-card-meta, .current-label, .badge, .tags, .tag-list, .collection-count, .calendar-note { font-size: 12px; }
+  .lab-tabs small, .lab-cats small, .lab-map-title small { font-size: 12px; }
+  main > a:not([class]) { display: inline-flex; align-items: center; min-height: 44px; }
+}
+
+@media (max-width: 860px) {
+  .brand { display: inline-flex; align-items: center; min-height: 44px; }
+  .theme-toggle { width: 44px; height: 44px; }
+  /* admin: brand and profile share the first row, the section strip scrolls underneath */
+  .console-side { gap: 2px 12px; padding: 8px 16px 0; }
+  .console-side-head { order: 1; flex: 1; min-width: 0; }
+  .console-side-foot { order: 2; margin-left: 0; }
+  .console-side nav { order: 3; flex: 1 0 100%; margin: 0 -16px; padding: 0 16px; scrollbar-width: none; overscroll-behavior-x: contain; }
+  .console-side nav::-webkit-scrollbar { display: none; }
+  .console-side nav a { flex: none; white-space: nowrap; }
+  .console-title { min-width: 0; }
+  .console-title p { overflow-wrap: anywhere; }
+  .console-tools { flex: none; }
+  html:has(.console) { scroll-padding-bottom: 150px; }
+  /* the sticky Save bar: compact, buttons share the row, and clear of the iPhone home bar */
+  .admin-actions { gap: 8px; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); }
+  .admin-actions button, .admin-new button { min-height: 44px; }
+  .admin-actions .danger { margin-left: 0; }
+  .admin-actions .admin-status { flex-basis: 100%; }
+  .console label.markdown textarea, .admin-form label.markdown textarea { font-size: 16px; }
+  /* the small square controls become 44px */
+  .admin-lab-order button, .admin-lab-cats li button, .admin-lab-add button, .admin-lab-new, .admin-thumb-buttons button, .admin-file span,
+  .admin-pins button, .admin-thought-list li > button { min-height: 44px; min-width: 44px; }
+  .admin-lab-cats li input, .admin-lab-add input, .admin-thought-list input:not([type]), .admin-thought-list select,
+  .admin-thoughts .admin-lab-add select, .admin-new input { min-height: 44px; }
+  .admin-check { min-height: 44px; min-width: 44px; justify-content: center; }
+  .admin-lab-icons label { width: 44px; height: 44px; }
+  .admin-filter button { min-height: 44px; }
+  .console-collapse { width: 44px; height: 44px; }
+  /* Thoughts: the words get a full line, the controls sit under them */
+  .admin-thought-list li { grid-template-columns: 44px minmax(0, 1fr) auto auto; gap: 6px; }
+  .admin-thought-list li > label:nth-of-type(1) { grid-area: 1 / 1; }
+  .admin-thought-list li > input { grid-area: 1 / 2 / 2 / -1; }
+  .admin-thought-list li > label:nth-of-type(2) { grid-area: 2 / 1; }
+  .admin-thought-list li > select { grid-area: 2 / 2; }
+  .admin-thought-list li > button:nth-of-type(1) { grid-area: 2 / 3; }
+  .admin-thought-list li > button:nth-of-type(2) { grid-area: 2 / 4; }
+  .admin-thought-preview { grid-area: 3 / 1 / 4 / -1; }
+  .admin-thought-list { gap: 14px; }
+  .admin-row > label { flex: 1 1 10rem; min-width: 0; }
+}
+
+@media (max-width: 480px) {
+  .console-bar { padding: 10px 16px; min-height: 0; }
+  .console-body { padding-top: 16px; }
+  .admin-form fieldset { padding: 18px 14px 16px; }
+  .admin-locked { padding: 22px 18px; box-shadow: 4px 4px 0 var(--color-faint); }
+  /* a pinned item: its name gets the full line, the ↑ ↓ Unpin controls sit under it on the right */
+  .admin-pins li { flex-wrap: wrap; }
+  .admin-pins li .grow { flex: 1 1 100%; margin-right: 0; }
+  .admin-pins li .grow + button { margin-left: auto; }
+}
+
+@media (max-width: 420px) {
+  /* a category: its name on a full line, then its id and the ↑ ↓ × controls */
+  .admin-lab-cats li > input { grid-column: 1 / -1; }
+  .admin-lab-cats li small { grid-column: 1; grid-row: 2; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+}

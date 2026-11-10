@@ -1,0 +1,40 @@
+/* ---------- room vignettes: page headers cropped from the homepage room ---------- */
+.vignette {
+  container-type: inline-size; position: relative; overflow: hidden; width: 100%;
+  aspect-ratio: var(--cw) / var(--ch); margin: 4px 0 40px; background: #0a0e2c;
+  box-shadow: 0 0 0 3px var(--color-faint), 8px 8px 0 3px rgba(0, 0, 0, .3);
+}
+.vignette-room {
+  --u: calc(100cqw / var(--cw)); position: absolute;
+  width: calc(var(--u) * 384); height: calc(var(--u) * 216);
+  left: calc(var(--u) * var(--cx) * -1); top: calc(var(--u) * var(--cy) * -1);
+}
+:root:not([data-theme="light"]) .vignette :is(.layer-sky-day, .layer-sunbeam) { opacity: 0; }
+:root[data-theme="light"] .vignette :is(.layer-sky-night, .layer-night, .layer-glow, .layer-bulb) { opacity: 0; }
+.vignette-at { position: absolute; left: calc(var(--u) * var(--x)); top: calc(var(--u) * var(--y)); }
+.vignette .storm { position: relative; }
+.vignette .storm .sprite { --sprite-size: calc(var(--u) * 64) !important; display: block; }
+.vignette .storm .sprite.storm-nap { --sprite-size: calc(var(--u) * 40) !important; }
+.vignette .asad .sprite { --sprite-size: calc(var(--u) * 128) !important; display: block; }
+.vignette .robot .sprite { --sprite-size: calc(var(--u) * 48) !important; display: block; }
+.vignette .sleep-mark { position: absolute; top: 40%; right: 18%; font: 12px var(--font-mono); color: var(--color-accent); animation: pulse 3s infinite; }
+@media (max-width: 760px) { .vignette { margin-inline: -20px; width: calc(100% + 40px); box-shadow: none; } }
+
+/* QROVER drives a little way along the desk and back */
+.actor.robot { left: calc(var(--u) * 286); top: calc(var(--u) * 80); animation: robot-drive 16s ease-in-out infinite; }
+.actor.robot .sprite { --sprite-size: calc(var(--u) * 48) !important; display: block; }
+/* 14 room px of the robot's 48 */
+@keyframes robot-drive { 0%, 20% { transform: translate3d(0, 0, 0); } 45%, 60% { transform: translate3d(29.1667%, 0, 0); } 85%, 100% { transform: translate3d(0, 0, 0); } }
+.room[data-lamp="off"][data-sky="night"] .actor.robot { animation-play-state: paused; }
+
+/* pixel icons inside links */
+.pixel-icon { width: 1.15em; height: 1.15em; fill: currentColor; vertical-align: -0.2em; margin-right: .3em; flex: none; shape-rendering: crispEdges; }
+.pixel-icon.after { margin: 0 0 0 .3em; }
+.calendar-toolbar button .pixel-icon, .mobile-menu-head button .pixel-icon { margin: 0; width: 20px; height: 20px; }
+.pixel-icon.ext { width: .85em; height: .85em; margin: 0 0 0 .15em; vertical-align: 0; opacity: .7; }
+.closing-links a, .mobile-menu-links a { display: inline-flex; align-items: center; gap: .1em; text-decoration: none; }
+.closing-links { gap: 4px 28px; max-width: none !important; }
+
+/* ```mermaid blocks are shown as their source: the mermaid runtime was removed (docs/decisions/0003) */
+.mermaid-diagram { margin: 1.8em 0; padding: 20px; border: 2px solid var(--color-faint); box-shadow: 6px 6px 0 var(--color-faint); overflow-x: auto; text-align: center; }
+.mermaid-diagram .mermaid-src { font: 13px/1.5 var(--font-mono); color: var(--color-muted); text-align: left; margin: 0; white-space: pre-wrap; }
