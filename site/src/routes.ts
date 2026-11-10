@@ -30,6 +30,7 @@ import About from "./pages/About.vue";
 import Calendar from "./pages/Calendar.vue";
 import Admin from "./pages/Admin.vue";
 import NotFound from "./pages/NotFound.vue";
+import Styleguide from "./pages/Styleguide.vue";
 
 export type RenderContext = { dev: boolean; root: string };
 export type Page = { props: Record<string, unknown>; head: Head; status?: number };
@@ -169,6 +170,20 @@ export const routes: RouteRecordRaw[] = [
         const article = parseArticle(source);
         const { html, toc } = await renderMarkdown(article.body);
         return { props: { article: strip(article), html, toc, draft: true }, head: { title: "Local draft preview", noindex: true } };
+      },
+    },
+  },
+  {
+    // development only: every design-system component on one page (never prerendered)
+    path: "/styleguide",
+    component: Styleguide,
+    meta: {
+      load: async (_params, ctx) => {
+        if (!ctx.dev) return null;
+        const { readFile } = await import("node:fs/promises");
+        const { join } = await import("node:path");
+        const { html } = await renderMarkdown(parseArticle(await readFile(join(ctx.root, "tests/fixtures/article.md"), "utf8")).body);
+        return { props: { html }, head: { title: "Components", noindex: true } };
       },
     },
   },

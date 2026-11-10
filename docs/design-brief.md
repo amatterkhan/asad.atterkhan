@@ -1,6 +1,6 @@
 # Design brief
 
-Status: draft for Stage 2 ([#50](https://github.com/amatterkhan/asad.atterkhan/issues/50)). The chosen direction will be recorded as an ADR.
+Status: direction chosen ([ADR 0006](decisions/0006-design-direction-notebook.md)). Written for Stage 2 ([#50](https://github.com/amatterkhan/asad.atterkhan/issues/50)). 
 
 ## What the site is for
 
@@ -19,10 +19,10 @@ These are the owner's identity and do not change:
 
 - The Lab index is built for thumbnails. With no thumbnail an entry is a large empty box, so every post needs art before it looks finished.
 - An entry's date, section and reading time are small and scattered. A reader scanning for "what has this person done" has to open each card.
-- The article page has no table of contents, no updated date and no place for disclosure status.
+- The article page has a contents list and an updated date, but no place for disclosure status and no way to the next entry.
 - Uppercase mono labels sit above most headings, and Workbench projects are numbered although they are not a sequence. Both are decoration.
-- 56 controls are smaller than 44px on touch widths (Stage 0 baseline).
-- One 1,323-line stylesheet holds the tokens, the room, the admin console and every page.
+- 39 controls are smaller than 44px on phones or tablets (measured with their stretched hit areas).
+- One 1,323-line stylesheet held the tokens, the room, the admin console and every page (now split, see [development.md](development.md)).
 
 ## Principles
 

@@ -27,4 +27,6 @@
 @import "./parts/admin.css" layer(components);
 @import "./parts/lab.css";
 @import "./parts/admin-lab.css";
+@import "./parts/notebook.css";
 @import "./parts/mobile.css";
+@import "./parts/touch.css";

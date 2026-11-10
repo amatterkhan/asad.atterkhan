@@ -1,0 +1,17 @@
+/* ---------- touch targets: controls are at least 44px on phones, tablets and any touch screen ---------- */
+/* Two controls stay smaller on purpose: the room's hotspots and its meter are drawn on the pixel grid
+   and would overlap each other if padded. Everything the hotspots reach is also in the menu. */
+.skip { display: inline-flex; align-items: center; min-height: 44px; }
+
+@media (max-width: 1023px), (pointer: coarse) {
+  /* nothing moves: the hit area grows past the visible link */
+  :is(.block-head a, .text-links a, .path a, .article-crumb a, .section-head > a, .featured-credentials a, .article-end a, .project-facts a, .desktop-nav a, .lab-room-cats a, .filters a) { position: relative; }
+  :is(.block-head a, .text-links a, .path a, .article-crumb a, .section-head > a, .featured-credentials a, .article-end a, .project-facts a, .desktop-nav a, .lab-room-cats a, .filters a)::after {
+    content: ""; position: absolute; inset: -15px -6px;
+  }
+  .path-line a { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0 4px; }
+  .role-details summary, .lab-cats a, .copy-code { min-height: 44px; }
+  .copy-code { min-width: 60px; }
+  .mobile-toc a { display: flex; align-items: center; min-height: 44px; padding: 0; }
+  main > a:not([class]) { display: inline-flex; align-items: center; min-height: 44px; }
+}
