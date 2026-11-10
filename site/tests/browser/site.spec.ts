@@ -375,6 +375,19 @@ test("public pages carry no inline styles and still look styled under the strict
   expect(spot!.width).toBeGreaterThan(8);
   expect(violations).toEqual([]);
 });
+test("security.txt is served at the well-known path and has not expired", async ({ request }) => {
+  for (const path of ["/.well-known/security.txt", "/security.txt"]) {
+    const res = await request.get(path);
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("text/plain");
+    const body = await res.text();
+    expect(body).toMatch(/^Contact: mailto:\S+@\S+$/m);
+    expect(body).toMatch(/^Canonical: https:\/\/\S+\/\.well-known\/security\.txt$/m);
+    const expires = Date.parse(/^Expires: (\S+)$/m.exec(body)![1]);
+    expect(expires).toBeGreaterThan(Date.now() + 200 * 86_400_000);
+    expect(expires).toBeLessThan(Date.now() + 366 * 86_400_000);
+  }
+});
 test("redirects and missing pages", async ({ request }) => {
   const home = await request.get("/");
   expect(home.headers()["x-content-type-options"]).toBe("nosniff");

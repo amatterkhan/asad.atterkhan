@@ -100,6 +100,9 @@ createServer(async (req, res) => {
     res.writeHead(400);
     return res.end();
   }
+  // Static rewrites (the Cloud Run ones are proxied above), e.g. /.well-known/security.txt.
+  for (const r of config.rewrites as { source: string; destination?: string }[])
+    if (r.destination && r.source === p) p = r.destination;
   const found =
     (await file(path.join(dist, p))) ??
     (await file(path.join(dist, p + ".html"))) ??

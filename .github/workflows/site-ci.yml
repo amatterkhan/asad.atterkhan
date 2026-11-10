@@ -1,9 +1,10 @@
 name: Site and API checks
-# Runs on pull requests that touch the Vue site, the Go API or these workflows, and as the first
-# step of site-deploy.yml on pushes to the deploy branch. Demo emulators only; no cloud credentials.
+# Runs on every pull request and as the first step of site-deploy.yml on pushes to the deploy
+# branch. Demo emulators only; no cloud credentials. There is no path filter on purpose: these jobs
+# are required status checks on main, and a check that is skipped by a path filter never reports,
+# which would leave a docs-only pull request unmergeable.
 on:
   pull_request:
-    paths: ['site/**', 'api/**', '.github/workflows/site-*.yml', '.github/actions/**']
   workflow_call:
   workflow_dispatch:
 permissions:
@@ -44,8 +45,23 @@ jobs:
           ../site/node_modules/.bin/firebase emulators:exec
           --config ../site/firebase.json --only auth,firestore,storage
           --project demo-asad-exe 'go test -race ./... -count=1'
+      # Known vulnerabilities in code the API actually calls. Skipped on deploys and content
+      # rebuilds, so a new advisory never blocks publishing; site-watch.yml runs it weekly.
+      - name: govulncheck
+        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
       - name: Container image builds
         run: docker build --tag asad-api:ci .
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # the whole history: the repository is public, so every commit is published
+          persist-credentials: false
+      - name: Secret scan (gitleaks, full history)
+        run: .github/scripts/secret-scan.sh
 
   site:
     runs-on: ubuntu-latest

@@ -5,6 +5,7 @@
     "trailingSlash": false,
     "ignore": ["firebase.json", "firebase.ci.json", "**/.*"],
     "rewrites": [
+      { "source": "/.well-known/security.txt", "destination": "/security.txt" },
       { "source": "/api/**", "run": { "serviceId": "asad-api", "region": "us-central1" } },
       { "source": "/files/**", "run": { "serviceId": "asad-api", "region": "us-central1" } },
       { "source": "/media/**", "run": { "serviceId": "asad-api", "region": "us-central1" } }
