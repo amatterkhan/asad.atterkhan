@@ -33,6 +33,40 @@ describe("firebase.json security headers", () => {
     expect(header("**", "Cross-Origin-Resource-Policy")).toBe("same-origin");
   });
 
+  it("allows no inline styles or scripts on public pages", () => {
+    expect(directive(publicCsp, "style-src")).toBe("style-src 'self'");
+    expect(publicCsp).not.toContain("unsafe-inline");
+    expect(publicCsp).not.toContain("unsafe-eval");
+    expect(directive(publicCsp, "script-src")).toMatch(/^script-src 'self' 'sha256-[A-Za-z0-9+/=]+'$/);
+    expect(directive(publicCsp, "object-src")).toBe("object-src 'none'");
+    expect(directive(publicCsp, "base-uri")).toBe("base-uri 'self'");
+    expect(directive(publicCsp, "frame-ancestors")).toBe("frame-ancestors 'none'");
+  });
+
+  it("upgrades insecure requests everywhere and requires Trusted Types on public pages", () => {
+    for (const csp of [publicCsp, adminCsp]) expect(csp.split(";").map((d) => d.trim())).toContain("upgrade-insecure-requests");
+    expect(directive(publicCsp, "require-trusted-types-for")).toBe("require-trusted-types-for 'script'");
+    expect(directive(publicCsp, "trusted-types")).toBe("trusted-types vue");
+  });
+
+  it("isolates the browsing context, with popups allowed only for the /admin sign-in", () => {
+    expect(header("**", "Cross-Origin-Opener-Policy")).toBe("same-origin");
+    expect(header("/admin", "Cross-Origin-Opener-Policy")).toBe("same-origin-allow-popups");
+  });
+
+  it("switches off every powerful feature the site does not use", () => {
+    const policy = header("**", "Permissions-Policy");
+    for (const feature of ["camera", "microphone", "geolocation", "payment", "usb", "display-capture", "browsing-topics"])
+      expect(policy).toContain(`${feature}=()`);
+    expect(policy).not.toMatch(/=\((self|\*)/);
+  });
+
+  it("lets other sites show share images, and nothing else", () => {
+    expect(header("**/opengraph-image.png", "Cross-Origin-Resource-Policy")).toBe("cross-origin");
+    const crossOrigin = rules.filter((r) => r.headers.some((h) => h.key === "Cross-Origin-Resource-Policy" && h.value !== "same-origin"));
+    expect(crossOrigin.map((r) => r.source)).toEqual(["**/opengraph-image.png"]);
+  });
+
   it("lists the /admin CSP after the site-wide one so it wins", () => {
     const order = rules.map((r) => r.source);
     expect(order.indexOf("/admin")).toBeGreaterThan(order.indexOf("**"));

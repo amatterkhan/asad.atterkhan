@@ -263,7 +263,7 @@ const statusLine = (d: Draft) =>
       </div>
       <div class="admin-body">
         <label class="markdown">
-          <span>Body (Markdown, ```mermaid and ```flow supported)</span>
+          <span>Body (Markdown, ```flow supported)</span>
           <textarea v-model="draft.body" rows="24" spellcheck="true" />
         </label>
         <div v-if="preview !== null" class="admin-preview">

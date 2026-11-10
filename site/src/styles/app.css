@@ -857,11 +857,9 @@ html[data-cursor="box"] .cursor-dot span { background: var(--color-accent); }
 .closing-links a, .mobile-menu-links a { display: inline-flex; align-items: center; gap: .1em; text-decoration: none; }
 .closing-links { gap: 4px 28px; max-width: none !important; }
 
-/* mermaid diagrams (```mermaid): source shown until the browser renders the SVG */
+/* ```mermaid blocks are shown as their source: the mermaid runtime was removed (docs/decisions/0003) */
 .mermaid-diagram { margin: 1.8em 0; padding: 20px; border: 2px solid var(--color-faint); box-shadow: 6px 6px 0 var(--color-faint); overflow-x: auto; text-align: center; }
 .mermaid-diagram .mermaid-src { font: 13px/1.5 var(--font-mono); color: var(--color-muted); text-align: left; margin: 0; white-space: pre-wrap; }
-.mermaid-diagram svg { max-width: 100%; height: auto; }
-.mermaid-diagram.is-error::before { content: "Diagram could not be rendered"; display: block; font: 11px var(--font-mono); color: var(--color-peach); margin-bottom: 8px; }
 
 /* ---------- admin console (/admin) ---------- */
 .admin-locked { border: 2px solid var(--color-faint); padding: 28px; max-width: 34rem; box-shadow: 6px 6px 0 var(--color-faint); }

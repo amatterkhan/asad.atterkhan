@@ -20,7 +20,7 @@ for (const path of [
   test(`layout, accessibility and hydration ${path}`, async ({ page }) => {
     const warnings: string[] = [];
     page.on("console", (msg) => {
-      if (/hydration|mismatch/i.test(msg.text())) warnings.push(msg.text());
+      if (/hydration|mismatch|Content Security Policy|Trusted ?(Type|HTML|Script)/i.test(msg.text())) warnings.push(msg.text());
     });
     page.on("pageerror", (err) => warnings.push(err.message));
     await page.goto(path);
@@ -67,7 +67,10 @@ test("the divergence meter shifts worldlines and back", async ({ page }) => {
   await expect(room).toHaveAttribute("data-worldline", "normal");
   await expect(tubes).toHaveAttribute("aria-label", /Nixie tube clock reading/);
   await expect(meter).toHaveAccessibleDescription(/Normal worldline/);
-  const outfitBefore = (await page.locator(".actor.asad .sprite").getAttribute("style"))!.match(/\/art\/outfits\/([a-z0-9-]+)\//)![1];
+  // The sprite sheet is a custom property: a stylesheet rule on load (the CSP allows no style
+  // attribute), then set through the CSSOM when the outfit changes.
+  const sheet = () => page.locator(".actor.asad .sprite").evaluate((el) => getComputedStyle(el).getPropertyValue("--sprite-sheet"));
+  const outfitBefore = (await sheet()).match(/\/art\/outfits\/([a-z0-9-]+)\//)![1];
   expect(outfitBefore).not.toBe("labcoat");
 
   // the keyboard works, and presses during a shift are ignored
@@ -95,7 +98,7 @@ test("the divergence meter shifts worldlines and back", async ({ page }) => {
   await expect(page.locator(".wl-spark").first()).toBeAttached();
   // Steins Gate puts Asad in the lab coat, still animating, and saves nothing
   const asad = page.locator(".actor.asad .sprite");
-  await expect(asad).toHaveAttribute("style", /\/art\/outfits\/labcoat\//);
+  await expect.poll(sheet).toMatch(/\/art\/outfits\/labcoat\//);
   await expect(asad.locator(".sprite-strip")).toHaveCSS("animation-name", "sprite-play");
   expect(await page.evaluate(() => JSON.stringify(localStorage))).not.toMatch(/labcoat|outfit/);
 
@@ -103,8 +106,8 @@ test("the divergence meter shifts worldlines and back", async ({ page }) => {
   await meter.click();
   await expect(room).toHaveAttribute("data-worldline", "normal");
   await expect(tubes).toHaveAttribute("aria-label", /Nixie tube clock reading/);
-  await expect(asad).not.toHaveAttribute("style", /labcoat/);
-  await expect(asad).toHaveAttribute("style", new RegExp(`/art/outfits/${outfitBefore}/`));
+  await expect.poll(sheet).toMatch(new RegExp(`/art/outfits/${outfitBefore}/`));
+  expect(await sheet()).not.toMatch(/labcoat/);
   await expect(page.locator(".wl-tint, .wl-gold, .wl-spark, .wl-rain")).toHaveCount(0);
   await expect(page.locator(".initial-a, .initial-s")).toHaveCount(2);
 });
@@ -350,6 +353,40 @@ test("search filters and clears collections", async ({ page }) => {
   await expect(page.locator(".empty")).toBeVisible();
   await notes.fill("");
   await expect(notes).toHaveValue("");
+});
+test("public pages carry no inline styles and still look styled under the strict CSP", async ({ page, request }) => {
+  const res = await request.get("/");
+  const csp = res.headers()["content-security-policy"];
+  expect(csp).toContain("style-src 'self';");
+  expect(csp).not.toContain("unsafe-inline");
+  expect(res.headers()["cross-origin-opener-policy"]).toBe("same-origin");
+  expect(await res.text()).not.toMatch(/<[a-z][^<>]*\sstyle=/i);
+  expect((await request.get("/opengraph-image.png")).headers()["cross-origin-resource-policy"]).toBe("cross-origin");
+  expect((await request.get("/admin")).headers()["cross-origin-opener-policy"]).toBe("same-origin-allow-popups");
+
+  const violations: string[] = [];
+  page.on("console", (msg) => {
+    if (/Content Security Policy|Trusted ?(Type|HTML|Script)/i.test(msg.text())) violations.push(msg.text());
+  });
+  await page.goto("/");
+  // Extracted rules position the room: its base layer has its image and a hotspot has its box.
+  await expect(page.locator(".room .layer-room").first()).toHaveCSS("background-image", /room\.png/);
+  const spot = await page.locator(".room .spot").first().boundingBox();
+  expect(spot!.width).toBeGreaterThan(8);
+  expect(violations).toEqual([]);
+});
+test("security.txt is served at the well-known path and has not expired", async ({ request }) => {
+  for (const path of ["/.well-known/security.txt", "/security.txt"]) {
+    const res = await request.get(path);
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("text/plain");
+    const body = await res.text();
+    expect(body).toMatch(/^Contact: mailto:\S+@\S+$/m);
+    expect(body).toMatch(/^Canonical: https:\/\/\S+\/\.well-known\/security\.txt$/m);
+    const expires = Date.parse(/^Expires: (\S+)$/m.exec(body)![1]);
+    expect(expires).toBeGreaterThan(Date.now() + 200 * 86_400_000);
+    expect(expires).toBeLessThan(Date.now() + 366 * 86_400_000);
+  }
 });
 test("redirects and missing pages", async ({ request }) => {
   const home = await request.get("/");

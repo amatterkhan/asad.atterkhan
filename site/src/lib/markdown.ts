@@ -65,7 +65,7 @@ function enhance() {
             };
         }
         if (child.tagName === "pre" && String(child.children?.[0]?.properties?.className).includes("language-mermaid")) {
-          // rendered in the browser (behaviors/article.ts) with the site palette, strict mode
+          // shown as its source text: no diagram runtime ships (docs/decisions/0003)
           const src = text(child).trim();
           if (src.length <= 8000)
             return {

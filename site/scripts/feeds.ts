@@ -45,5 +45,13 @@ export async function feeds(server: Server, dist: string, write: Write) {
       ? "User-Agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin\nDisallow: /calendar\nDisallow: /preview/\n"
       : "User-Agent: *\nDisallow: /\n") + `\nSitemap: ${site.url}/sitemap.xml\n`,
   );
+  // RFC 9116. Hosting ignores dot-directories, so the file is written at /security.txt and
+  // firebase.json rewrites /.well-known/security.txt to it. Expires is renewed by every build;
+  // the weekly site-watch workflow fails when the live file has under 30 days left.
+  const expires = new Date(Date.now() + 300 * 86_400_000).toISOString().replace(/\.\d+Z$/, "Z");
+  await write(
+    path.join(dist, "security.txt"),
+    `Contact: mailto:${site.email}\nExpires: ${expires}\nPreferred-Languages: en\nCanonical: ${site.url}/.well-known/security.txt\n`,
+  );
   await write(path.join(dist, "search.json"), JSON.stringify(articles.map(server.articleSummary)));
 }

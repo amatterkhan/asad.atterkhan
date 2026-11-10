@@ -1,0 +1,63 @@
+name: Weekly site watch
+# Things a single maintainer would otherwise forget, checked every Monday. A failure emails the
+# owner (GitHub notifies whoever last edited this schedule). No cloud credentials, no deploys.
+#   live      the deployed site: security headers, robots, security.txt expiry, every sitemap URL
+#   advisories  new Go and npm advisories since the last pull request
+#   secrets   full-history secret scan
+# GitHub pauses schedules in a repository with no activity for 60 days; re-enable it under
+# Actions if that happens (docs/maintenance.md).
+on:
+  schedule:
+    - cron: '17 5 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: site-watch
+  cancel-in-progress: true
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      # No npm install: the script has no dependencies and Node 24 runs TypeScript directly.
+      - name: Check the live site
+        run: node site/scripts/check-live.ts "$SITE_URL"
+        env:
+          SITE_URL: ${{ vars.SITE_URL || 'https://asad.atterkhan.com' }}
+
+  advisories:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: api/go.mod
+          cache-dependency-path: api/go.sum
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - name: govulncheck
+        working-directory: api
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+      # Reads the lockfile only; nothing is installed.
+      - name: npm audit (what ships to visitors)
+        working-directory: site
+        run: npm audit --omit=dev --audit-level=moderate
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Secret scan (gitleaks, full history)
+        run: .github/scripts/secret-scan.sh

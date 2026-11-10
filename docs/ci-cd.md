@@ -1,12 +1,13 @@
 # CI/CD: GitHub → Firebase
 
-Three workflows and one shared build step. GitHub signs in to Google Cloud with Workload Identity
+Four workflows and one shared build step. GitHub signs in to Google Cloud with Workload Identity
 Federation, so no service-account key exists anywhere. Nothing deploys until the one-time setup has
 set the repository variables. Until then the deploy and preview jobs are skipped, and checks still run.
 
 | Workflow | Runs on | Does |
 | --- | --- | --- |
-| `site-ci.yml` | Pull requests touching `site/`, `api/` or the workflows; called by deploy | gofmt, `go vet`, Go tests against Auth/Firestore/Storage emulators with `-race`, API Docker build; site typecheck, Vitest, `npm audit`, build, Playwright suite |
+| `site-ci.yml` | Every pull request (no path filter, so its jobs can be required checks); called by deploy | gofmt, `go vet`, Go tests against Auth/Firestore/Storage emulators with `-race`, `govulncheck` (pull requests only), API Docker build; full-history secret scan; site typecheck, Vitest, `npm audit`, build, Playwright suite |
+| `site-watch.yml` | Mondays, manual | Checks the live site (`site/scripts/check-live.ts`), new Go and npm advisories, and the secret scan. No credentials; a failure emails the owner |
 | `site-deploy.yml` | Push to `main`, `content-published` dispatch, manual | Checks → API to Cloud Run (when enabled and `api/` changed) → [export →] build → Hosting + Firestore/Storage rules |
 | `site-preview.yml` | Same-repository pull requests touching `site/` | 7-day preview channel `pr-<n>` with Git content, noindex and no API; link posted on the PR; deleted on close |
 | `.github/actions/site-build` | Used by deploy and preview | `npm ci --ignore-scripts`, typecheck, test, build. Runs with no cloud credentials |

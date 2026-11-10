@@ -54,7 +54,8 @@ createServer(async (req, res) => {
       rule.source === p ||
       (rule.source === "/@(admin|calendar)" &&
         /^\/(admin|calendar)$/.test(p)) ||
-      (rule.source.endsWith("/**") && p.startsWith(rule.source.slice(0, -2)));
+      (rule.source.endsWith("/**") && p.startsWith(rule.source.slice(0, -2))) ||
+      (rule.source.startsWith("**/") && p.endsWith(rule.source.slice(2)));
     if (matches) for (const h of rule.headers) res.setHeader(h.key, h.value);
   }
   for (const r of config.redirects as {
@@ -99,6 +100,9 @@ createServer(async (req, res) => {
     res.writeHead(400);
     return res.end();
   }
+  // Static rewrites (the Cloud Run ones are proxied above), e.g. /.well-known/security.txt.
+  for (const r of config.rewrites as { source: string; destination?: string }[])
+    if (r.destination && r.source === p) p = r.destination;
   const found =
     (await file(path.join(dist, p))) ??
     (await file(path.join(dist, p + ".html"))) ??
