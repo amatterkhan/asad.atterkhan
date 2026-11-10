@@ -10,6 +10,10 @@
 | [firebase.md](firebase.md) | The Firebase project: current state, collections, security, cost |
 | [deployment.md](deployment.md) | Production deployment sequence |
 | [ci-cd.md](ci-cd.md) | GitHub → Firebase workflows and one-time setup |
-| [decisions/](decisions/) | Design decisions and the original rebuild proposal |
+| [threat-model.md](threat-model.md) | Assets, threats, controls and open gaps |
+| [security.md](security.md) | What tests enforce, owner actions with commands, the rebuild token |
+| [recovery.md](recovery.md) | What to do when an account is lost or compromised |
+| [maintenance.md](maintenance.md) | Recurring tasks and their dates |
+| [decisions/](decisions/) | ADRs: one file per decision |
 
 Pixel-art tooling is documented in [../art/README.md](../art/README.md).

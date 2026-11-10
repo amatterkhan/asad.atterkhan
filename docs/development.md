@@ -92,6 +92,9 @@ npm audit
 npm run test:e2e
 ```
 
+`node scripts/check-live.ts` checks the deployed site's headers, robots, `security.txt` and sitemap
+links; add `http://127.0.0.1:4191 --local` to point it at `npm run preview`.
+
 Plain `go test` skips Firebase integration when the three emulator variables are absent; use the
 emulator command above for the full route/export suite. Browser tests build with
 `HYDRATION_DETAILS=true`, start isolated preview/dev servers on 4192/4193, and use installed Chrome.
