@@ -6,8 +6,8 @@
 @media (max-width: 1023px), (pointer: coarse) {
   /* nothing moves: the hit area grows past the visible link */
   /* (a one-line project title is under 44px in fallback serifs, which are shorter than Iowan Old Style) */
-  :is(.block-head a, .text-links a, .path a, .article-crumb a, .section-head > a, .featured-credentials a, .article-end a, .project-facts a, .desktop-nav a, .lab-room-cats a, .filters a, .showcase h3 a) { position: relative; }
-  :is(.block-head a, .text-links a, .path a, .article-crumb a, .section-head > a, .featured-credentials a, .article-end a, .project-facts a, .desktop-nav a, .lab-room-cats a, .filters a, .showcase h3 a)::after {
+  :is(.block-head a, .text-links a, .path a, .article-crumb a, .section-head > a, .featured-credentials a, .article-end a, .project-facts a, .desktop-nav a, .lab-room-cats a, .filters a, .showcase h3 a, .entry h2 a) { position: relative; }
+  :is(.block-head a, .text-links a, .path a, .article-crumb a, .section-head > a, .featured-credentials a, .article-end a, .project-facts a, .desktop-nav a, .lab-room-cats a, .filters a, .showcase h3 a, .entry h2 a)::after {
     content: ""; position: absolute; inset: -15px -6px;
   }
   .path-line a { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0 4px; }
