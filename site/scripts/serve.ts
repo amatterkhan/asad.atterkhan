@@ -54,7 +54,8 @@ createServer(async (req, res) => {
       rule.source === p ||
       (rule.source === "/@(admin|calendar)" &&
         /^\/(admin|calendar)$/.test(p)) ||
-      (rule.source.endsWith("/**") && p.startsWith(rule.source.slice(0, -2)));
+      (rule.source.endsWith("/**") && p.startsWith(rule.source.slice(0, -2))) ||
+      (rule.source.startsWith("**/") && p.endsWith(rule.source.slice(2)));
     if (matches) for (const h of rule.headers) res.setHeader(h.key, h.value);
   }
   for (const r of config.redirects as {

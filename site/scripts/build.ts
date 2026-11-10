@@ -2,7 +2,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { build } from "vite";
 import { feeds } from "./feeds";
+import { createHash } from "node:crypto";
 import { ogImages } from "./og";
+import { createStyleExtractor, hasInlineStyle } from "./inline-styles";
 
 // Production build: client assets, then the server renderer, then every route prerendered to
 // dist/<path>/index.html (plus 404.html, RSS, sitemap, robots, search index, Open Graph images).
@@ -44,12 +46,24 @@ const write = async (file: string, body: string | Buffer) => {
 const imageVersions = await ogImages(server, root, dist, write);
 const assets = { tags, islandPreloads, imageVersions };
 const paths: string[] = await server.prerenderPaths();
+// Pages are held until every one is rendered: their style attributes become rules appended to the
+// main stylesheet (scripts/inline-styles.ts), whose file name then changes with its content.
+const styles = createStyleExtractor();
+const pages = new Map<string, string>();
 for (const p of paths) {
   const { status, html } = await server.render(p, ctx, assets);
   if (status !== 200) throw new Error(`${p} rendered ${status}`);
-  await write(path.join(dist, p, "index.html"), html);
+  pages.set(path.join(dist, p, "index.html"), styles.extract(html));
 }
-await write(path.join(dist, "404.html"), (await server.render("/404", ctx, assets)).html);
+pages.set(path.join(dist, "404.html"), styles.extract((await server.render("/404", ctx, assets)).html));
+const sheet = (await fs.readFile(path.join(dist, style.file), "utf8")) + "\n" + styles.css() + "\n";
+const sheetFile = `assets/style-${createHash("sha256").update(sheet).digest("hex").slice(0, 10)}.css`;
+await fs.rm(path.join(dist, style.file));
+await write(path.join(dist, sheetFile), sheet);
+for (const [file, html] of pages) {
+  if (hasInlineStyle(html)) throw new Error(`${path.relative(dist, file)} still has an inline style; the CSP would block it`);
+  await write(file, html.replaceAll(`/${style.file}`, `/${sheetFile}`));
+}
 await feeds(server, dist, write);
 for (const [name, source] of server.thumbnailSources() as Map<string, string>) await write(path.join(dist, "lab-media", name), await fs.readFile(source));
 await fs.rm(path.join(dist, ".vite"), { recursive: true, force: true });
