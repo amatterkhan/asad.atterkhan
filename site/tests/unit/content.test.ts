@@ -88,7 +88,8 @@ describe("content boundaries", () => {
   });
   it("derives article reading time and strips code from search", () => {
     const a = parseArticle(
-      "---\ntitle: Test\ndescription: Description\nslug: test\nstatus: draft\n---\n## Hi\n```js\nsecretCode\n```",
+      "---\ntitle: Test\ndate: 2026-01-01\nsection: notes\nsummary: Description\nstatus: draft\ndisclosure: unresolved\n---\n## Hi\n```js\nsecretCode\n```",
+      "content/drafts/test.md",
     );
     expect(a.readingMinutes).toBe(1);
     expect(a.searchText).not.toContain("secretCode");

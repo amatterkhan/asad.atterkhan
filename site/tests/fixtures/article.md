@@ -1,10 +1,11 @@
 ---
 title: "A notebook needs room for the details"
-description: "An unpublished layout fixture for testing technical prose, code, tables, images, and the small things that make a long article readable."
-slug: reading-layout
-status: draft
+date: "2026-01-01"
+section: notes
+summary: "An unpublished layout fixture for testing technical prose, code, tables, images, and the small things that make a long article readable."
 tags: [layout, testing]
-category: Design fixture
+status: draft
+disclosure: no-vulnerability
 ---
 
 ## Start with a question
