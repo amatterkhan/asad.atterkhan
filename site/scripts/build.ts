@@ -4,6 +4,7 @@ import { build } from "vite";
 import { feeds } from "./feeds";
 import { createHash } from "node:crypto";
 import { ogImages } from "./og";
+import { checkContent } from "./check-content";
 import { createStyleExtractor, hasInlineStyle } from "./inline-styles";
 
 // Production build: client assets, then the server renderer, then every route prerendered to
@@ -12,6 +13,11 @@ const root = path.resolve(import.meta.dirname, "..");
 const dist = path.join(root, "dist");
 const ssrOut = path.join(root, "node_modules/.cache/site-ssr");
 
+// Tracked Markdown is public: refuse to build it unfinished, undisclosed or unsafe (scripts/check-content.ts).
+if ((process.env.ARTICLE_SOURCE || process.env.CONTENT_SOURCE || "git") === "git") {
+  const problems = await checkContent(root);
+  if (problems.length) throw new Error(`content check failed:\n${problems.join("\n")}`);
+}
 await fs.rm(dist, { recursive: true, force: true });
 await build({ root, logLevel: "warn" });
 await build({ root, logLevel: "warn", build: { ssr: "src/entry-server.ts", outDir: ssrOut, emptyOutDir: true, manifest: false, rollupOptions: { input: "src/entry-server.ts" } } });

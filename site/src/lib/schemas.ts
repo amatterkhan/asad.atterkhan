@@ -7,12 +7,22 @@ export const httpsUrl = z.string().max(500).refine(isHttpsUrl, "Use an HTTPS lin
 
 // Content schemas. Every record from Git or from a Firestore export passes these before it reaches a page.
 
+/**
+ * Hard rule 1 (nothing undisclosed), as data. Only the last three may be public.
+ * - unresolved: not yet decided. The default for a draft; blocks CI and the build.
+ * - disclosed: the program's rules allow a public write-up.
+ * - no-vulnerability: a write-up, tool or note that describes no finding.
+ * - redacted: a finding described without program or target details.
+ */
+export const DISCLOSURE_STATES = ["unresolved", "disclosed", "no-vulnerability", "redacted"] as const;
+export type Disclosure = (typeof DISCLOSURE_STATES)[number];
+
 export const ArticleSchema = z
   .object({
     title: z.string().min(1).max(160),
     description: z.string().min(1).max(300),
     slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
-    status: z.enum(["draft", "published"]),
+    status: z.enum(["draft", "published", "archived"]),
     publishedAt: z.iso.date().optional(),
     updatedAt: z.iso.date().optional(),
     tags: z.array(z.string().min(1).max(40)).max(12).default([]),
@@ -26,14 +36,51 @@ export const ArticleSchema = z
       .regex(/^[a-z0-9][a-z0-9-]*\.(webp|png|jpg)$/)
       .optional(),
     featured: z.boolean().default(false),
+    // Set on entries written as Markdown in Git (EntrySchema); absent on older Firestore records.
+    disclosure: z.enum(DISCLOSURE_STATES).optional(),
+    series: z.string().max(50).optional(),
+    position: z.number().int().min(1).optional(),
   })
   .superRefine((a, ctx) => {
-    if (a.status === "published" && (!a.publishedAt || new Date(a.publishedAt) > new Date()))
+    if ((a.status === "published" || a.status === "archived") && (!a.publishedAt || new Date(a.publishedAt) > new Date()))
       ctx.addIssue({ code: "custom", message: "Published articles need a non-future publication date" });
     if (a.updatedAt && a.publishedAt && a.updatedAt < a.publishedAt)
       ctx.addIssue({ code: "custom", message: "Update cannot precede publication" });
   });
 export type ArticleMeta = z.infer<typeof ArticleSchema>;
+
+const entryId = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, digits and hyphens");
+/**
+ * The frontmatter of a Lab entry written as Markdown in Git (content/articles/<slug>.md). The slug is
+ * the file name, so it cannot disagree with it. Unknown keys fail, so a typo never goes unnoticed.
+ */
+export const EntrySchema = z
+  .strictObject({
+    title: z.string().min(1).max(160),
+    date: z.iso.date(),
+    updated: z.iso.date().optional(),
+    section: entryId.max(50),
+    category: entryId.max(50).optional(),
+    tags: z.array(z.string().max(40).regex(/[a-z0-9]/i, "A tag needs a letter or digit")).max(12).default([]),
+    summary: z.string().min(1).max(300),
+    series: entryId.max(50).optional(),
+    position: z.number().int().min(1).max(99).optional(),
+    status: z.enum(["draft", "published", "archived"]),
+    disclosure: z.enum(DISCLOSURE_STATES),
+    thumbnail: z
+      .string()
+      .regex(/^[a-z0-9][a-z0-9-]*\.(webp|png|jpg)$/)
+      .optional(),
+    featured: z.boolean().default(false),
+  })
+  .superRefine((e, ctx) => {
+    if (e.status !== "draft" && new Date(e.date) > new Date())
+      ctx.addIssue({ code: "custom", path: ["date"], message: "Published entries need a non-future date" });
+    if (e.updated && e.updated < e.date) ctx.addIssue({ code: "custom", path: ["updated"], message: "Update cannot precede the date" });
+    if (!e.series !== !e.position)
+      ctx.addIssue({ code: "custom", path: [e.series ? "position" : "series"], message: "Give both series and position, or neither" });
+  });
+export type Entry = z.infer<typeof EntrySchema>;
 export type Article = ArticleMeta & {
   body: string;
   readingMinutes: number;
@@ -86,6 +133,46 @@ export const ThoughtsSchema = z
   .refine((v) => v.featured === null || v.thoughts.some((t) => t.id === v.featured), "The featured Thought must be one of the list");
 export type Thoughts = z.infer<typeof ThoughtsSchema>;
 export type Thought = Thoughts["thoughts"][number];
+
+/** The places Asad can be found (siteSettings/profiles). "other" covers any platform; its icon comes from the link (lib/profiles.ts). */
+export const PROFILE_KINDS = ["github", "linkedin", "email", "website", "other"] as const;
+export type ProfileKind = (typeof PROFILE_KINDS)[number];
+const EMAIL = /^[^\s@<>"'\\:]+@[^\s@<>"'\\]+\.[^\s@<>"'\\]+$/;
+const hostIs = (value: string, domain: string) => {
+  try {
+    const h = new URL(value).hostname.toLowerCase();
+    return h === domain || h.endsWith(`.${domain}`);
+  } catch {
+    return false;
+  }
+};
+export const ProfileSchema = z
+  .strictObject({
+    id: slugId,
+    kind: z.enum(PROFILE_KINDS),
+    /** An https:// link, or an address for kind "email". */
+    value: z.string().trim().min(1).max(300),
+    /** Optional text for the link; the host or platform name is used when empty. */
+    label: z.string().trim().max(40).default(""),
+  })
+  .superRefine((p, ctx) => {
+    const bad = (message: string) => ctx.addIssue({ code: "custom", path: ["value"], message });
+    if (p.kind === "email") {
+      if (!EMAIL.test(p.value)) bad("Use an email address");
+      return;
+    }
+    if (!isHttpsUrl(p.value)) return bad("Use an HTTPS link");
+    if (p.kind === "github" && !hostIs(p.value, "github.com")) bad("A GitHub link is on github.com");
+    if (p.kind === "linkedin" && !hostIs(p.value, "linkedin.com")) bad("A LinkedIn link is on linkedin.com");
+  });
+export const ProfilesSchema = z.strictObject({
+  profiles: z
+    .array(ProfileSchema)
+    .max(12)
+    .refine((l) => unique(l.map((x) => x.id)), "Profile ids must be unique"),
+});
+export type Profile = z.infer<typeof ProfileSchema>;
+export type Profiles = z.infer<typeof ProfilesSchema>;
 
 export const ProjectSchema = z.object({
   id: z.number(),

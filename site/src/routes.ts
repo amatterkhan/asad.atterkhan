@@ -3,21 +3,25 @@ import type { RouteRecordRaw } from "vue-router";
 import type { Head } from "./head";
 import { site } from "./lib/site";
 import {
-  articleCard,
   articleSummary,
   getAchievements,
   getArticles,
+  getDraftArticles,
+  isCurrent,
   getExperience,
   getActiveOutfit,
   getFeaturedAchievements,
   getLab,
   getThoughts,
+  getProfiles,
   getProjects,
   getSiteCopy,
   parseArticle,
   projectWriteup,
 } from "./lib/content.server";
 import { renderMarkdown } from "./lib/markdown";
+import { personJsonLd } from "./lib/person";
+import { neighbours, tagCounts, tagSlug, toLabEntry } from "./lib/lab-index";
 import Home from "./pages/Home.vue";
 import Lab from "./pages/Lab.vue";
 import ArticlePage from "./pages/ArticlePage.vue";
@@ -27,6 +31,7 @@ import Project from "./pages/Project.vue";
 import Experience from "./pages/Experience.vue";
 import Achievements from "./pages/Achievements.vue";
 import About from "./pages/About.vue";
+import Disclosure from "./pages/Disclosure.vue";
 import Calendar from "./pages/Calendar.vue";
 import Admin from "./pages/Admin.vue";
 import NotFound from "./pages/NotFound.vue";
@@ -57,28 +62,41 @@ async function labMap() {
   });
   return { sections, articles };
 }
-/** /lab, /lab/section/:section and /lab/section/:section/:category. */
+/** /lab, /lab/section/:section[/:category] and /lab/tag/:tag: one ledger, filtered. In development, private drafts are listed too. */
 const labPage =
-  (scope: "all" | "section" | "category"): Loader =>
-  async ({ section: sectionId, category: categoryId }, ctx) => {
+  (scope: "all" | "section" | "category" | "tag"): Loader =>
+  async ({ section: sectionId, category: categoryId, tag: tagId }, ctx) => {
     const { sections, articles } = await labMap();
-    const intro = (await getSiteCopy()).labIntro;
+    const copy = await getSiteCopy();
+    const drafts = ctx.dev ? await getDraftArticles() : [];
+    const rows = [...articles.map((a) => ({ a, draft: false })), ...drafts.map((a) => ({ a, draft: true }))];
+    const pick = (keep: (a: (typeof articles)[number]) => boolean) => rows.filter((r) => keep(r.a)).map((r) => toLabEntry(r.a, r.draft));
     if (scope === "all")
       return {
-        props: { intro, sections, articles: articles.map(articleCard), devPreview: ctx.dev },
-        head: { title: "The Lab", description: (await getSiteCopy()).shareLab, canonical: "/lab" },
+        props: { intro: copy.labIntro, sections, entries: pick(() => true), tags: tagCounts(articles) },
+        head: { title: "The Lab", description: copy.shareLab, canonical: "/lab" },
       };
+    if (scope === "tag") {
+      const tags = tagCounts(articles);
+      const tag = tags.find((t) => t.slug === tagId);
+      if (!tag) return null;
+      return {
+        props: { intro: copy.labIntro, sections, active: { tag: tag.slug }, entries: pick((a) => a.tags.some((t) => tagSlug(t) === tag.slug)), tags },
+        head: { title: `Tagged ${tag.label} · The Lab`, description: `Lab entries tagged ${tag.label}.`, canonical: `/lab/tag/${tag.slug}` },
+      };
+    }
     const section = sections.find((s) => s.id === sectionId);
     const category = scope === "category" ? section?.categories.find((c) => c.id === categoryId) : undefined;
     if (!section || (scope === "category" && !category)) return null;
+    const here = (a: (typeof articles)[number]) => a.shelf!.section === section.id && (!category || a.shelf!.category === category.id);
     const path = `/lab/section/${section.id}${category ? `/${category.id}` : ""}`;
     return {
       props: {
-        intro,
+        intro: copy.labIntro,
         sections,
         active: { section: section.id, category: category?.id },
-        articles: articles.filter((a) => a.shelf!.section === section.id && (!category || a.shelf!.category === category.id)).map(articleCard),
-        devPreview: ctx.dev,
+        entries: pick(here),
+        tags: tagCounts(articles.filter(here)),
       },
       head: {
         title: category ? `${category.name} · ${section.name}` : `${section.name} · The Lab`,
@@ -96,15 +114,16 @@ export const routes: RouteRecordRaw[] = [
       load: async () => ({
         props: {
           copy: await getSiteCopy(),
-          articles: (await getArticles()).slice(0, 3).map(articleSummary),
+          articles: (await getArticles()).filter(isCurrent).slice(0, 3).map(articleSummary),
           projects: (await getProjects()).filter((p) => p.featured).sort((a, b) => b.date.localeCompare(a.date)),
           outfit: await getActiveOutfit(),
           thoughts: await getThoughts(),
+          profiles: await getProfiles(),
         },
         head: {
           description: (await getSiteCopy()).shareHome,
           canonical: "/",
-          jsonLd: { "@context": "https://schema.org", "@type": "Person", name: site.name, url: site.url, sameAs: [site.github, site.linkedin] },
+          jsonLd: personJsonLd(await getProfiles(), (await getExperience()).work),
         },
       }),
     },
@@ -112,6 +131,7 @@ export const routes: RouteRecordRaw[] = [
   { path: "/lab", component: Lab, meta: { load: labPage("all") } },
   { path: "/lab/section/:section", component: Lab, meta: { load: labPage("section") } },
   { path: "/lab/section/:section/:category", component: Lab, meta: { load: labPage("category") } },
+  { path: "/lab/tag/:tag", component: Lab, meta: { load: labPage("tag") } },
   {
     path: "/lab/:slug",
     component: ArticlePage,
@@ -132,7 +152,7 @@ export const routes: RouteRecordRaw[] = [
           .slice(0, 3)
           .map((a) => ({ slug: a.slug, title: a.title, thumb: a.thumb, shelf: a.shelf! }));
         return {
-          props: { article: strip(article), html, toc, related },
+          props: { article: strip(article), html, toc, related, ...neighbours(articles, slug) },
           head: {
             title: article.title,
             description: article.description,
@@ -164,10 +184,10 @@ export const routes: RouteRecordRaw[] = [
         const { readFile } = await import("node:fs/promises");
         const { join } = await import("node:path");
         const file =
-          slug === "reading-layout" ? join(ctx.root, "tests/fixtures/article.md") : join(ctx.root, ".private-content/articles", slug + ".md");
+          slug === "reading-layout" ? join(ctx.root, "tests/fixtures/article.md") : join(ctx.root, "content/drafts", slug + ".md");
         const source = await readFile(file, "utf8").catch(() => null);
         if (source === null) return null;
-        const article = parseArticle(source);
+        const article = parseArticle(source, `${slug}.md`);
         const { html, toc } = await renderMarkdown(article.body);
         return { props: { article: strip(article), html, toc, draft: true }, head: { title: "Local draft preview", noindex: true } };
       },
@@ -243,7 +263,22 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       load: async () => ({
         props: { html: (await renderMarkdown((await getSiteCopy()).aboutBody)).html, outfit: await getActiveOutfit() },
-        head: { title: "About", description: (await getSiteCopy()).shareAbout, canonical: "/about" },
+        head: {
+          title: "About",
+          description: (await getSiteCopy()).shareAbout,
+          canonical: "/about",
+          jsonLd: personJsonLd(await getProfiles(), (await getExperience()).work),
+        },
+      }),
+    },
+  },
+  {
+    path: "/disclosure",
+    component: Disclosure,
+    meta: {
+      load: async () => ({
+        props: {},
+        head: { title: "Disclosure", description: "How findings are disclosed in the Lab.", canonical: "/disclosure" },
       }),
     },
   },

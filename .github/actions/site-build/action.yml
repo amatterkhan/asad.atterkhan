@@ -7,6 +7,9 @@ inputs:
   content-source:
     description: git (content/ files) or firestore (use the snapshot in content-export-dir)
     default: git
+  article-source:
+    description: git or firestore for Lab articles only; empty follows content-source (docs/decisions/0005)
+    default: ''
   content-export-dir:
     description: Directory holding the exported snapshot (content-source firestore only)
     default: ''
@@ -36,6 +39,7 @@ runs:
       run: npm ci --ignore-scripts && npm run typecheck && npm test && npm run build
       env:
         CONTENT_SOURCE: ${{ inputs.content-source }}
+        ARTICLE_SOURCE: ${{ inputs.article-source }}
         CONTENT_EXPORT_DIR: ${{ inputs.content-export-dir }}
         INDEX_SITE: ${{ inputs.index-site }}
         SITE_URL: ${{ inputs.site-url }}

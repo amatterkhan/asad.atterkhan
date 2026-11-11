@@ -198,6 +198,7 @@ jobs:
       - uses: ./.github/actions/site-build
         with:
           content-source: ${{ vars.CONTENT_SOURCE || 'git' }}
+          article-source: ${{ vars.ARTICLE_SOURCE }}
           content-export-dir: ${{ runner.temp }}/content-export
           index-site: ${{ vars.INDEX_SITE || 'false' }}
           site-url: ${{ vars.SITE_URL }}

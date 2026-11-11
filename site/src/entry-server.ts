@@ -3,6 +3,7 @@ import { renderToString } from "vue/server-renderer";
 import { createMemoryHistory, createRouter, RouterView } from "vue-router";
 import Layout from "./components/Layout.vue";
 import { renderHead } from "./head";
+import { tagCounts } from "./lib/lab-index";
 import { notFoundPage, routes, type Page, type RenderContext } from "./routes";
 
 export type Assets = {
@@ -25,9 +26,11 @@ export async function render(url: string, ctx: RenderContext, assets: Assets): P
   const page: Page = loaded ?? notFoundPage();
   if (!loaded) await router.replace({ path: "/__not-found", query: {} });
 
+  const { getProfiles } = await import("./lib/content.server");
+  const profiles = await getProfiles();
   const app = createSSRApp({
     render: () =>
-      h(Layout, { path: route.path }, () =>
+      h(Layout, { path: route.path, profiles }, () =>
         h(RouterView, null, { default: ({ Component }: { Component: unknown }) => h(Component as never, page.props) }),
       ),
   });
@@ -56,11 +59,14 @@ export async function render(url: string, ctx: RenderContext, assets: Assets): P
 /** Every public path to prerender (dynamic routes expanded from content). */
 export async function prerenderPaths(): Promise<string[]> {
   const { getArticles, getLab, getProjects } = await import("./lib/content.server");
+  const articles = await getArticles();
   return [
     "/",
     "/lab",
     ...(await getLab()).sections.flatMap((s) => [`/lab/section/${s.id}`, ...s.categories.map((c) => `/lab/section/${s.id}/${c.id}`)]),
-    ...(await getArticles()).map((a) => `/lab/${a.slug}`),
+    ...tagCounts(articles).map((t) => `/lab/tag/${t.slug}`),
+    ...articles.map((a) => `/lab/${a.slug}`),
+    "/disclosure",
     "/workbench",
     ...(await getProjects()).map((p) => `/workbench/${p.slug}`),
     "/experience",
@@ -70,4 +76,4 @@ export async function prerenderPaths(): Promise<string[]> {
     "/admin",
   ];
 }
-export { getArticles, getLab, getProjects, getActiveOutfit, articleSummary, thumbnailSources } from "./lib/content.server";
+export { getArticles, getLab, getProjects, getActiveOutfit, articleSummary, thumbnailSources, isCurrent } from "./lib/content.server";

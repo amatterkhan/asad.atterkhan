@@ -54,7 +54,7 @@ const groups = groupExperience(work);
     <article v-for="e in education" :key="e.degree" class="education-entry">
       <div>
         <h3>{{ e.degree }} · {{ e.field }}</h3>
-        <p><a :href="safeHref(e.degreeLink)">{{ e.university }} ↗</a></p>
+        <p><a :href="safeHref(e.degreeLink)">{{ e.university }}<PixelIcon name="external" extra="ext" /></a></p>
       </div>
       <div>
         <p class="meta">{{ e.isGraduated ? e.graduationDate : "In progress" }}</p>
@@ -69,7 +69,7 @@ const groups = groupExperience(work);
     </div>
     <ul v-if="featured.length" class="featured-credentials">
       <li v-for="c in featured" :key="c.id">
-        <a :href="safeHref(c.link)">{{ c.title }} ↗</a>
+        <a :href="safeHref(c.link)">{{ c.title }}<PixelIcon name="external" extra="ext" /></a>
         <span>{{ c.issuer }}</span>
       </li>
     </ul>

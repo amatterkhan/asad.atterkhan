@@ -282,6 +282,7 @@ func (s *Server) Handler() http.Handler {
 		mux.HandleFunc(method+" /api/admin/wardrobe", endpoint(s.wardrobe))
 		mux.HandleFunc(method+" /api/admin/lab", endpoint(s.lab))
 		mux.HandleFunc(method+" /api/admin/thoughts", endpoint(s.thoughts))
+		mux.HandleFunc(method+" /api/admin/profiles", endpoint(s.profiles))
 		mux.HandleFunc(method+" /api/admin/experience", endpoint(s.experience))
 		mux.HandleFunc(method+" /api/admin/achievements", endpoint(s.achievements))
 	}

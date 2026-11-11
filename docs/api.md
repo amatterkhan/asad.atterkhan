@@ -235,3 +235,21 @@ type Achievements = {
 Site-copy saves, article publish/unpublish, achievement, wardrobe, Lab map, Thoughts and Experience changes ask GitHub to rebuild
 the site (`repository_dispatch` `content-published`; see [architecture.md](architecture.md)).
 Article draft saves and previews do not. Published documents change visibility immediately.
+
+
+## Profiles: `siteSettings/profiles` (owner)
+
+The links shown on Home and in the phone menu. Nothing renders while the list is empty.
+
+```ts
+type Profiles = {
+  profiles: { id: string; kind: "github" | "linkedin" | "email" | "website" | "other"; value: string; label: string }[]; // ≤ 12
+  updatedAt?: string;
+};
+```
+
+- `GET /api/admin/profiles` → `Profiles` (the shipped `content/profiles.json` until the first save)
+- `PUT /api/admin/profiles` body `Profiles` → `Profiles`; then requests a rebuild. `value` is an
+  `https://` link without credentials (an address for `email`); `github` and `linkedin` links must be on
+  their own domains; `label` ≤ 40 characters; ids are unique slugs; unknown keys or control characters → 400.
+  The site picks each icon from the link's host (`site/src/lib/profiles.ts`).

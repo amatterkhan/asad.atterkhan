@@ -1,7 +1,6 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import matter from "gray-matter";
 import { z } from "zod";
 import {
   AchievementSchema,
@@ -12,15 +11,18 @@ import {
   ProjectSchema,
   SiteCopySchema,
   ThoughtsSchema,
+  ProfilesSchema,
   type Achievements,
   type Article,
   type Experience,
   type ArticleMeta,
   type Lab,
+  type Profile,
   type Project,
   type SiteCopy,
 } from "./schemas";
 import { renderMarkdown, type TocEntry } from "./markdown";
+import { EntryError, gateProblems, lintBody, parseEntry } from "./entries";
 import { DEFAULT_OUTFIT, resolveOutfit } from "./outfits";
 import type { PublicThought } from "./thoughts";
 
@@ -33,6 +35,17 @@ const root = process.env.SITE_ROOT || process.cwd();
 const dir = (...p: string[]) => path.join(root, ...p);
 const exportDir = () => path.resolve(root, process.env.CONTENT_EXPORT_DIR || ".content-export");
 export const contentSource = () => (process.env.CONTENT_SOURCE === "firestore" ? "firestore" : "git");
+/**
+ * Where Lab articles come from, separate from CONTENT_SOURCE (ADR 0005). Unset, it follows
+ * CONTENT_SOURCE, so nothing changes until ARTICLE_SOURCE is set: production can read articles
+ * from Git while the rest still comes from Firestore.
+ */
+export const articleSource = (): "git" | "firestore" => {
+  const v = process.env.ARTICLE_SOURCE;
+  if (v === undefined || v === "") return contentSource();
+  if (v !== "git" && v !== "firestore") throw new Error(`ARTICLE_SOURCE must be "git" or "firestore", not "${v}"`);
+  return v;
+};
 
 const readJson = async (file: string) => JSON.parse(await fs.readFile(file, "utf8"));
 const exists = (file: string) =>
@@ -55,15 +68,62 @@ export function withDerived(meta: ArticleMeta, content: string): Article {
       .slice(0, 120000),
   };
 }
-export function parseArticle(source: string): Article {
-  const { data, content } = matter(source);
-  return withDerived(ArticleSchema.parse(data), content);
+/** One Markdown entry (frontmatter in the Lab entry format) as an Article. `file` names it in errors; its base name is the slug. */
+export function parseArticle(source: string, file = "entry.md"): Article {
+  const { entry, body, slug } = parseEntry(source, file);
+  return withDerived(
+    {
+      title: entry.title,
+      description: entry.summary,
+      slug,
+      status: entry.status,
+      publishedAt: entry.date,
+      updatedAt: entry.updated,
+      tags: entry.tags,
+      section: entry.section,
+      category: entry.category,
+      thumbnail: entry.thumbnail,
+      featured: entry.featured,
+      disclosure: entry.disclosure,
+      series: entry.series,
+      position: entry.position,
+    },
+    body,
+  );
 }
 
+const markdownFiles = async (folder: string) =>
+  (await exists(folder)) ? (await fs.readdir(folder)).filter((f) => f.endsWith(".md")).sort() : [];
+
+/** Every tracked entry passes the gate and the lint here, so the build and CI cannot disagree. */
 async function gitArticles(): Promise<Article[]> {
   const base = dir("content/articles");
-  const files = (await fs.readdir(base)).filter((f) => f.endsWith(".md")).sort();
-  return Promise.all(files.map(async (f) => parseArticle(await fs.readFile(path.join(base, f), "utf8"))));
+  return Promise.all(
+    (await markdownFiles(base)).map(async (f) => {
+      const file = `content/articles/${f}`;
+      const article = parseArticle(await fs.readFile(path.join(base, f), "utf8"), file);
+      const problems = [...gateProblems({ status: article.status, disclosure: article.disclosure! }), ...lintBody(article.body)];
+      if (problems.length) throw new EntryError(file, problems.join("; "));
+      return article;
+    }),
+  );
+}
+
+/**
+ * Private drafts for the development server: content/drafts/ is gitignored (a clone of the private
+ * drafts repository). Only the dev routes call this; the production build never reads the folder.
+ */
+export async function getDraftArticles(): Promise<Article[]> {
+  const base = dir("content/drafts");
+  const lab = await getLab();
+  const tracked = new Set((await markdownFiles(dir("content/articles"))).map((f) => f.replace(/\.md$/, "")));
+  return Promise.all(
+    (await markdownFiles(base)).map(async (f) => {
+      const a = parseArticle(await fs.readFile(path.join(base, f), "utf8"), `content/drafts/${f}`);
+      if (tracked.has(a.slug)) throw new EntryError(`content/drafts/${f}`, "the slug is already used by a tracked entry");
+      return { ...a, shelf: resolveShelf(lab, a), thumb: await thumbnailUrl(a.thumbnail, dir("content/drafts")) };
+    }),
+  );
 }
 async function exportedArticles(): Promise<Article[]> {
   const base = path.join(exportDir(), "articles");
@@ -77,15 +137,16 @@ async function exportedArticles(): Promise<Article[]> {
 }
 
 export async function getArticles(): Promise<Article[]> {
-  const articles = contentSource() === "firestore" ? await exportedArticles() : await gitArticles();
+  const articles = articleSource() === "firestore" ? await exportedArticles() : await gitArticles();
   const slugs = new Set<string>();
   for (const a of articles) {
     if (slugs.has(a.slug)) throw new Error("Duplicate article slug");
     slugs.add(a.slug);
   }
   const lab = await getLab();
+  // Archived entries stay readable and in the ledger; feeds and Home leave them out (see `isCurrent`).
   const published = articles
-    .filter((a) => a.status === "published")
+    .filter((a) => a.status === "published" || a.status === "archived")
     .sort((a, b) => b.publishedAt!.localeCompare(a.publishedAt!));
   return Promise.all(published.map(async (a) => ({ ...a, shelf: resolveShelf(lab, a), thumb: await thumbnailUrl(a.thumbnail) })));
 }
@@ -108,6 +169,12 @@ export async function getThoughts(): Promise<{ thoughts: PublicThought[]; featur
   const thoughts = all.thoughts.filter((t) => t.enabled).map(({ id, text, context }) => ({ id, text, context }));
   return { thoughts, featured: thoughts.some((t) => t.id === all.featured) ? all.featured : null };
 }
+/** The profile links: the exported siteSettings/profiles when CONTENT_SOURCE=firestore, else content/profiles.json. */
+export async function getProfiles(): Promise<Profile[]> {
+  const exported = path.join(exportDir(), "profiles.json");
+  const file = contentSource() === "firestore" && (await exists(exported)) ? exported : dir("content/profiles.json");
+  return ProfilesSchema.parse(await readJson(file)).profiles;
+}
 /** Where an article sits on the Lab map. A missing or removed section falls back to the last one;
  *  a category that is not in the section is dropped. */
 export function resolveShelf(lab: Lab, a: { section?: string; category?: string }) {
@@ -119,11 +186,11 @@ export type Shelf = ReturnType<typeof resolveShelf>;
 
 // Thumbnails are published under a content hash (/lab-media/<16 hex>.<ext>) so Hosting can cache
 // them for a year; the build copies each one from its source (thumbnailSources) into dist/.
-const thumbDir = () => (contentSource() === "firestore" ? path.join(exportDir(), "thumbnails") : dir("content/thumbnails"));
+const thumbDir = () => (articleSource() === "firestore" ? path.join(exportDir(), "thumbnails") : dir("content/thumbnails"));
 const thumbs = new Map<string, string>();
-export async function thumbnailUrl(file?: string): Promise<string | undefined> {
+export async function thumbnailUrl(file?: string, from?: string): Promise<string | undefined> {
   if (!file) return undefined;
-  const source = path.join(thumbDir(), file);
+  const source = path.join(from ?? thumbDir(), file);
   const bytes = await fs.readFile(source).catch(() => {
     throw new Error(`Thumbnail ${file} is missing from ${thumbDir()}`);
   });
@@ -133,6 +200,9 @@ export async function thumbnailUrl(file?: string): Promise<string | undefined> {
 }
 /** Public thumbnail name to source file, for every thumbnail resolved so far. */
 export const thumbnailSources = () => thumbs;
+
+/** Published and not archived: what feeds, Home and "latest" lists show. */
+export const isCurrent = (a: { status: string }) => a.status === "published";
 
 export function articleSummary(article: Article) {
   return { ...articleCard(article), updatedAt: article.updatedAt, searchText: article.searchText };

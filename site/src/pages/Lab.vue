@@ -2,95 +2,66 @@
 import RoomVignette from "../components/RoomVignette.vue";
 import At from "../components/At.vue";
 import Sprite from "../components/Sprite.vue";
-import PixelIcon from "../components/PixelIcon.vue";
+import PathLine from "../components/PathLine.vue";
+import FilterTabs from "../components/FilterTabs.vue";
 import { LabSearch } from "../islands";
 import { subtitles } from "../lib/site";
-import type { ArticleCard } from "../lib/content.server";
+import type { LabEntry, TagCount } from "../lib/lab-index";
 import type { LabMapSection } from "../routes";
-// The Lab and each of its sections share this page. The overview (no `active`) shows the room and the
-// map of sections; a section page shows the section tabs and its categories. All navigation is plain
-// links between prerendered pages; only the search below hydrates.
-const { intro, sections, active, articles, devPreview } = defineProps<{
+// The Lab index (docs/decisions/0006): a dated ledger with the whole row as the link. Sections,
+// categories and tags are filters, each a link to its own prerendered page, so they work without
+// JavaScript and have URLs. Only the search hydrates.
+const { intro, sections, active, entries, tags } = defineProps<{
   intro: string;
   sections: LabMapSection[];
-  active?: { section: string; category?: string };
-  articles: ArticleCard[];
-  devPreview: boolean;
+  active?: { section?: string; category?: string; tag?: string };
+  entries: LabEntry[];
+  tags: TagCount[];
 }>();
-const current = active && sections.find((s) => s.id === active.section)!;
+const section = active?.section ? sections.find((s) => s.id === active.section) : undefined;
+const category = section && active?.category ? section.categories.find((c) => c.id === active.category) : undefined;
+const tag = active?.tag ? tags.find((t) => t.slug === active.tag) : undefined;
 const total = sections.reduce((n, s) => n + s.count, 0);
-const entries = (n: number) => `${n} ${n === 1 ? "entry" : "entries"}`;
 const sectionHref = (id: string) => `/lab/section/${id}`;
+const path = [
+  { label: "lab", href: "/lab" },
+  ...(section ? [{ label: section.id, href: sectionHref(section.id) }] : []),
+  ...(section && category ? [{ label: category.id, href: `${sectionHref(section.id)}/${category.id}` }] : []),
+  ...(active?.tag ? [{ label: `tag/${active.tag}`, href: `/lab/tag/${active.tag}` }] : []),
+];
+const heading = category?.name ?? section?.name ?? (active?.tag ? `Tagged ${tag?.label ?? active.tag}` : "The Lab");
+const sectionTabs = [
+  { label: "All", href: "/lab", count: total, current: !active?.section && !active?.tag },
+  ...sections.map((s) => ({ label: s.name, href: sectionHref(s.id), count: s.count, current: s.id === section?.id && !category })),
+];
+const categoryTabs = section?.categories.length
+  ? [
+      { label: `All ${section.name}`, href: sectionHref(section.id), count: section.count, current: !category },
+      ...section.categories.map((c) => ({ label: c.name, href: `${sectionHref(section.id)}/${c.id}`, count: c.count, current: c.id === category?.id })),
+    ]
+  : [];
+const tagTabs = tags.map((t) => ({ label: t.label, href: `/lab/tag/${t.slug}`, count: t.count, current: t.slug === active?.tag }));
 </script>
 <template>
-  <template v-if="!current">
-    <div class="lab-heading">
-      <div>
-        <p class="eyebrow">Technical journal</p>
-        <h1>The Lab</h1>
-        <p class="page-subtitle">{{ subtitles.lab }}</p>
-        <p>{{ intro }}</p>
-      </div>
+  <PathLine :segments="path" />
+  <div class="lab-heading">
+    <div>
+      <h1>{{ heading }}</h1>
+      <p v-if="!active" class="page-subtitle">{{ subtitles.lab }}</p>
+      <p v-if="!active">{{ intro }}</p>
+      <p v-else-if="section && !category">{{ section.blurb }}</p>
     </div>
-    <RoomVignette corner="lab">
-      <At :x="159" :y="111">
-        <div class="storm">
-          <Sprite state="storm-nap" :size="40" />
-          <span class="sleep-mark">z Z</span>
-        </div>
-      </At>
-    </RoomVignette>
-    <nav class="lab-map" aria-label="Lab sections">
-      <h2 class="lab-map-title"><PixelIcon name="map" /> Lab map <small>{{ entries(total) }}</small></h2>
-      <ul>
-        <li v-for="s in sections" :key="s.id" class="lab-room">
-          <span class="lab-room-icon" aria-hidden="true"><PixelIcon :name="s.icon" /></span>
-          <h3><a :href="sectionHref(s.id)">{{ s.name }}</a></h3>
-          <p class="lab-room-count">{{ entries(s.count) }}</p>
-          <p class="lab-room-blurb">{{ s.blurb }}</p>
-          <p v-if="s.categories.length" class="lab-room-cats">
-            <a v-for="c in s.categories" :key="c.id" :href="`${sectionHref(s.id)}/${c.id}`">{{ c.name }}</a>
-          </p>
-        </li>
-      </ul>
-    </nav>
-    <h2 class="lab-list-title">Latest from the bench</h2>
-  </template>
-
-  <template v-else>
-    <p class="eyebrow article-crumb">
-      <a href="/lab">The Lab</a> <span aria-hidden="true">/</span>
-      <template v-if="active!.category">
-        <a :href="sectionHref(current.id)">{{ current.name }}</a> <span aria-hidden="true">/</span>
-      </template>
-      <span v-else>{{ current.name }}</span>
-    </p>
-    <nav class="lab-tabs" aria-label="Lab sections">
-      <a href="/lab">All</a>
-      <a
-        v-for="s in sections"
-        :key="s.id"
-        :href="sectionHref(s.id)"
-        :aria-current="s.id === current.id ? 'page' : undefined"
-      ><PixelIcon :name="s.icon" />{{ s.name }} <small>{{ s.count }}</small></a>
-    </nav>
-    <div class="lab-section-head">
-      <span class="lab-room-icon" aria-hidden="true"><PixelIcon :name="current.icon" /></span>
-      <div>
-        <h1>{{ active!.category ? current.categories.find((c) => c.id === active!.category)!.name : current.name }}</h1>
-        <p>{{ current.blurb }}</p>
+  </div>
+  <RoomVignette v-if="!active" corner="lab">
+    <At :x="159" :y="111">
+      <div class="storm">
+        <Sprite state="storm-nap" :size="40" />
+        <span class="sleep-mark">z Z</span>
       </div>
-    </div>
-    <nav v-if="current.categories.length" class="filters lab-cats" aria-label="Categories">
-      <a :href="sectionHref(current.id)" :aria-current="!active!.category ? 'page' : undefined">All <small>{{ current.count }}</small></a>
-      <a
-        v-for="c in current.categories"
-        :key="c.id"
-        :href="`${sectionHref(current.id)}/${c.id}`"
-        :aria-current="c.id === active!.category ? 'page' : undefined"
-      >{{ c.name }} <small>{{ c.count }}</small></a>
-    </nav>
-  </template>
-
-  <LabSearch :articles="articles" :dev-preview="devPreview && !current" :scoped="!!current" />
+    </At>
+  </RoomVignette>
+  <FilterTabs label="Sections" :tabs="sectionTabs" />
+  <FilterTabs v-if="categoryTabs.length" label="Categories" :tabs="categoryTabs" />
+  <FilterTabs v-if="tagTabs.length" label="Tags" :tabs="tagTabs" />
+  <LabSearch :entries="entries" :scoped="!!active" />
 </template>

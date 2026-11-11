@@ -3,7 +3,8 @@ import Brand from "./Brand.vue";
 import Cursor from "./Cursor.vue";
 import SiteNav from "./SiteNav.vue";
 import { site } from "../lib/site";
-const { path } = defineProps<{ path: string }>();
+import type { Profile } from "../lib/schemas";
+const { path, profiles } = defineProps<{ path: string; profiles: Profile[] }>();
 const year = new Date().getFullYear();
 </script>
 <template>
@@ -12,7 +13,7 @@ const year = new Date().getFullYear();
   <div class="wrap">
     <header class="site-header">
       <Brand />
-      <SiteNav :path="path" />
+      <SiteNav :path="path" :profiles="profiles" />
     </header>
     <main id="main"><slot /></main>
     <footer class="site-footer">

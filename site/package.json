@@ -14,7 +14,9 @@
     "budget": "tsx scripts/check-budget.ts",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "markdown:golden": "tsx scripts/markdown-golden.ts"
+    "markdown:golden": "tsx scripts/markdown-golden.ts",
+    "content:check": "tsx scripts/check-content.ts",
+    "new-entry": "tsx scripts/new-entry.ts"
   },
   "dependencies": {
     "firebase": "^13.1.0",

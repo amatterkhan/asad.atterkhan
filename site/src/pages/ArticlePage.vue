@@ -1,17 +1,22 @@
 <script setup lang="ts">
 import ArticleView from "./Article.vue";
 import PixelIcon from "../components/PixelIcon.vue";
+import EntryNav from "../components/EntryNav.vue";
 import type { Article } from "../lib/schemas";
 import type { TocEntry } from "../lib/markdown";
-const { article, html, toc, related } = defineProps<{
+const { article, html, toc, related, newer, older, series } = defineProps<{
   article: Omit<Article, "body" | "searchText">;
   html: string;
   toc: TocEntry[];
+  newer?: { href: string; title: string };
+  older?: { href: string; title: string };
+  series?: { name: string; items: { href: string; title: string; position: number; current: boolean }[] };
   related: { slug: string; title: string; thumb?: string; shelf: NonNullable<Article["shelf"]> }[];
 }>();
 </script>
 <template>
-  <ArticleView :article="article" :html="html" :toc="toc" />
+  <ArticleView :article="article" :html="html" :toc="toc" :series="series" />
+  <EntryNav :newer="newer" :older="older" />
   <section v-if="related.length > 0" class="related">
     <h2>Nearby in The Lab</h2>
     <a v-for="a in related" :key="a.slug" :href="`/lab/${a.slug}`" class="related-item">

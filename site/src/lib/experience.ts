@@ -14,3 +14,13 @@ export function groupExperience(roles: Role[]) {
         : group.roles[0].dateRange,
   }));
 }
+
+/**
+ * The job title and employer shown wherever the exact title is machine-read (search-engine data, link
+ * previews). It is the current role on the Experience page, so editing that role in the console
+ * changes it everywhere. The hero's self-description is separate, hand-written copy.
+ */
+export function currentRole(roles: readonly Role[]): { title: string; company: string } | undefined {
+  const role = [...roles].reverse().find((r) => r.isCurrent);
+  return role && { title: role.title, company: role.company };
+}

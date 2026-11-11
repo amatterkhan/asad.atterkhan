@@ -104,6 +104,7 @@ Then turn things on one at a time, each with `gh variable set NAME --body VALUE`
 | `ENABLE_CONTENT_ADMIN`, `ENABLE_DOCUMENT_ADMIN`, `ENABLE_ACHIEVEMENT_ADMIN`, `ENABLE_PUBLIC_FILES` = `true` | Per feature, after owner sign-in is verified on the deployed site. They take effect on the next API deploy. |
 | `REBUILD_HOOK=github` | After creating the `asad-api-github-token` secret in Secret Manager (fine-grained token for this repository, Contents: read and write) and re-running the setup script so the runtime can read it. |
 | `CONTENT_SOURCE=firestore` | Once the published articles live in Firestore. |
+| `ARTICLE_SOURCE=git` | When the owner switches Lab articles to Markdown in Git while everything else stays on Firestore. Delete it to roll back ([deployment.md](deployment.md#switching-lab-articles-to-git-and-rolling-back)). |
 | `INDEX_SITE=true`, `SITE_URL=https://asad.atterkhan.com` | At the domain cutover only. |
 | `FIREBASE_HOSTING_SITE` | Only to deploy to a second Hosting site instead of the default one. |
 

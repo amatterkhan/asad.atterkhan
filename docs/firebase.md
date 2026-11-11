@@ -33,6 +33,7 @@ The owner UID, `admin` claim and TOTP enrollment are already set up for the owne
 | `siteSettings/achievements`, `siteSettings/wardrobe` | achievements and wardrobe routes | Featured achievements; Asad's active outfit |
 | `siteSettings/lab` | `PUT /api/admin/lab` | The Lab map: sections and their categories |
 | `siteSettings/thoughts` | `PUT /api/admin/thoughts` | Asad's Thoughts: the one-liners, their contexts, the featured one |
+| `siteSettings/profiles` | `PUT /api/admin/profiles` | Profile links (GitHub, LinkedIn, email, websites, other); the icon is recognised from the link |
 | `articles/{slug}` | `/api/admin/articles…` | Owner drafts with `version` (optimistic concurrency) |
 | `publicArticles/{slug}` | publish / unpublish | Validated snapshot + `body`, written in the same transaction that marks the draft published |
 | `publicProjects/{slug}` | (read-only for now) | Same pattern, not yet editable |

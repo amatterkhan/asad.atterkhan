@@ -17,7 +17,8 @@ const years = computed(() => groupByYear(entries));
             <p v-if="e.summary">{{ e.summary }}</p>
           </div>
           <div class="ledger-meta">
-            <b v-if="e.kind">{{ e.kind }}</b>
+            <b v-if="e.kind">{{ e.kind }}<em v-if="e.flag" class="ledger-flag"> · {{ e.flag }}</em></b>
+            <b v-else-if="e.flag"><em class="ledger-flag">{{ e.flag }}</em></b>
             <span v-if="e.minutes">{{ e.minutes }} min read</span>
           </div>
         </a>

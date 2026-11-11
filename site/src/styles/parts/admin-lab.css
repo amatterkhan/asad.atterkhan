@@ -74,3 +74,20 @@
   .admin-thought-list li > select { grid-column: 2; }
   .admin-thoughts .admin-lab-add { flex-wrap: wrap; }
 }
+
+/* profile links: the same row controls as Thoughts, with a recognised-icon chip in front */
+.admin-profile-list { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 6px; }
+.admin-profile-list li { display: grid; grid-template-columns: auto auto minmax(0, 1fr) minmax(0, 150px) auto; gap: 6px; align-items: center; }
+.admin-profile-list input:not([type]), .admin-profile-list select, .admin-profiles .admin-lab-add select { padding: 6px 10px !important; font-size: 14px !important; min-height: 34px; }
+.admin-profile-list select, .admin-profiles .admin-lab-add select { border: 2px solid var(--color-faint); background-color: var(--color-bg); color: var(--color-ink); font: 12px var(--font-mono); }
+.admin-profile-list li > button { min-height: 34px; min-width: 34px; padding: 4px 10px; border: 2px solid var(--color-faint); background: var(--color-bg); color: var(--color-ink); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.admin-profile-list li > button:hover { border-color: var(--color-accent); }
+.admin-profile-list li > button .pixel-icon { width: 14px; height: 14px; margin: 0; }
+.admin-profile-icon { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 2px solid var(--color-faint); color: var(--color-accent); }
+.admin-profile-icon .pixel-icon { width: 18px; height: 18px; margin: 0; }
+.admin-profiles .admin-lab-add input { flex: 1; }
+@media (max-width: 640px) {
+  .admin-profile-list li { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .admin-profile-list li > input:nth-of-type(1) { grid-column: 1 / -1; }
+  .admin-profile-list li > input:nth-of-type(2) { grid-column: 1 / 3; }
+}

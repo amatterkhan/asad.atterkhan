@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { site } from "../lib/site";
+import { profileView } from "../lib/profiles";
+import type { Profile } from "../lib/schemas";
 import Brand from "./Brand.vue";
 import PixelIcon from "./PixelIcon.vue";
 // Rendered once at build time; behaviors/nav.ts opens and closes the dialog.
-const { path } = defineProps<{ path: string }>();
+const { path, profiles } = defineProps<{ path: string; profiles: Profile[] }>();
+const profileLinks = profiles.map(profileView);
 const links = [
   ["/lab", "The Lab"],
   ["/workbench", "Workbench"],
@@ -36,10 +38,8 @@ const current = (href: string) =>
     <nav aria-label="Mobile navigation">
       <a v-for="[href, label] in links" :key="href" :href="href" :aria-current="current(href)">{{ label }}</a>
     </nav>
-    <div class="mobile-menu-links">
-      <a :href="site.github"><PixelIcon name="github" /> <span>GitHub</span></a>
-      <a :href="site.linkedin"><PixelIcon name="linkedin" /> <span>LinkedIn</span></a>
-      <a :href="`mailto:${site.email}`"><PixelIcon name="mail" /> <span>Email</span></a>
+    <div v-if="profileLinks.length" class="mobile-menu-links">
+      <a v-for="l in profileLinks" :key="l.id" :href="l.href"><PixelIcon :name="l.icon" /> <span>{{ l.label }}</span></a>
     </div>
   </dialog>
   <noscript>

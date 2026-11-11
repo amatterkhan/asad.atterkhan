@@ -78,6 +78,8 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run typecheck
       - run: npm test
+      # The publication gate on its own, so a failure names the file (docs/decisions/0005).
+      - run: npm run content:check
       - run: npm audit --omit=dev --audit-level=moderate
       - run: npm run build
       # Size budgets for the stylesheet and each page's JavaScript (scripts/check-budget.ts).

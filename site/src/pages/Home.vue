@@ -2,16 +2,21 @@
 import PixelIcon from "../components/PixelIcon.vue";
 import { Room } from "../islands";
 import { date, site, subtitles } from "../lib/site";
-import type { SiteCopy, Project } from "../lib/schemas";
+import { profileView } from "../lib/profiles";
+import type { Profile, SiteCopy, Project } from "../lib/schemas";
 import type { ArticleSummary } from "../lib/content.server";
 import type { PublicThought } from "../lib/thoughts";
-const { copy, articles, projects, outfit, thoughts } = defineProps<{
+const { copy, articles, projects, outfit, thoughts, profiles } = defineProps<{
   copy: SiteCopy;
   articles: ArticleSummary[];
   projects: Project[];
   outfit: string;
   thoughts: { thoughts: PublicThought[]; featured: string | null };
+  profiles: Profile[];
 }>();
+const links = profiles.filter((p) => p.kind !== "email").map(profileView);
+// the address the closing line ends on: the first email profile, else the site contact
+const email = profiles.find((p) => p.kind === "email")?.value ?? site.email;
 const name = copy.heroTitle.match(/Asad\.?$/)?.[0];
 // the body is short paragraphs separated by blank lines in the copy
 const body = copy.heroBody.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
@@ -67,10 +72,9 @@ const body = copy.heroBody.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean)
 
   <section class="block closing">
     <h2>{{ copy.closingTitle }}</h2>
-    <p>{{ copy.closingBody }} <a :href="`mailto:${site.email}`">{{ site.email }}</a></p>
+    <p>{{ copy.closingBody }} <a :href="`mailto:${email}`">{{ email }}</a></p>
     <p class="closing-links">
-      <a :href="site.github"><PixelIcon name="github" /> GitHub <PixelIcon name="external" extra="ext" /></a>
-      <a :href="site.linkedin"><PixelIcon name="linkedin" /> LinkedIn <PixelIcon name="external" extra="ext" /></a>
+      <a v-for="l in links" :key="l.id" :href="l.href"><PixelIcon :name="l.icon" /> {{ l.label }}<PixelIcon v-if="l.external" name="external" extra="ext" /></a>
       <a href="/experience"><PixelIcon name="briefcase" /> Experience</a>
     </p>
   </section>

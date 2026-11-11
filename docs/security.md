@@ -21,8 +21,11 @@ Each line is checked by a test or a script, so it fails loudly if it regresses.
 | Raw HTML in Markdown is dropped; owner-edited URLs are `https://` only | `site/tests/unit/markdown.test.ts`, `content.test.ts`, the Go tests |
 | Firestore and Storage refuse browsers; every admin route needs the owner, the claim and TOTP | The Go emulator tests in CI |
 
-Not enforced by a test yet: off-origin images in Markdown (the CSP blocks them; the renderer does
-not), the draft gate and the content lint (Stage 3), and the API abuse review (Stage 5).
+| A tracked Lab entry is `published` or `archived` and has its disclosure decided | `site/tests/unit/entries.test.ts` (a fixture per failure); `npm run content:check` in CI and in `npm run build` |
+| No Markdown image from another origin, no script or event handler in an entry, no SVG with script or external references | The same lint, `site/src/lib/entries.ts` |
+| Private drafts never reach `dist/` | `site/tests/unit/lab-publish.test.ts` |
+
+Not enforced by a test yet: the API abuse review (Stage 5).
 
 `/admin` is looser on purpose: it may load `apis.google.com`, call the two Firebase auth hosts,
 frame the project's `firebaseapp.com` handler, open the sign-in popup (COOP

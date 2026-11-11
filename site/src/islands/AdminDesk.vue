@@ -8,6 +8,7 @@ import AdminWriting from "./AdminWriting.vue";
 import AdminWardrobe from "./AdminWardrobe.vue";
 import AdminLab from "./AdminLab.vue";
 import AdminThoughts from "./AdminThoughts.vue";
+import AdminProfiles from "./AdminProfiles.vue";
 import AdminExperience from "./AdminExperience.vue";
 import AdminAchievements from "./AdminAchievements.vue";
 import { syncTheme } from "../behaviors/theme";
@@ -28,6 +29,7 @@ const SECTIONS = [
   { id: "achievements", label: "Achievements", hint: "Certifications, and which show on Experience", icon: "medal" },
   { id: "wardrobe", label: "Wardrobe", hint: "What Asad is wearing", icon: "shirt" },
   { id: "thoughts", label: "Thoughts", hint: "What Asad says in the room", icon: "comment" },
+  { id: "profiles", label: "Profiles", hint: "Where people can find Asad", icon: "globe" },
 ] as const;
 type Section = (typeof SECTIONS)[number]["id"];
 const tab = ref<Section>("writing");
@@ -165,6 +167,7 @@ const api: Api = async <T,>(path: string, init: RequestInit = {}): Promise<T> =>
         <AdminWardrobe v-else-if="tab === 'wardrobe'" :api="api" />
         <AdminLab v-else-if="tab === 'lab'" :api="api" />
         <AdminThoughts v-else-if="tab === 'thoughts'" :api="api" />
+        <AdminProfiles v-else-if="tab === 'profiles'" :api="api" />
         <AdminWriting v-else :api="api" :authed="authed" />
       </div>
     </div>
