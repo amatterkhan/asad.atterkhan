@@ -7,6 +7,8 @@ export type LedgerEntry = {
   /** What kind of entry it is, for example "Writeups / Hack The Box". */
   kind?: string;
   minutes?: number;
+  /** A short mark beside the kind, for example "Archived". */
+  flag?: string;
 };
 
 // Spelled out here because Intl's short month names differ between runtimes ("Sep" and "Sept").

@@ -14,5 +14,6 @@
   .role-details summary, .lab-cats a, .copy-code { min-height: 44px; }
   .copy-code { min-width: 60px; }
   .mobile-toc a { display: flex; align-items: center; min-height: 44px; padding: 0; }
+  .disclosure-line a, .series-nav a, .series-nav [aria-current] { display: inline-flex; align-items: center; min-height: 44px; padding: 0; }
   main > a:not([class]) { display: inline-flex; align-items: center; min-height: 44px; }
 }

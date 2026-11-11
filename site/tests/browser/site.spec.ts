@@ -9,6 +9,8 @@ for (const path of [
   "/lab",
   "/lab/section/writeups",
   "/lab/section/writeups/hackthebox",
+  "/lab/section/notes",
+  "/disclosure",
   "/workbench",
   "/experience",
   "/achievements",
@@ -501,4 +503,20 @@ test("the component page renders every piece, is accessible, and is not part of 
   if (info.project.name.startsWith("mobile")) expect(await smallTargets(page)).toEqual([]);
   expect(problems).toEqual([]);
   expect((await request.get("/styleguide")).status()).toBe(404);
+});
+
+test("the Lab ledger and its filters are plain links", async ({ page, request }) => {
+  await page.goto("/lab");
+  const sections = page.getByRole("navigation", { name: "Sections" });
+  await expect(sections.getByRole("link", { name: /^All/ })).toHaveAttribute("aria-current", "page");
+  await sections.getByRole("link", { name: /^Notes/ }).click();
+  await expect(page).toHaveURL(/\/lab\/section\/notes$/);
+  await expect(sections.getByRole("link", { name: /^Notes/ })).toHaveAttribute("aria-current", "page");
+  // the whole ledger row is the link, and the entry says where its disclosure stands
+  await page.locator(".ledger a", { hasText: "Lab 000" }).click();
+  await expect(page).toHaveURL(/\/lab\/lab-000$/);
+  await expect(page.locator(".disclosure-line")).toContainText("No vulnerability described");
+  // each section has a feed; an unknown tag or section is a 404
+  expect((await request.get("/lab/section/notes/rss.xml")).headers()["content-type"]).toContain("xml");
+  expect((await request.get("/lab/tag/no-such-tag")).status()).toBe(404);
 });

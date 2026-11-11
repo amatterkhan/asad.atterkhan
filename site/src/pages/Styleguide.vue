@@ -28,7 +28,7 @@ const entries: LedgerEntry[] = [
   { href: "#one", date: "2026-10-12", title: "Sample entry with a title long enough to wrap on a phone", summary: "A one-line summary of a sample entry.", kind: "Writeups / Sample category", minutes: 14 },
   { href: "#two", date: "2026-09-30", title: "Sample entry", summary: "A one-line summary of a sample entry.", kind: "Tooling", minutes: 6 },
   { href: "#three", date: "2026-01-04", title: "Sample entry without a summary", kind: "Notes", minutes: 1 },
-  { href: "#four", date: "2025-12-19", title: "Sample entry from the year before", summary: "A one-line summary of a sample entry.", kind: "Writeups", minutes: 9 },
+  { href: "#four", date: "2025-12-19", title: "Sample entry from the year before", summary: "A one-line summary of a sample entry.", kind: "Writeups", minutes: 9, flag: "Archived" },
 ];
 </script>
 <template>
@@ -76,6 +76,18 @@ const entries: LedgerEntry[] = [
   <section class="sg-section" aria-labelledby="sg-nav">
     <h2 id="sg-nav">Entry navigation</h2>
     <EntryNav :newer="{ href: '#newer', title: 'Sample newer entry' }" :older="{ href: '#older', title: 'Sample older entry' }" />
+  </section>
+
+  <section class="sg-section" aria-labelledby="sg-entry">
+    <h2 id="sg-entry">Entry header pieces</h2>
+    <p class="disclosure-line"><a href="#disclosure"><b>No vulnerability described</b></a><span>This entry describes no finding.</span></p>
+    <nav class="series-nav" aria-label="Series">
+      <p>Part of the series <b>sample series</b></p>
+      <ol>
+        <li><a href="#part-1">1. Sample first part</a></li>
+        <li><span aria-current="page">2. Sample second part</span></li>
+      </ol>
+    </nav>
   </section>
 
   <section class="sg-section" aria-labelledby="sg-prose">
