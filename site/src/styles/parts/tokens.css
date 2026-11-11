@@ -1,0 +1,26 @@
+@font-face {
+  font-family: Departure;
+  src: url(/fonts/DepartureMono-Regular.woff2) format("woff2");
+  font-display: swap;
+}
+
+/* night: the room after dark: ink-navy, warm paper text, curtain-mint accents, teal links */
+@theme static {
+  --color-bg: #12141d;
+  --color-bg-2: #1a1d29;
+  --color-ink: #e4ddd0;
+  --color-ink-strong: #fbf5ea;
+  --color-muted: #a69f93;
+  --color-faint: #2d303d;
+  --color-accent: #9ed6b4;
+  --color-sky: #7cc0d4;
+  --color-peach: #c9b08a;
+  --color-green: #9cc98a;
+  --color-dot: rgba(214, 200, 172, .13);
+  --color-paper-hl: rgba(249, 226, 175, .85);
+  --color-code-bg: #171a24;
+  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: Departure, ui-monospace, monospace;
+  --container-measure: 68ch;
+}

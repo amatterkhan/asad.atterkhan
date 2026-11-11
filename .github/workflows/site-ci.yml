@@ -80,6 +80,8 @@ jobs:
       - run: npm test
       - run: npm audit --omit=dev --audit-level=moderate
       - run: npm run build
+      # Size budgets for the stylesheet and each page's JavaScript (scripts/check-budget.ts).
+      - run: npm run budget
       # Browser suite: production prerender + preview server, desktop/mobile, both themes,
       # axe, overflow, hydration. Uses the Chrome already installed on GitHub's runners.
       - run: npm run test:e2e

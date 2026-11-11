@@ -452,3 +452,53 @@ test("calendar development preview navigates mocked months", async ({
     .click();
   await expect(month).toHaveText("October 2026");
 });
+
+/** Links and buttons whose hit area (the box, or a pseudo-element stretched over it) is under 44px. */
+const smallTargets = (page: import("@playwright/test").Page) =>
+  page.evaluate(() => {
+    const small: string[] = [];
+    for (const el of document.querySelectorAll<HTMLElement>("a[href], button, summary, input, select")) {
+      // The room's hotspots and meter sit on the pixel grid (styles/parts/touch.css).
+      if (el.closest(".room, .vignette")) continue;
+      const box = el.getBoundingClientRect();
+      const cs = getComputedStyle(el);
+      if (!box.width || !box.height || cs.visibility === "hidden") continue;
+      // Links inside running text are exempt (WCAG 2.5.8).
+      if (el.tagName === "A" && cs.display === "inline" && el.closest("p, li") && !el.closest("nav")) continue;
+      const after = getComputedStyle(el, "::after");
+      const stretched = after.content !== "none" && after.position === "absolute";
+      const width = Math.max(box.width, stretched ? parseFloat(after.width) || 0 : 0);
+      const height = Math.max(box.height, stretched ? parseFloat(after.height) || 0 : 0);
+      // Sub-pixel layout can report 43.98 for a 44px box.
+      if (Math.round(width) < 44 || Math.round(height) < 44) small.push(`${el.tagName}.${el.className} "${el.textContent?.trim().slice(0, 20)}" ${Math.round(width)}x${Math.round(height)}`);
+    }
+    return small;
+  });
+
+for (const path of ["/lab", "/lab/lab-000", "/lab/section/writeups", "/workbench", "/workbench/qrover", "/experience", "/achievements", "/about", "/missing-page"])
+  test(`touch targets are at least 44px ${path}`, async ({ page }, info) => {
+    test.skip(!info.project.name.startsWith("mobile"), "touch widths only");
+    await page.goto(path);
+    await page.evaluate(() => document.fonts.ready);
+    expect(await smallTargets(page)).toEqual([]);
+  });
+
+test("the component page renders every piece, is accessible, and is not part of the built site", async ({ page, request }, info) => {
+  const problems: string[] = [];
+  page.on("pageerror", (err) => problems.push(err.message));
+  await page.goto("http://127.0.0.1:4193/styleguide");
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page.getByRole("heading", { level: 1, name: "Components" })).toBeVisible();
+  await expect(page.locator("main")).toHaveCSS("opacity", "1");
+  await expect(page.locator(".ledger a")).toHaveCount(4);
+  await expect(page.locator(".ledger-year")).toHaveText(["2026", "2025"]);
+  await expect(page.locator(".filter-tabs a[aria-current]")).toHaveText(/All/);
+  await expect(page.locator(".path-line a")).toHaveCount(4);
+  await expect(page.locator(".entry-nav a")).toHaveCount(2);
+  await expect(page.locator(".prose pre").first()).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze()).violations).toEqual([]);
+  if (info.project.name.startsWith("mobile")) expect(await smallTargets(page)).toEqual([]);
+  expect(problems).toEqual([]);
+  expect((await request.get("/styleguide")).status()).toBe(404);
+});

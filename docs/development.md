@@ -108,3 +108,25 @@ boundaries and token classification can differ from Shiki. This is an intentiona
 Raw HTML is dropped and unsafe URLs are removed in both renderers.
 Heading IDs use a generated filter from github-slugger. After upgrading that package, run
 `npx tsx scripts/slugger-table.ts` from `site/` and format the generated Go file.
+
+## Styles and components
+
+`site/src/styles/app.css` only lists imports; the rules live in `site/src/styles/parts/`. The import
+order is the cascade order, so a later file wins. Files imported with `layer(components)` sit under
+Tailwind's utilities; the ones after them are unlayered.
+
+| File | Holds |
+| --- | --- |
+| `tokens.css` | Fonts, colours and the reading measure |
+| `base.css`, `chrome.css`, `type.css` | Reset, themes, header, footer, headings |
+| `home.css`, `pages.css`, `prose.css`, `calendar.css`, `lab.css` | Page and article rules |
+| `sprites.css`, `room.css`, `vignette.css`, `controls.css` | The pixel room and its controls |
+| `admin.css`, `admin-lab.css` | The `/admin` console |
+| `notebook.css` | Path line, filter tabs, ledger, entry navigation ([ADR 0006](decisions/0006-design-direction-notebook.md)) |
+| `responsive.css`, `mobile.css`, `touch.css` | Breakpoints and 44px touch targets |
+
+`http://localhost:4190/styleguide` shows every component in the current theme. It exists only under
+`npm run dev` and is never built.
+
+`npm run budget` (after `npm run build`) fails if the stylesheet or a page's JavaScript grows past
+the sizes in `site/scripts/check-budget.ts`. Raise a number there in the same commit that needs it.

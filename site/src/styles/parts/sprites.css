@@ -1,0 +1,56 @@
+/* ---------- sprites (approved art, unchanged behaviour) ---------- */
+.sprite-scene { display: flex; justify-content: center; align-items: flex-end; max-width: 100%; position: relative; z-index: 1; }
+.sprite {
+  display: inline-block; flex: none; width: var(--sprite-size, 128px); height: var(--sprite-size, 128px);
+  overflow: hidden; contain: strict;
+}
+/* the whole sheet, n frames wide; -100% of its own width moves it a frame per step */
+.sprite-strip {
+  display: block; width: calc(100% * var(--n, 2)); height: 100%;
+  background: var(--sprite-sheet) 0 0 / 100% 100% no-repeat; image-rendering: pixelated;
+  animation: sprite-play calc(var(--n, 2) * var(--ms, 400ms)) steps(var(--n, 2)) infinite;
+  will-change: transform; backface-visibility: hidden;
+}
+@keyframes sprite-play { to { transform: translate3d(-100%, 0, 0); } }
+/* played once: a strip one frame shorter than the sheet, so -100% lands on the last frame and holds */
+.sprite[data-once] > .sprite-strip {
+  width: calc(100% * var(--n1)); background-size: calc(100% * var(--n) / var(--n1)) 100%;
+  animation: sprite-play calc(var(--n1) * var(--ms)) steps(var(--n1)) forwards;
+}
+.sprite[data-once="reverse"] > .sprite-strip { animation-direction: reverse; }
+html[data-visibility="hidden"] *,
+html[data-visibility="hidden"] *::before,
+html[data-visibility="hidden"] *::after {
+  animation-play-state: paused !important;
+}
+html[data-motion="paused"] *,
+html[data-motion="paused"] *::before,
+html[data-motion="paused"] *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+/* Reduce Motion stills the site, except the pixel-art room, its vignettes and the sprites: their
+   motion is small and in place (a cat's legs, blinking LEDs, slow clouds), and without it the room
+   looks broken (Storm glides with frozen legs). */
+@media (prefers-reduced-motion: reduce) {
+  :not(:is(.room, .vignette, .sprite) *),
+  :not(:is(.room, .vignette, .sprite) *)::before,
+  :not(:is(.room, .vignette, .sprite) *)::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  .ambient-layer {
+    will-change: auto;
+  }
+  .motion-control {
+    display: none;
+  }
+}
+.lab-entry { grid-template-columns: 1fr; }
+@media (max-width: 420px) {
+  .sprite-scene > .sprite { --sprite-size: 200px !important; }
+  .sprite-scene .storm-btn .sprite { --sprite-size: 100px !important; }
+  .hero h1 { font-size: 68px; }
+}
