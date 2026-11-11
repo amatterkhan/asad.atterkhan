@@ -71,7 +71,7 @@ const labPage =
     const pick = (keep: (a: (typeof articles)[number]) => boolean) => rows.filter((r) => keep(r.a)).map((r) => toLabEntry(r.a, r.draft));
     if (scope === "all")
       return {
-        props: { intro: copy.labIntro, sections, entries: pick(() => true), tags: tagCounts(articles), devPreview: ctx.dev },
+        props: { intro: copy.labIntro, sections, entries: pick(() => true), tags: tagCounts(articles) },
         head: { title: "The Lab", description: copy.shareLab, canonical: "/lab" },
       };
     if (scope === "tag") {
@@ -79,7 +79,7 @@ const labPage =
       const tag = tags.find((t) => t.slug === tagId);
       if (!tag) return null;
       return {
-        props: { intro: copy.labIntro, sections, active: { tag: tag.slug }, entries: pick((a) => a.tags.some((t) => tagSlug(t) === tag.slug)), tags, devPreview: ctx.dev },
+        props: { intro: copy.labIntro, sections, active: { tag: tag.slug }, entries: pick((a) => a.tags.some((t) => tagSlug(t) === tag.slug)), tags },
         head: { title: `Tagged ${tag.label} · The Lab`, description: `Lab entries tagged ${tag.label}.`, canonical: `/lab/tag/${tag.slug}` },
       };
     }
@@ -95,7 +95,6 @@ const labPage =
         active: { section: section.id, category: category?.id },
         entries: pick(here),
         tags: tagCounts(articles.filter(here)),
-        devPreview: ctx.dev,
       },
       head: {
         title: category ? `${category.name} · ${section.name}` : `${section.name} · The Lab`,
@@ -271,7 +270,7 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       load: async () => ({
         props: {},
-        head: { title: "Disclosure", description: "How findings are disclosed in the Lab.", canonical: "/disclosure" },
+        head: { title: "Disclosure", description: "How findings are disclosed in the Lab.", canonical: "/disclosure", noindex: true }, // until the owner writes the page
       }),
     },
   },

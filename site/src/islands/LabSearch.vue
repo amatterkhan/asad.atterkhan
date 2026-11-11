@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 import Ledger from "../components/Ledger.vue";
 import PixelIcon from "../components/PixelIcon.vue";
 import type { LabEntry } from "../lib/lab-index";
-const { entries, scoped = false } = defineProps<{ entries: LabEntry[]; devPreview?: boolean; scoped?: boolean }>();
+const { entries, scoped = false } = defineProps<{ entries: LabEntry[]; scoped?: boolean }>();
 const query = ref("");
 // Titles, summaries, kinds and tags are searched at once. Article text comes from /search.json,
 // fetched the first time someone types, so the page itself stays light. Without it (dev, offline)

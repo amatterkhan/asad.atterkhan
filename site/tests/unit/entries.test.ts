@@ -38,6 +38,7 @@ describe("entry frontmatter", () => {
     ["a series without a position", { ...valid, series: "intro" }, /position: Give both/],
     ["a position without a series", { ...valid, position: "2" }, /series: Give both/],
     ["an unknown field", { ...valid, publishedAt: '"2026-01-01"' }, /publishedAt/],
+    ["a tag with no letter or digit", { ...valid, tags: '["???"]' }, /tags\.0: A tag needs/],
     ["an unknown status", { ...valid, status: "live" }, /status/],
   ];
   for (const [name, front, message] of bad)
@@ -81,6 +82,7 @@ describe("content lint", () => {
       expect(lintBody(body).length).toBeGreaterThan(0);
     });
   it("allows local images, links and code that mentions these things", () => {
+    expect(lintBody("Run it once = and online=true are plain prose.")).toEqual([]);
     expect(lintBody("![x](/lab-media/a.png) [x](https://example.com)\n\n```html\n<script>alert(1)</script>\n```\n\nUse `<iframe>` carefully.")).toEqual([]);
   });
   const svgCases: [string, string][] = [

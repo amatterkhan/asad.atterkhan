@@ -61,7 +61,7 @@ export const EntrySchema = z
     updated: z.iso.date().optional(),
     section: entryId.max(50),
     category: entryId.max(50).optional(),
-    tags: z.array(z.string().min(1).max(40)).max(12).default([]),
+    tags: z.array(z.string().max(40).regex(/[a-z0-9]/i, "A tag needs a letter or digit")).max(12).default([]),
     summary: z.string().min(1).max(300),
     series: entryId.max(50).optional(),
     position: z.number().int().min(1).max(99).optional(),

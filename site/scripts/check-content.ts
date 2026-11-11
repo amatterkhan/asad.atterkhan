@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { EntryError, gateProblems, lintBody, lintSvg, parseEntry } from "../src/lib/entries";
 
 // The publication gate (docs/decisions/0005). Every Markdown file in content/articles/ is public, so
@@ -37,7 +38,7 @@ async function walk(dir: string, rel = ""): Promise<string[]> {
   return out;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const problems = await checkContent(path.resolve(import.meta.dirname, ".."));
   if (problems.length) {
     console.error(problems.join("\n"));

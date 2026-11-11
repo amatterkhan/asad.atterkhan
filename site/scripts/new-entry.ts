@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 // `npm run new-entry -- <slug> "<title>"` writes content/drafts/<slug>.md with valid frontmatter.
 // Drafts are private (gitignored); move the file to content/articles/ when it is finished, set
@@ -30,7 +31,7 @@ export async function createEntry(slug: string, title: string, base = root) {
   return file;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [slug, ...title] = process.argv.slice(2);
   if (!slug || !title.length) {
     console.error('usage: npm run new-entry -- <slug> "<title>"');

@@ -47,7 +47,7 @@ export function gateProblems(entry: Pick<Entry, "status" | "disclosure">): strin
 const SCRIPTY = [
   [/<\s*script\b/i, "a <script> element"],
   [/\bjavascript\s*:/i, "a javascript: link"],
-  [/\son[a-z]+\s*=/i, "an inline event handler"],
+  [/<[^>]*\son[a-z]+\s*=/i, "an inline event handler"],
   [/<\s*(iframe|object|embed|link|meta|base|form)\b/i, "an element the CSP or the sanitiser would block"],
   [/\bdata\s*:\s*(text\/html|application\/)/i, "a data: document"],
 ] as const;

@@ -8,6 +8,7 @@ type Server = {
   getProjects(): Promise<Project[]>;
   getLab(): Promise<Lab>;
   articleSummary(a: Article): unknown;
+  isCurrent(a: { status: string }): boolean;
 };
 type Write = (file: string, body: string) => Promise<void>;
 
@@ -16,7 +17,7 @@ export async function feeds(server: Server, dist: string, write: Write) {
   const articles = await server.getArticles();
   const projects = await server.getProjects();
   // The whole Lab at /rss.xml, each section at /lab/section/<id>/rss.xml. Archived entries are left out.
-  const current = articles.filter((a) => a.status === "published");
+  const current = articles.filter(server.isCurrent);
   const rss = (title: string, link: string, self: string, items: Article[]) =>
     `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>${xml(title)}</title><link>${link}</link><description>${xml(site.description)}</description><language>en</language><atom:link href="${self}" rel="self" type="application/rss+xml"/>${items
       .map(
@@ -31,7 +32,7 @@ export async function feeds(server: Server, dist: string, write: Write) {
       rss(`${site.name} — The Lab: ${s.name}`, `${site.url}/lab/section/${s.id}`, `${site.url}/lab/section/${s.id}/rss.xml`, current.filter((a) => a.shelf!.section === s.id)),
     );
   const urls: { loc: string; lastmod?: string }[] = [
-    ...["", "/lab", "/disclosure", "/workbench", "/experience", "/achievements", "/about"].map((p) => ({ loc: site.url + p })),
+    ...["", "/lab", "/workbench", "/experience", "/achievements", "/about"].map((p) => ({ loc: site.url + p })),
     ...(await server.getLab()).sections.flatMap((s) => [
       { loc: `${site.url}/lab/section/${s.id}` },
       ...s.categories.map((c) => ({ loc: `${site.url}/lab/section/${s.id}/${c.id}` })),

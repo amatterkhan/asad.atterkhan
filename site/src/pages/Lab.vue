@@ -11,13 +11,12 @@ import type { LabMapSection } from "../routes";
 // The Lab index (docs/decisions/0006): a dated ledger with the whole row as the link. Sections,
 // categories and tags are filters, each a link to its own prerendered page, so they work without
 // JavaScript and have URLs. Only the search hydrates.
-const { intro, sections, active, entries, tags, devPreview } = defineProps<{
+const { intro, sections, active, entries, tags } = defineProps<{
   intro: string;
   sections: LabMapSection[];
   active?: { section?: string; category?: string; tag?: string };
   entries: LabEntry[];
   tags: TagCount[];
-  devPreview: boolean;
 }>();
 const section = active?.section ? sections.find((s) => s.id === active.section) : undefined;
 const category = section && active?.category ? section.categories.find((c) => c.id === active.category) : undefined;
@@ -64,5 +63,5 @@ const tagTabs = tags.map((t) => ({ label: t.label, href: `/lab/tag/${t.slug}`, c
   <FilterTabs label="Sections" :tabs="sectionTabs" />
   <FilterTabs v-if="categoryTabs.length" label="Categories" :tabs="categoryTabs" />
   <FilterTabs v-if="tagTabs.length" label="Tags" :tabs="tagTabs" />
-  <LabSearch :entries="entries" :dev-preview="devPreview && !active" :scoped="!!active" />
+  <LabSearch :entries="entries" :scoped="!!active" />
 </template>
