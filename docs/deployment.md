@@ -63,3 +63,30 @@ Cloudflare TLS to Full (strict) first and re-check the headers and cache behavio
 - Browser end-to-end checks of the achievements, documents and file-publishing admin tabs
   (upload → publish → `/files/{id}`) need an interactive owner session.
 - Cloudflare-proxied operation (see above) has not been tested.
+
+## Switching Lab articles to Git, and rolling back
+
+`ARTICLE_SOURCE` chooses where Lab articles come from, separately from `CONTENT_SOURCE`
+([ADR 0005](decisions/0005-lab-source-and-private-drafts.md)). Unset, it follows `CONTENT_SOURCE`, so
+production is unchanged until the variable is set. Everything else stays on Firestore.
+
+**Before switching**, copy every published Firestore article into `site/content/articles/` as a
+Markdown file with the entry frontmatter ([authoring.md](authoring.md)), merge that, and compare.
+Pull request previews already build from Git (`site-preview.yml` sets no content source), so the pull
+request's preview channel shows exactly what production will look like; open it and compare `/lab`,
+`/rss.xml` and `/search.json`. Then switch (nothing here runs by itself; each is the owner's call):
+
+```bash
+gh variable set ARTICLE_SOURCE --body git
+gh workflow run "Deploy site and API"
+```
+
+**Roll back** (articles read from Firestore again; Firestore articles are never deleted by this):
+
+```bash
+gh variable delete ARTICLE_SOURCE
+gh workflow run "Deploy site and API"
+```
+
+Merging to `main` deploys on its own (see [ci-cd.md](ci-cd.md)), so the manual run is only needed
+when only the variable changed.

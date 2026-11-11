@@ -1,6 +1,6 @@
 # ADR 0005: Lab articles live in Git; drafts live in a private repository; the article editor is retired
 
-**Date:** 10 November 2026 · **Status:** accepted, not yet implemented (Stage 3)
+**Date:** 10 November 2026 · **Status:** accepted; the Git source, drafts, gate and article-source setting are implemented (Stage 3). The editor is still in place until the owner has switched production.
 
 ## Context
 

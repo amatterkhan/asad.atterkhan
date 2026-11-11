@@ -1,27 +1,98 @@
 # Writing and content maintenance
 
-## In the admin (normal path)
+## Lab entries: Markdown in Git ([ADR 0005](decisions/0005-lab-source-and-private-drafts.md))
 
-Sign in at `/admin` (Google + TOTP). The **Writing** tab creates drafts, saves with version checks,
-previews with the site's own renderer, and publishes or unpublishes. **Site copy** edits the hero,
-role, intros, About text and the link-preview line for each page (what shows under the title when a page is shared). The motto and the page subtitles (Home, About, The Lab, 404) are
-fixed in `site/src/lib/site.ts`, not admin copy, so they never drift. Publishing asks GitHub to rebuild; the change is live when that
-deploy finishes (see [architecture.md](architecture.md)).
+An entry is one file, `site/content/articles/<slug>.md`, and the slug is the file name. Publishing is
+committing that file: no code change.
+
+### Write a draft (private)
+
+Drafts live in a separate private repository, cloned into `site/content/drafts/` (gitignored, so a
+draft can never be committed here by accident). To create the private repository and clone it:
+
+```bash
+gh repo create lab-drafts --private
+git clone git@github.com:<you>/lab-drafts.git site/content/drafts
+```
+
+Start an entry (writes `site/content/drafts/<slug>.md` with valid frontmatter, no dependency):
+
+```bash
+cd site && npm run new-entry -- my-first-entry "My first entry"
+```
+
+`npm run dev` lists drafts in the Lab (marked "Draft") and opens them at `/preview/<slug>`. The
+production build never reads the folder. Commit and push drafts in the drafts repository.
+
+### Publish
+
+1. Move the file to `site/content/articles/`.
+2. Set `status: published`, a `date` (not in the future) and a decided `disclosure`.
+3. Run `cd site && npm run content:check && npm test`. A mistake fails with the file and the field.
+4. Commit and merge. The deploy that follows publishes it.
+
+```yaml
+---
+title: "Understanding a system"
+date: "2026-10-25"
+updated: "2026-11-02"        # optional: substantive later changes
+section: notes               # a section id from content/lab.json
+category: infrastructure     # optional: a category id inside that section
+tags: [systems, notes]
+summary: "A concise, accurate sentence."
+series: systems-basics       # optional: give series and position together
+position: 1
+status: published            # draft | published | archived
+disclosure: no-vulnerability # unresolved | disclosed | no-vulnerability | redacted
+thumbnail: understanding-a-system.webp   # optional: a file in content/thumbnails/
+---
+```
+
+**Disclosure** (hard rule: nothing undisclosed). `unresolved` is the draft default and **blocks the
+build and CI**. `disclosed`: the program's rules allow a public write-up. `no-vulnerability`: the
+entry describes no finding. `redacted`: a finding described without program or target details. The
+entry page shows the label near its title and links to [/disclosure](../site/src/pages/Disclosure.vue).
+
+**Archived** entries stay at their URL and in the ledger, marked "Archived", and are left out of
+feeds and Home. Do not delete a published entry; archive it.
+
+**What CI refuses** (`site/scripts/check-content.ts`): a tracked entry with `status: draft` or
+`disclosure: unresolved`; frontmatter that does not validate; a Markdown or HTML image from another
+origin; `<script>`, `javascript:`, inline event handlers, iframes and other elements the CSP or the
+sanitiser would break; any SVG under `content/` or `public/` with script, event handlers or external
+references. Code blocks may mention these. Raw HTML in Markdown is dropped in any case. Images belong
+in the site itself (`site/public/`), not on another host.
+
+Existing URLs stay: use `updated` for later changes, keep the `date` and the file name, and add a
+redirect in `site/firebase.json` rather than breaking an established URL.
+
+### The index, filters and feeds
+
+`/lab` is a dated ledger grouped by year. Sections, categories and tags are filters, each a link to a
+prerendered page that works without JavaScript: `/lab/section/<id>`, `/lab/section/<id>/<category>`
+and `/lab/tag/<tag>`. Feeds: `/rss.xml` for the whole Lab and `/lab/section/<id>/rss.xml` for a
+section. Each entry gets a link-preview image at `/lab/<slug>/opengraph-image.png`.
 
 ### The Lab map
 
-The Lab is organised into **sections** (Writeups, Tooling, Notes…) with **categories** inside
-them (Hack The Box, HTB Certifications, TryHackMe, CTF…). Visitors start at `/lab`, open a
-section at `/lab/section/<section>` and narrow it at `/lab/section/<section>/<category>`; every
-one of these is a prerendered page, and the search on each covers that shelf.
+The sections and categories are `site/content/lab.json` (Writeups, Tooling, Notes…; its copy for the
+API is `api/internal/content/data/lab.json`, and a test keeps them equal). While the admin Lab map
+tab exists it edits the Firestore copy. An entry with a missing section shows in the **last**
+section; an unknown category is ignored. Nothing breaks the build either way. Thumbnails are
+optional: see [lab-thumbnails.md](lab-thumbnails.md).
 
-- **Lab map** (admin tab) adds, renames, reorders and removes sections and categories, and picks
-  each section's icon and blurb. Ids come from the first name and are fixed once saved, because
-  they are in URLs and in every article filed under them. Saving rebuilds the site.
-- In **Writing**, each article picks a section and, optionally, a category from that section.
-  An article without a section, or whose section was removed, shows in the **last** section; a
-  category that is no longer in its section is ignored. Nothing breaks the build either way.
-- **Thumbnails**: see [lab-thumbnails.md](lab-thumbnails.md).
+### Switching production to Git articles
+
+Until the owner switches, production still reads articles from Firestore. The commands are in
+[deployment.md](deployment.md#switching-lab-articles-to-git-and-rolling-back).
+
+## In the admin
+
+Sign in at `/admin` (Google + TOTP). **Site copy** edits the hero, role, intros, About text and the
+link-preview line for each page. The motto and the page subtitles (Home, About, The Lab, 404) are
+fixed in `site/src/lib/site.ts`, not admin copy, so they never drift. Saving asks GitHub to rebuild;
+the change is live when that deploy finishes (see [architecture.md](architecture.md)). The **Writing**
+tab is retired in a later pull request once production reads Git (ADR 0005).
 
 ### Experience
 
@@ -39,30 +110,3 @@ up: any time, at night, with Storm nearby, or in the Steins Gate worldline. One 
 **featured**: it is the first Thought of each visit when its context fits; after that the room picks
 at random. Switched-off lines never reach the page; with every line off, Asad says nothing. Saving
 rebuilds the site. The starting set is `site/content/thoughts.json`.
-
-## In Git (fallback and the default content source)
-
-With `CONTENT_SOURCE=git` (the default) the site builds from `site/content/`. Articles are Markdown
-files with frontmatter in `site/content/articles/<slug>.md`:
-
-```yaml
-title: "Understanding a system"
-description: "A concise, accurate description."
-slug: understanding-a-system
-status: published
-publishedAt: "2026-10-25"
-tags: [systems, notes]
-section: notes            # a section id from content/lab.json
-category: infrastructure  # optional, a category id inside that section
-thumbnail: understanding-a-system.webp   # optional, a file in content/thumbnails/
-```
-
-The Lab map itself is `site/content/lab.json` (its copy for the API is
-`api/internal/content/data/lab.json`; a test keeps them equal).
-
-Dates are quoted ISO dates and cannot be in the future. Use `updatedAt` for substantive later
-changes, keep `publishedAt` and the slug, and add a redirect rather than breaking an established
-URL. Markdown is sanitised: raw HTML and unsafe links are removed. This repository is public:
-keep confidential drafts out of it (use the admin, whose drafts stay in Firestore).
-
-Validate with `npm run typecheck && npm test && npm run build` in `site/`.

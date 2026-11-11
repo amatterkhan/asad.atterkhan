@@ -109,6 +109,11 @@ Raw HTML is dropped and unsafe URLs are removed in both renderers.
 Heading IDs use a generated filter from github-slugger. After upgrading that package, run
 `npx tsx scripts/slugger-table.ts` from `site/` and format the generated Go file.
 
+## Lab entries
+
+`npm run new-entry -- <slug> "<title>"` starts a private draft; `npm run content:check` runs the
+publication gate and the content lint that CI and the build run ([authoring.md](authoring.md)).
+
 ## Styles and components
 
 `site/src/styles/app.css` only lists imports; the rules live in `site/src/styles/parts/`. The import

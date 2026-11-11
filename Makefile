@@ -7,7 +7,7 @@ install:
 # Fast checks that need no emulators or browsers; CI runs the full set (.github/workflows/site-ci.yml).
 check:
 	cd api && test -z "$$(gofmt -l .)" && go vet ./... && go test ./...
-	cd site && npm run typecheck && npm test
+	cd site && npm run typecheck && npm test && npm run content:check
 
 test: check
 	cd site && npm run test:e2e

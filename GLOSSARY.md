@@ -46,6 +46,23 @@ _Avoid_: quote, one-liner, message, tip
 The single Thought the owner pins, said first on each visit when its context holds.
 _Avoid_: pinned quote, highlight
 
+## The Lab
+
+**Entry**:
+One Lab publication: a Markdown file in `site/content/articles/`, named by its slug. The code and the Firestore records call it an article.
+_Avoid_: post, blog post
+
+**Disclosure state**:
+Whether an entry may be public: `unresolved` (blocks the build and CI), `disclosed`, `no-vulnerability` or `redacted`. The rule behind it is that nothing undisclosed is published.
+_Avoid_: status (that is `draft`, `published` or `archived`)
+
+**Draft**:
+An entry still being written. Drafts live in the private drafts repository, cloned into the gitignored `site/content/drafts/`, and show on the development server only.
+
+**Ledger**:
+The Lab index: entries by date, grouped by year, the whole row a link.
+_Avoid_: feed, timeline
+
 ## Identity
 
 **Motto**:
