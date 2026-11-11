@@ -40,7 +40,7 @@
 .credential-symbol { color: var(--color-accent); font-size: 20px; }
 
 /* ---------- experience ---------- */
-.section-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .career-section h2, .resume-section h2 { margin: 56px 0 24px; }
 .resume-section .section-head h2 { margin: 56px 0 24px; }
 .company-group { display: grid; grid-template-columns: 220px 1fr; gap: 12px 32px; margin-bottom: 40px; }

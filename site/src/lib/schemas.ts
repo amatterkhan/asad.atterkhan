@@ -134,6 +134,46 @@ export const ThoughtsSchema = z
 export type Thoughts = z.infer<typeof ThoughtsSchema>;
 export type Thought = Thoughts["thoughts"][number];
 
+/** The places Asad can be found (siteSettings/profiles). "other" covers any platform; its icon comes from the link (lib/profiles.ts). */
+export const PROFILE_KINDS = ["github", "linkedin", "email", "website", "other"] as const;
+export type ProfileKind = (typeof PROFILE_KINDS)[number];
+const EMAIL = /^[^\s@<>"'\\:]+@[^\s@<>"'\\]+\.[^\s@<>"'\\]+$/;
+const hostIs = (value: string, domain: string) => {
+  try {
+    const h = new URL(value).hostname.toLowerCase();
+    return h === domain || h.endsWith(`.${domain}`);
+  } catch {
+    return false;
+  }
+};
+export const ProfileSchema = z
+  .strictObject({
+    id: slugId,
+    kind: z.enum(PROFILE_KINDS),
+    /** An https:// link, or an address for kind "email". */
+    value: z.string().trim().min(1).max(300),
+    /** Optional text for the link; the host or platform name is used when empty. */
+    label: z.string().trim().max(40).default(""),
+  })
+  .superRefine((p, ctx) => {
+    const bad = (message: string) => ctx.addIssue({ code: "custom", path: ["value"], message });
+    if (p.kind === "email") {
+      if (!EMAIL.test(p.value)) bad("Use an email address");
+      return;
+    }
+    if (!isHttpsUrl(p.value)) return bad("Use an HTTPS link");
+    if (p.kind === "github" && !hostIs(p.value, "github.com")) bad("A GitHub link is on github.com");
+    if (p.kind === "linkedin" && !hostIs(p.value, "linkedin.com")) bad("A LinkedIn link is on linkedin.com");
+  });
+export const ProfilesSchema = z.strictObject({
+  profiles: z
+    .array(ProfileSchema)
+    .max(12)
+    .refine((l) => unique(l.map((x) => x.id)), "Profile ids must be unique"),
+});
+export type Profile = z.infer<typeof ProfileSchema>;
+export type Profiles = z.infer<typeof ProfilesSchema>;
+
 export const ProjectSchema = z.object({
   id: z.number(),
   title: z.string(),

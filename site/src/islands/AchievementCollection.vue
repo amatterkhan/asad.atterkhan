@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import PixelIcon from "../components/PixelIcon.vue";
 import { safeHref } from "../lib/safe-url";
 import type { Achievement } from "../lib/schemas";
 const { records } = defineProps<{ records: Achievement[] }>();
@@ -32,7 +33,7 @@ const found = computed(() =>
       <span class="credential-symbol" aria-hidden="true">{{ r.kind === "badge" ? "✧" : "◇" }}</span>
       <div>
         <p class="meta">{{ r.issuer }} · {{ r.kind }}</p>
-        <h2><a :href="safeHref(r.link)">{{ r.title }} ↗</a></h2>
+        <h2><a :href="safeHref(r.link)">{{ r.title }}<PixelIcon name="external" extra="ext" /></a></h2>
         <p v-if="r.earnedAt" class="meta"><time :datetime="r.earnedAt">{{ r.earnedAt }}</time></p>
       </div>
     </li>

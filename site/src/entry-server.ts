@@ -26,9 +26,11 @@ export async function render(url: string, ctx: RenderContext, assets: Assets): P
   const page: Page = loaded ?? notFoundPage();
   if (!loaded) await router.replace({ path: "/__not-found", query: {} });
 
+  const { getProfiles } = await import("./lib/content.server");
+  const profiles = await getProfiles();
   const app = createSSRApp({
     render: () =>
-      h(Layout, { path: route.path }, () =>
+      h(Layout, { path: route.path, profiles }, () =>
         h(RouterView, null, { default: ({ Component }: { Component: unknown }) => h(Component as never, page.props) }),
       ),
   });

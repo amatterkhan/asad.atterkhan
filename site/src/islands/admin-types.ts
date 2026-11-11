@@ -1,3 +1,4 @@
+import type { ProfileKind } from "../lib/schemas";
 export type SiteCopyForm = Record<string, string>;
 export type Summary = {
   slug: string;
@@ -32,6 +33,7 @@ export const slugify = (s: string) =>
     .slice(0, 80);
 export type ThoughtContext = "general" | "night" | "storm" | "steins-gate";
 export type ThoughtLine = { id: string; text: string; enabled: boolean; context: ThoughtContext };
+export type ProfilesState = { profiles: { id: string; kind: ProfileKind; value: string; label: string }[]; updatedAt?: string };
 export type ThoughtsState = { thoughts: ThoughtLine[]; featured: string | null; updatedAt?: string };
 export type ExperienceState = {
   work: { id: number; title: string; company: string; dateRange: string; responsibilities: string[]; promotionFrom?: number; isCurrent?: boolean }[];

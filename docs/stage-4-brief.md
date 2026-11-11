@@ -36,6 +36,15 @@ Recommendation: 1. It reuses finished pieces and keeps Home from becoming a seco
 | Pixel 404 | Art plus CSS | Needs a sprite from you |
 | URL-synced Lab filters | Done in Stage 3 | Filters are links |
 
+## Answers so far
+
+- Vendor wording on Experience: stays as it is.
+- Profiles: GitHub, LinkedIn, email, websites and "other" only, edited in the console, icons recognised
+  from the link. No PGP key. Built as `siteSettings/profiles`.
+- Title: the hero keeps "security engineer". Every machine-read title comes from the current role on the
+  Experience page, so editing that role in the console changes it.
+- Home direction: mockups 1 to 3 were rendered; waiting for a pick and two revisions.
+
 ## Questions that block the build
 
 - Do the vendor-naming sentences on the Experience page stay? (Handoff: ask before Stage 4 ships.)

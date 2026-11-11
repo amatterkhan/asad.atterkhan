@@ -10,7 +10,7 @@ const { project: p, writeup } = defineProps<{ project: Project; writeup: string 
   <p class="opening">{{ p.description }}</p>
   <div class="tags">{{ p.categories.join(" / ") }}</div>
   <div class="text-links">
-    <a v-for="l in p.links" :key="l.url" :href="safeHref(l.url)" rel="noopener noreferrer">{{ l.type === "Code" ? "Source code" : l.type }} ↗</a>
+    <a v-for="l in p.links" :key="l.url" :href="safeHref(l.url)" rel="noopener noreferrer">{{ l.type === "Code" ? "Source code" : l.type }}<PixelIcon name="external" extra="ext" /></a>
   </div>
   <section class="section project-facts">
     <h2>Project notes</h2>

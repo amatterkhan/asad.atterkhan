@@ -1,0 +1,7 @@
+{
+  "profiles": [
+    { "id": "github", "kind": "github", "value": "https://github.com/amatterkhan", "label": "" },
+    { "id": "linkedin", "kind": "linkedin", "value": "https://linkedin.com/in/amatterkhan", "label": "" },
+    { "id": "email", "kind": "email", "value": "contact@asad.atterkhan.com", "label": "" }
+  ]
+}

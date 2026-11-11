@@ -11,11 +11,13 @@ import {
   ProjectSchema,
   SiteCopySchema,
   ThoughtsSchema,
+  ProfilesSchema,
   type Achievements,
   type Article,
   type Experience,
   type ArticleMeta,
   type Lab,
+  type Profile,
   type Project,
   type SiteCopy,
 } from "./schemas";
@@ -166,6 +168,12 @@ export async function getThoughts(): Promise<{ thoughts: PublicThought[]; featur
   const all = ThoughtsSchema.parse(await readJson(file));
   const thoughts = all.thoughts.filter((t) => t.enabled).map(({ id, text, context }) => ({ id, text, context }));
   return { thoughts, featured: thoughts.some((t) => t.id === all.featured) ? all.featured : null };
+}
+/** The profile links: the exported siteSettings/profiles when CONTENT_SOURCE=firestore, else content/profiles.json. */
+export async function getProfiles(): Promise<Profile[]> {
+  const exported = path.join(exportDir(), "profiles.json");
+  const file = contentSource() === "firestore" && (await exists(exported)) ? exported : dir("content/profiles.json");
+  return ProfilesSchema.parse(await readJson(file)).profiles;
 }
 /** Where an article sits on the Lab map. A missing or removed section falls back to the last one;
  *  a category that is not in the section is dropped. */

@@ -32,7 +32,7 @@ export async function feeds(server: Server, dist: string, write: Write) {
       rss(`${site.name} — The Lab: ${s.name}`, `${site.url}/lab/section/${s.id}`, `${site.url}/lab/section/${s.id}/rss.xml`, current.filter((a) => a.shelf!.section === s.id)),
     );
   const urls: { loc: string; lastmod?: string }[] = [
-    ...["", "/lab", "/workbench", "/experience", "/achievements", "/about"].map((p) => ({ loc: site.url + p })),
+    ...["", "/lab", "/workbench", "/experience", "/achievements", "/about", "/disclosure"].map((p) => ({ loc: site.url + p })),
     ...(await server.getLab()).sections.flatMap((s) => [
       { loc: `${site.url}/lab/section/${s.id}` },
       ...s.categories.map((c) => ({ loc: `${site.url}/lab/section/${s.id}/${c.id}` })),

@@ -5,8 +5,6 @@ export const site = {
   /** The motto: the site's description and the footer's sign-off. Never explained. */
   description: "Somewhere between cloud nine and layer seven.",
   email: "contact@asad.atterkhan.com",
-  github: "https://github.com/amatterkhan",
-  linkedin: "https://linkedin.com/in/amatterkhan",
 };
 // Each page's fixed line under its heading. Deliberately code, not admin-editable copy, so they
 // never drift or rotate (Thoughts are the lines that change).

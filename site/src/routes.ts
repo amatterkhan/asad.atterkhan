@@ -13,12 +13,14 @@ import {
   getFeaturedAchievements,
   getLab,
   getThoughts,
+  getProfiles,
   getProjects,
   getSiteCopy,
   parseArticle,
   projectWriteup,
 } from "./lib/content.server";
 import { renderMarkdown } from "./lib/markdown";
+import { personJsonLd } from "./lib/person";
 import { neighbours, tagCounts, tagSlug, toLabEntry } from "./lib/lab-index";
 import Home from "./pages/Home.vue";
 import Lab from "./pages/Lab.vue";
@@ -116,11 +118,12 @@ export const routes: RouteRecordRaw[] = [
           projects: (await getProjects()).filter((p) => p.featured).sort((a, b) => b.date.localeCompare(a.date)),
           outfit: await getActiveOutfit(),
           thoughts: await getThoughts(),
+          profiles: await getProfiles(),
         },
         head: {
           description: (await getSiteCopy()).shareHome,
           canonical: "/",
-          jsonLd: { "@context": "https://schema.org", "@type": "Person", name: site.name, url: site.url, sameAs: [site.github, site.linkedin] },
+          jsonLd: personJsonLd(await getProfiles(), (await getExperience()).work),
         },
       }),
     },
@@ -260,7 +263,12 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       load: async () => ({
         props: { html: (await renderMarkdown((await getSiteCopy()).aboutBody)).html, outfit: await getActiveOutfit() },
-        head: { title: "About", description: (await getSiteCopy()).shareAbout, canonical: "/about" },
+        head: {
+          title: "About",
+          description: (await getSiteCopy()).shareAbout,
+          canonical: "/about",
+          jsonLd: personJsonLd(await getProfiles(), (await getExperience()).work),
+        },
       }),
     },
   },
@@ -270,7 +278,7 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       load: async () => ({
         props: {},
-        head: { title: "Disclosure", description: "How findings are disclosed in the Lab.", canonical: "/disclosure", noindex: true }, // until the owner writes the page
+        head: { title: "Disclosure", description: "How findings are disclosed in the Lab.", canonical: "/disclosure" },
       }),
     },
   },
