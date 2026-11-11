@@ -21,9 +21,12 @@ ${extra}---
 Sample body text, searchable word: zebracrossing.
 `;
 let tmp = "";
+// The CI build runs the unit tests with CONTENT_SOURCE=firestore; this test is about reviewed files in Git.
+const saved = { CONTENT_SOURCE: process.env.CONTENT_SOURCE, ARTICLE_SOURCE: process.env.ARTICLE_SOURCE };
 afterEach(async () => {
   vi.resetModules();
   delete process.env.SITE_ROOT;
+  for (const [k, v] of Object.entries(saved)) v === undefined ? delete process.env[k] : (process.env[k] = v);
   if (tmp) await fs.rm(tmp, { recursive: true, force: true });
 });
 
@@ -35,6 +38,8 @@ it("publishes a fixture entry everywhere without a code change", async () => {
   await fs.mkdir(path.join(tmp, "content/drafts"));
   await fs.writeFile(path.join(tmp, "content/drafts/secret-draft.md"), entry("draft").replace("status: published", "status: draft").replace("no-vulnerability", "unresolved").replace("Placeholder entry draft", "Private draft title"));
   process.env.SITE_ROOT = tmp;
+  process.env.CONTENT_SOURCE = "git";
+  process.env.ARTICLE_SOURCE = "git";
   const server = await import("../../src/entry-server");
   const ctx = { dev: false, root: tmp };
   const assets = { tags: "" };
