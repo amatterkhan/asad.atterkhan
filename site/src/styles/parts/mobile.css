@@ -9,15 +9,13 @@ h1, h2, h3, h4, .prose, .lab-card-desc, .entry p, .showcase p, .article-lead, .p
   :is(.block-head a, .text-links a, .path a, .article-crumb a, .section-head > a, .featured-credentials a, .article-end a, .project-facts a)::after {
     content: ""; position: absolute; inset: -12px -6px;
   }
-  .plain-list li { padding: 2px 0; }
-  .plain-list a { display: inline-block; padding: 8px 0; }
   .role-details summary { min-height: 44px; }
   .lab-cats a { min-height: 44px; }
   /* the menu sheet lines up with the page gutter, and fills the screen even under the iOS toolbar */
   .mobile-menu { padding: 14px 20px 22px; height: 100dvh; overflow-y: auto; }
   .mobile-menu-head { min-height: 44px; }
   /* 11px mono is too small to read on a phone */
-  .shelf-note, .lab-room-count, .lab-card-shelf, .lab-card-meta, .current-label, .badge, .tags, .tag-list, .collection-count, .calendar-note { font-size: 12px; }
+  .lab-room-count, .lab-card-shelf, .lab-card-meta, .current-label, .badge, .tags, .tag-list, .collection-count, .calendar-note { font-size: 12px; }
   .lab-tabs small, .lab-cats small, .lab-map-title small { font-size: 12px; }
   main > a:not([class]) { display: inline-flex; align-items: center; min-height: 44px; }
 }

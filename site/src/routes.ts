@@ -3,7 +3,6 @@ import type { RouteRecordRaw } from "vue-router";
 import type { Head } from "./head";
 import { site } from "./lib/site";
 import {
-  articleSummary,
   getAchievements,
   getArticles,
   getDraftArticles,
@@ -114,7 +113,8 @@ export const routes: RouteRecordRaw[] = [
       load: async () => ({
         props: {
           copy: await getSiteCopy(),
-          articles: (await getArticles()).filter(isCurrent).slice(0, 3).map(articleSummary),
+          entries: (await getArticles()).filter(isCurrent).slice(0, 3).map((a) => toLabEntry(a)),
+          credentials: await getFeaturedAchievements(),
           projects: (await getProjects()).filter((p) => p.featured).sort((a, b) => b.date.localeCompare(a.date)),
           outfit: await getActiveOutfit(),
           thoughts: await getThoughts(),

@@ -12,15 +12,8 @@
 .block { margin-top: 84px; }
 .block-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 22px; }
 .block-head a { font-size: 14px; }
-.plain-list { list-style: none; margin: 0; padding: 0; }
-.plain-list li { display: grid; grid-template-columns: 110px 1fr auto; gap: 16px; padding: 10px 0; align-items: baseline; }
-.plain-list time { font: 12px var(--font-mono); color: var(--color-muted); }
-.plain-list a { font: 22px/1.3 var(--font-serif); color: var(--color-ink-strong); text-decoration: none; }
-.plain-list a:hover { color: var(--color-accent); }
-.shelf-note { font: 11px var(--font-mono); color: var(--color-peach); text-transform: uppercase; letter-spacing: .08em; }
 .showcase { list-style: none; margin: 0; padding: 0; display: grid; gap: 44px; }
 .showcase li { display: grid; grid-template-columns: 64px 1fr; gap: 12px; }
-.showcase .num { font: 14px var(--font-mono); color: var(--color-accent); padding-top: 10px; }
 .showcase h3 { font-size: clamp(28px, 4vw, 40px); }
 .showcase h3 a { color: var(--color-ink-strong); text-decoration: none; background: linear-gradient(var(--color-accent), var(--color-accent)) 0 100% / 0 2px no-repeat; transition: background-size .3s; }
 .showcase h3 a:hover { background-size: 100% 2px; color: var(--color-ink-strong); }

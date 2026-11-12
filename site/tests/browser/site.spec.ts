@@ -520,3 +520,16 @@ test("the Lab ledger and its filters are plain links", async ({ page, request })
   expect((await request.get("/lab/section/notes/rss.xml")).headers()["content-type"]).toContain("xml");
   expect((await request.get("/lab/tag/no-such-tag")).status()).toBe(404);
 });
+
+test("Home shows the latest Lab entries as ledger rows, then the pinned credentials", async ({ page }) => {
+  await page.goto("/");
+  const lab = page.locator("section.block", { has: page.getByRole("heading", { name: "From The Lab" }) });
+  await expect(lab.locator(".ledger a").first()).toBeVisible();
+  const creds = page.locator("section.block", { has: page.getByRole("heading", { name: "Credentials" }) });
+  await expect(creds.locator(".featured-credentials a").first()).toHaveAttribute("href", /^https:\/\//);
+  // the Workbench list carries no decorative numbering
+  await expect(page.locator(".showcase .num")).toHaveCount(0);
+  // the ledger row is the link and is tall enough to tap
+  const row = await lab.locator(".ledger a").first().boundingBox();
+  expect(row!.height).toBeGreaterThanOrEqual(44);
+});
