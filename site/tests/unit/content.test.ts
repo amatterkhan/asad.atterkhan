@@ -30,6 +30,7 @@ import { ICONS, ICON_SOURCES } from "../../src/lib/icons";
 
 afterEach(() => {
   delete process.env.CONTENT_SOURCE;
+  delete process.env.ARTICLE_SOURCE;
   delete process.env.CONTENT_EXPORT_DIR;
 });
 const published = {
@@ -121,6 +122,7 @@ describe("content boundaries", () => {
         JSON.stringify({ featuredIds: ["5"] }),
       );
       process.env.CONTENT_SOURCE = "firestore";
+      process.env.ARTICLE_SOURCE = "firestore"; // CI sets ARTICLE_SOURCE=git once production switches
       process.env.CONTENT_EXPORT_DIR = dir;
       expect((await getArticles()).map((a) => a.slug)).toEqual(["test-note"]);
       expect((await getSiteCopy()).heroTitle).toBe("Exported title");
@@ -136,6 +138,7 @@ it("reads Asad's outfit from the export and falls back to the wardrobe default",
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "asad-wardrobe-"));
   try {
     process.env.CONTENT_SOURCE = "firestore";
+    process.env.ARTICLE_SOURCE = "firestore"; // CI sets ARTICLE_SOURCE=git once production switches
     process.env.CONTENT_EXPORT_DIR = dir;
     expect(await getActiveOutfit()).toBe(DEFAULT_OUTFIT);
     await fs.writeFile(path.join(dir, "wardrobe.json"), JSON.stringify({ activeOutfit: "classic" }));
@@ -160,6 +163,7 @@ it("lets a worldline dress Asad in the lab coat, but never makes it his outfit",
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "asad-wardrobe-"));
   try {
     process.env.CONTENT_SOURCE = "firestore";
+    process.env.ARTICLE_SOURCE = "firestore"; // CI sets ARTICLE_SOURCE=git once production switches
     process.env.CONTENT_EXPORT_DIR = dir;
     await fs.writeFile(path.join(dir, "wardrobe.json"), JSON.stringify({ activeOutfit: "labcoat" }));
     expect(await getActiveOutfit()).toBe(DEFAULT_OUTFIT);
@@ -281,6 +285,7 @@ describe("the Lab map", () => {
       );
       await fs.writeFile(path.join(dir, "lab.json"), JSON.stringify({ sections: [room("tooling", "tools")] }));
       process.env.CONTENT_SOURCE = "firestore";
+      process.env.ARTICLE_SOURCE = "firestore"; // CI sets ARTICLE_SOURCE=git once production switches
       process.env.CONTENT_EXPORT_DIR = dir;
       const [a] = await getArticles();
       expect(a.thumb).toMatch(/^\/lab-media\/[a-f0-9]{16}\.webp$/);
@@ -330,6 +335,7 @@ describe("Thoughts", () => {
         JSON.stringify({ thoughts: [line("on"), line("off", false), line("night", true, "night")], featured: "off" }),
       );
       process.env.CONTENT_SOURCE = "firestore";
+      process.env.ARTICLE_SOURCE = "firestore"; // CI sets ARTICLE_SOURCE=git once production switches
       process.env.CONTENT_EXPORT_DIR = dir;
       const { thoughts, featured } = await getThoughts();
       expect(thoughts.map((t) => t.id)).toEqual(["on", "night"]);
