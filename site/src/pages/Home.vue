@@ -1,14 +1,20 @@
 <script setup lang="ts">
+import Ledger from "../components/Ledger.vue";
 import PixelIcon from "../components/PixelIcon.vue";
 import { Room } from "../islands";
-import { date, site, subtitles } from "../lib/site";
+import { safeHref } from "../lib/safe-url";
+import { site, subtitles } from "../lib/site";
 import { profileView } from "../lib/profiles";
 import type { Profile, SiteCopy, Project } from "../lib/schemas";
-import type { ArticleSummary } from "../lib/content.server";
+import type { LabEntry } from "../lib/lab-index";
+import type { Achievement } from "../lib/schemas";
 import type { PublicThought } from "../lib/thoughts";
-const { copy, articles, projects, outfit, thoughts, profiles } = defineProps<{
+const { copy, entries, credentials, projects, outfit, thoughts, profiles } = defineProps<{
   copy: SiteCopy;
-  articles: ArticleSummary[];
+  /** The latest Lab entries, as ledger rows. */
+  entries: LabEntry[];
+  /** The achievements pinned to Experience. */
+  credentials: Achievement[];
   projects: Project[];
   outfit: string;
   thoughts: { thoughts: PublicThought[]; featured: string | null };
@@ -38,19 +44,26 @@ const body = copy.heroBody.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean)
   <section class="block">
     <header class="block-head">
       <h2>From The Lab</h2>
-      <a href="/lab">All notes <PixelIcon name="arrowRight" extra="after" /></a>
+      <a href="/lab">All entries <PixelIcon name="arrowRight" extra="after" /></a>
     </header>
-    <ul v-if="articles.length" class="plain-list">
-      <li v-for="a in articles" :key="a.slug">
-        <time :datetime="a.publishedAt">{{ date(a.publishedAt!) }}</time>
-        <a :href="`/lab/${a.slug}`">{{ a.title }}</a>
-        <small class="shelf-note">{{ a.shelf.categoryName ?? a.shelf.sectionName }}</small>
-      </li>
-    </ul>
+    <Ledger v-if="entries.length" :entries="entries" />
     <p v-else class="quiet-note">
       Nothing published yet. The first notes are on the bench: experiments, write-ups, and the occasional dead end
       worth keeping.
     </p>
+  </section>
+
+  <section v-if="credentials.length" class="block">
+    <header class="block-head">
+      <h2>Credentials</h2>
+      <a href="/achievements">All achievements <PixelIcon name="arrowRight" extra="after" /></a>
+    </header>
+    <ul class="featured-credentials">
+      <li v-for="c in credentials" :key="c.id">
+        <a :href="safeHref(c.link)">{{ c.title }}<PixelIcon name="external" extra="ext" /></a>
+        <span>{{ c.issuer }}</span>
+      </li>
+    </ul>
   </section>
 
   <section class="block">
@@ -58,16 +71,15 @@ const body = copy.heroBody.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean)
       <h2>On the Workbench</h2>
       <a href="/workbench">All projects <PixelIcon name="arrowRight" extra="after" /></a>
     </header>
-    <ol class="showcase">
-      <li v-for="(p, i) in projects" :key="p.slug">
-        <span class="num" aria-hidden="true">{{ String(i + 1).padStart(2, "0") }}</span>
+    <ul class="showcase">
+      <li v-for="p in projects" :key="p.slug">
         <div>
           <h3><a :href="`/workbench/${p.slug}`">{{ p.title }}</a></h3>
           <p>{{ p.description }}</p>
           <p class="stack">{{ p.tags.join(" · ") }}</p>
         </div>
       </li>
-    </ol>
+    </ul>
   </section>
 
   <section class="block closing">

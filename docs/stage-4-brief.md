@@ -43,7 +43,7 @@ Recommendation: 1. It reuses finished pieces and keeps Home from becoming a seco
   from the link. No PGP key. Built as `siteSettings/profiles`.
 - Title: the hero keeps "security engineer". Every machine-read title comes from the current role on the
   Experience page, so editing that role in the console changes it.
-- Home direction: mockups 1 to 3 were rendered; waiting for a pick and two revisions.
+- Home direction: 1 (ledger first), picked by the owner and built: three latest entries as ledger rows, a Credentials block, the Workbench list without numbering. Experience, About, Achievements and Workbench pages are not yet moved onto the Notebook pieces; the interactivity list is not cut yet.
 
 ## Questions that block the build
 
