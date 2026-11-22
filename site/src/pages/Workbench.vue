@@ -16,5 +16,6 @@ const { intro, projects } = defineProps<{ intro: string; projects: Entry[] }>();
       <div class="robot"><Sprite state="robot-idle" :size="48" /></div>
     </At>
   </RoomVignette>
+  <h2 class="sr-only">Projects</h2>
   <WorkbenchSearch :projects="projects" />
 </template>

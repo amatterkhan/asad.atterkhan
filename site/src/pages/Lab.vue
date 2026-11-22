@@ -63,5 +63,6 @@ const tagTabs = tags.map((t) => ({ label: t.label, href: `/lab/tag/${t.slug}`, c
   <FilterTabs label="Sections" :tabs="sectionTabs" />
   <FilterTabs v-if="categoryTabs.length" label="Categories" :tabs="categoryTabs" />
   <FilterTabs v-if="tagTabs.length" label="Tags" :tabs="tagTabs" />
+  <h2 class="sr-only">Entries</h2>
   <LabSearch :entries="entries" :scoped="!!active" />
 </template>

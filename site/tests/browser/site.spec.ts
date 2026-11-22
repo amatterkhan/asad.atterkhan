@@ -58,6 +58,9 @@ for (const path of routes)
         .violations,
     ).toEqual([]);
     expect(warnings).toEqual([]);
+    // headings never skip a level (axe's heading-order is a best practice, not a WCAG tag, so check it here)
+    const levels = await page.locator("h1, h2, h3, h4, h5, h6").evaluateAll((hs) => hs.map((h) => Number(h.tagName[1])));
+    expect(levels.filter((l, i) => i > 0 && l > levels[i - 1] + 1), `heading levels ${levels.join(" ")}`).toEqual([]);
   });
 test("mobile navigation Escape and focus return", async ({
   page,
