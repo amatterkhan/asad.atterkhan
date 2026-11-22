@@ -244,7 +244,7 @@ Remind him of these at the end of each stage. Commands are in [security.md](secu
   review count.
 - Approval gate on `site-production`. Until this exists, merging is deploying.
 - Re-run the setup script (exporter and preview identities, `site-export` limited to `main`).
-- CAA records; HSTS on the apex before preload; the unverifiable rows in security.md.
+- The unverifiable rows in security.md. (CAA and HSTS preload were done on 2026-11-22.)
 - Rebuild token scope (SEC-02), deferred by him.
 - Decide the Experience page's vendor wording before Stage 4 ships.
 - Supply profile URLs and numbers, and a PGP key, when he wants them shown.
