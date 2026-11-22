@@ -30,6 +30,6 @@ Next due: **8 February 2027**. Then set the next date here.
 ## Once
 
 Open owner actions (ruleset, setup script and PR previews, the Actions-only rebuild token,
-Google Cloud settings, CAA, HSTS on the apex) are listed with commands in
+Google Cloud settings) are listed with commands in
 [security.md](security.md#owner-actions). The deploy approval gate was declined
 ([ADR 0008](decisions/0008-no-deploy-approval-gate.md)).

@@ -37,8 +37,9 @@ frame the project's `firebaseapp.com` handler, open the sign-in popup (COOP
 ## Owner actions
 
 Only the owner can change these. Status as of 22 November 2026: the ruleset row was read from the
-GitHub API that day; the rest is as of 10 November, read from the GitHub API and public DNS (the
-Stage 5 review could not reach DNS, the live site or the repository's settings). "Unverifiable" means it cannot be read without cloud credentials. The commands below
+GitHub API that day, and the CAA, HSTS and `amatterkhan.com` rows record what the owner did that
+day; the rest is as of 10 November, read from the GitHub API and public DNS (the Stage 5 review
+could not reach DNS, the live site or the repository's settings). "Unverifiable" means it cannot be read without cloud credentials. The commands below
 were written against the API documentation and have **not been run**: read each before running it.
 
 | Item | Status | Stops |
@@ -53,8 +54,9 @@ were written against the API documentation and have **not been run**: read each 
 | Firestore TTL on `_quotas` | Unverifiable | Unbounded growth of quota counters |
 | Identity Platform sign-up disabled | Unverifiable | Strangers creating accounts in the project |
 | Log alerts | Unverifiable | An attack or a failed rebuild going unnoticed |
-| CAA records | **Not done** (none published) | Another certificate authority issuing for the domain |
-| HSTS preload | **Not ready** (the apex `atterkhan.com` sends no HSTS) | First-visit downgrade |
+| CAA records | Done 2026-11-22 (`pki.goog`, `letsencrypt.org`; Cloudflare adds its own CAs to the published set) | Another certificate authority issuing for the domain |
+| HSTS preload | Header live on the apex; **submitted at hstspreload.org 2026-11-22**, awaiting inclusion | First-visit downgrade |
+| `amatterkhan.com` | Email-only since 2026-11-22: no A, AAAA or CNAME records, no GitHub Pages verification; Zoho MX, SPF, DKIM and DMARC kept | Domain takeover through a dangling Pages record |
 | DNSSEC | Done | DNS spoofing |
 | SPF and DMARC | Done (`~all`, `p=quarantine`) | Mail spoofing |
 | DKIM for `@asad.atterkhan.com` | Unverifiable (selector unknown) | Mail spoofing |
@@ -139,29 +141,14 @@ Cloud Run parses the log line.
 
 ### 5. Domain and email
 
-- **CAA.** Both certificates in use when last checked were issued by Google Trust Services, and
-  Firebase Hosting can also use Let's Encrypt, so allow both. Check first:
-  `echo | openssl s_client -connect asad.atterkhan.com:443 -servername asad.atterkhan.com 2>/dev/null | openssl x509 -noout -issuer -enddate`.
-  If the issuer is neither Google Trust Services nor Let's Encrypt, stop and add that CA too.
-  Then Cloudflare → `atterkhan.com` → DNS → Records → **Add record**, twice: Type `CAA`, Name `@`,
-  Flags `0`, Tag **Only allow specific hostnames**, CA domain `pki.goog`; then the same with
-  `letsencrypt.org`. Records on the apex cover every subdomain. If any hostname is proxied
-  (orange cloud), Cloudflare adds its own CAs' records automatically; leave them. Verify with
-  `dig +short CAA atterkhan.com`. A wrong record blocks renewals, so after the `-enddate` above has
-  passed its renewal point (Firebase renews about 30 days before expiry), run the same command
-  and check the date moved forward, or check Firebase console → Hosting → the domain shows no
-  certificate error.
-- **HSTS on the apex, then preload.** `asad.atterkhan.com` already sends
-  `max-age=63072000; includeSubDomains; preload`. Preload needs the apex to send it too, and
-  **every** subdomain of `atterkhan.com` to serve HTTPS. List them first (Cloudflare → DNS →
-  Records) and confirm each answers on `https://`. Then Cloudflare → `atterkhan.com` → SSL/TLS →
-  Edge Certificates → **HTTP Strict Transport Security (HSTS)** → Enable: Max Age
-  **12 months** or more (preload needs at least a year), Include subdomains **on**, Preload
-  **on**, No-Sniff on. This only works for hostnames Cloudflare proxies (orange cloud), so the apex must be proxied or redirect through a
-  proxied rule. Check: `curl -sI https://atterkhan.com | grep -i strict`. Only then submit
-  `atterkhan.com` at hstspreload.org. Preload is hard to undo (months); skip it if any subdomain
-  is not yours to keep on HTTPS. Even without submitting, the header with Include subdomains forces
-  HTTPS on every subdomain for anyone who has visited the apex, so do the subdomain check first.
+- **CAA** is done (2026-11-22). A wrong record blocks renewals, so once the date from
+  `echo | openssl s_client -connect asad.atterkhan.com:443 -servername asad.atterkhan.com 2>/dev/null | openssl x509 -noout -issuer -enddate`
+  has passed its renewal point (Firebase renews about 30 days before expiry), run it again and
+  check the date moved forward. Verify the records with `dig +short CAA atterkhan.com`.
+- **HSTS preload** is submitted for `atterkhan.com` (2026-11-22). The apex sends
+  `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload` (Cloudflare → SSL/TLS →
+  Edge Certificates → HSTS), so **every** subdomain of `atterkhan.com` must serve HTTPS for good.
+  Never create an HTTP-only hostname under it. Removal from the list takes months to reach browsers.
 - **DKIM**: in Zoho Mail admin, confirm DKIM is enabled for `asad.atterkhan.com` and note the
   selector; `dig +short TXT <selector>._domainkey.asad.atterkhan.com` must return a key.
 - **DMARC**: once the reports show only your own mail, move both records from `p=quarantine` to
