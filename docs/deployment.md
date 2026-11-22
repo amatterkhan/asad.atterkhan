@@ -43,8 +43,9 @@ the Storage bucket, to avoid cross-region latency on API calls. Do not use `APP_
 - Content: `CONTENT_SOURCE=firestore`; the site is built from Firestore on every deploy.
 - Indexing: `SITE_URL=https://asad.atterkhan.com`, `INDEX_SITE=true`; canonical links, Open Graph,
   `sitemap.xml`, RSS and `robots.txt` use the real domain.
-- Publishing in `/admin` sends a `repository_dispatch` (`REBUILD_HOOK=github`) that runs "Deploy
-  site and API" on `main` (`SITE_DEPLOY_BRANCH=main`).
+- Publishing in `/admin` starts "Deploy site and API" on `main` (`SITE_DEPLOY_BRANCH=main`): a
+  `repository_dispatch` while `REBUILD_HOOK=github`, a `workflow_dispatch` once the owner switches
+  to `REBUILD_HOOK=github-workflow` ([security.md](security.md#rebuild-token-sec-02)).
 
 ### DNS (Cloudflare, zone `atterkhan.com`)
 

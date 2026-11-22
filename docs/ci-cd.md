@@ -102,7 +102,7 @@ Then turn things on one at a time, each with `gh variable set NAME --body VALUE`
 | --- | --- |
 | `API_ENABLED=true` | Blaze billing, Storage bucket (`FIREBASE_STORAGE_BUCKET`), Google sign-in + TOTP and `FIREBASE_OWNER_UID` (with its `admin` claim) are ready. The next deploy builds and rolls out `asad-api`, then adds the rewrites. Run the deploy with "Also build and deploy the API" for the first rollout. |
 | `ENABLE_CONTENT_ADMIN`, `ENABLE_DOCUMENT_ADMIN`, `ENABLE_ACHIEVEMENT_ADMIN`, `ENABLE_PUBLIC_FILES` = `true` | Per feature, after owner sign-in is verified on the deployed site. They take effect on the next API deploy. |
-| `REBUILD_HOOK=github` | After creating the `asad-api-github-token` secret in Secret Manager (fine-grained token for this repository, Contents: read and write) and re-running the setup script so the runtime can read it. |
+| `REBUILD_HOOK=github-workflow` | After storing a fine-grained token for this repository with **Actions: write** only as the `asad-api-github-token` secret in Secret Manager, and re-running the setup script so the runtime can read it. `REBUILD_HOOK=github` is the older mode that needs Contents: write ([security.md](security.md#rebuild-token-sec-02)). |
 | `CONTENT_SOURCE=firestore` | Once the published articles live in Firestore. |
 | `ARTICLE_SOURCE=git` | When the owner switches Lab articles to Markdown in Git while everything else stays on Firestore. Delete it to roll back ([deployment.md](deployment.md#switching-lab-articles-to-git-and-rolling-back)). |
 | `INDEX_SITE=true`, `SITE_URL=https://asad.atterkhan.com` | At the domain cutover only. |
@@ -141,8 +141,9 @@ Configuration names set during launch (values of UID/key omitted):
 `SITE_DEPLOY_BRANCH`, `ENABLE_CONTENT_ADMIN`, `ENABLE_ACHIEVEMENT_ADMIN`, `ENABLE_DOCUMENT_ADMIN`,
 `ENABLE_PUBLIC_FILES`.
 GitHub secrets: `FIREBASE_OWNER_UID`, `FIREBASE_WEB_API_KEY`. The Secret Manager secret
-`asad-api-github-token` (fine-grained token, Contents: read and write, this repository only) is
-mounted into Cloud Run when `REBUILD_HOOK=github`. It expires, so set a reminder and rotate it
+`asad-api-github-token` (fine-grained token, this repository only: Actions: write for
+`REBUILD_HOOK=github-workflow`, Contents: write for the older `github`) is mounted into Cloud Run
+when `REBUILD_HOOK` is either. It expires, so set a reminder and rotate it
 with `gcloud secrets versions add asad-api-github-token --data-file=-` plus an API redeploy.
 Rapid admin saves each start a run; the Hosting deploy's concurrency group cancels superseded ones.
 
