@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import PathLine from "../components/PathLine.vue";
 import PixelIcon from "../components/PixelIcon.vue";
 import { safeHref } from "../lib/safe-url";
 import type { Project } from "../lib/schemas";
 const { project: p, writeup } = defineProps<{ project: Project; writeup: string | null }>();
 </script>
 <template>
-  <div class="path"><a href="/workbench">Workbench</a> · {{ p.categories[0] }}</div>
+  <PathLine :segments="[{ label: 'workbench', href: '/workbench' }, { label: p.slug, href: `/workbench/${p.slug}` }]" />
   <h1>{{ p.title }}</h1>
   <p class="opening">{{ p.description }}</p>
   <div class="tags">{{ p.categories.join(" / ") }}</div>

@@ -30,6 +30,10 @@ const entries: LedgerEntry[] = [
   { href: "#three", date: "2026-01-04", title: "Sample entry without a summary", kind: "Notes", minutes: 1 },
   { href: "#four", date: "2025-12-19", title: "Sample entry from the year before", summary: "A one-line summary of a sample entry.", kind: "Writeups", minutes: 9, flag: "Archived" },
 ];
+const undated: LedgerEntry[] = [
+  { href: "#project-one", title: "Sample project", summary: "A one-line description of a sample project.", kind: "Tooling · Sample", tags: ["sample-tag", "another-tag"] },
+  { href: "#project-two", title: "Sample project without tags", summary: "Undated rows keep the order they are given.", kind: "Hardware" },
+];
 </script>
 <template>
   <PathLine :segments="[{ label: 'styleguide', href: '/styleguide' }]" />
@@ -71,6 +75,28 @@ const entries: LedgerEntry[] = [
     <h2 id="sg-filters">Filter tabs and ledger</h2>
     <FilterTabs label="Sample filters" :tabs="tabs" />
     <Ledger :entries="entries" />
+  </section>
+
+  <section class="sg-section" aria-labelledby="sg-undated">
+    <h2 id="sg-undated">Ledger without dates</h2>
+    <p class="sg-note">Workbench projects: no date column, tags under the summary, no numbering.</p>
+    <Ledger :entries="undated" :noun="['project', 'projects']" />
+  </section>
+
+  <section class="sg-section" aria-labelledby="sg-credentials">
+    <h2 id="sg-credentials">Credential card</h2>
+    <ul class="credentials" role="list">
+      <li>
+        <details>
+          <summary><h3>Sample certification</h3><span class="credential-meta">Sample issuer</span></summary>
+          <dl>
+            <div><dt>Type</dt><dd>Certification</dd></div>
+            <div><dt>Issued by</dt><dd>Sample issuer</dd></div>
+          </dl>
+          <a href="#sg-credentials">Verify with Sample issuer</a>
+        </details>
+      </li>
+    </ul>
   </section>
 
   <section class="sg-section" aria-labelledby="sg-nav">

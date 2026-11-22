@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PathLine from "../components/PathLine.vue";
 import RoomVignette from "../components/RoomVignette.vue";
 import At from "../components/At.vue";
 import Sprite from "../components/Sprite.vue";
@@ -7,7 +8,7 @@ type Entry = { slug: string; title: string; description: string; tags: string[];
 const { intro, projects } = defineProps<{ intro: string; projects: Entry[] }>();
 </script>
 <template>
-  <p class="eyebrow">Things I've built</p>
+  <PathLine :segments="[{ label: 'workbench', href: '/workbench' }]" />
   <h1>Workbench</h1>
   <p class="page-intro">{{ intro }}</p>
   <RoomVignette corner="bench">
