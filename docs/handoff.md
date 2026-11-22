@@ -84,9 +84,9 @@ approval gate yet, so a merge is live within minutes. Say so each time you ask a
 | --- | --- |
 | 0 Orientation | Done. Decisions are below and in ADRs 0002 to 0005. |
 | 1 Foundation and security baseline | Merged (pull request 49) and live. `site/scripts/check-live.ts` passed all 22 checks against production. |
-| 2 Design system | Pull request [52](https://github.com/amatterkhan/asad.atterkhan/pull/52) open on `stage-2-design-system`, checks `api`, `site`, `secrets` green at `299e472`. **Waiting for the owner to merge.** Issue 50. |
-| 3 The Lab | Not started. Starts after 52 is merged. |
-| 4 Remaining pages and interactivity | Not started. |
+| 2 Design system | Merged (pull request 52). |
+| 3 The Lab | Merged (pull request 54). |
+| 4 Remaining pages and interactivity | Home merged (pull request 57). The rest (Experience, About, Achievements, Workbench on Notebook pieces; tablet tap targets; command palette, "?" overlay, heading links, certification cards, pixel 404, all kept by the owner) is in the Stage 4 pages pull request, waiting for the owner. Vendor wording on Experience stays (owner). |
 | 5 Hardening and verification | Not started. |
 
 What Stage 2 left ready for you:

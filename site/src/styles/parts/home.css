@@ -13,7 +13,8 @@
 .block-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 22px; }
 .block-head a { font-size: 14px; }
 .showcase { list-style: none; margin: 0; padding: 0; display: grid; gap: 44px; }
-.showcase li { display: grid; grid-template-columns: 64px 1fr; gap: 12px; }
+/* one column: the 64px column held the project number, which went in Stage 4; left in place it squeezed the text into it */
+.showcase li { display: block; }
 .showcase h3 { font-size: clamp(28px, 4vw, 40px); }
 .showcase h3 a { color: var(--color-ink-strong); text-decoration: none; background: linear-gradient(var(--color-accent), var(--color-accent)) 0 100% / 0 2px no-repeat; transition: background-size .3s; }
 .showcase h3 a:hover { background-size: 100% 2px; color: var(--color-ink-strong); }

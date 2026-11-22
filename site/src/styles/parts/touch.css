@@ -6,10 +6,13 @@
 @media (max-width: 1023px), (pointer: coarse) {
   /* nothing moves: the hit area grows past the visible link */
   /* (a one-line project title is under 44px in fallback serifs, which are shorter than Iowan Old Style) */
-  :is(.block-head a, .text-links a, .path a, .article-crumb a, .section-head > a, .featured-credentials a, .article-end a, .project-facts a, .desktop-nav a, .lab-room-cats a, .filters a, .showcase h3 a, .entry h2 a) { position: relative; }
-  :is(.block-head a, .text-links a, .path a, .article-crumb a, .section-head > a, .featured-credentials a, .article-end a, .project-facts a, .desktop-nav a, .lab-room-cats a, .filters a, .showcase h3 a, .entry h2 a)::after {
+  :is(.block-head a, .text-links a, .path a, .article-crumb a, .section-head > a, .featured-credentials a, .article-end a, .project-facts a, .desktop-nav a, .lab-room-cats a, .showcase h3 a) { position: relative; }
+  :is(.block-head a, .text-links a, .path a, .article-crumb a, .section-head > a, .featured-credentials a, .article-end a, .project-facts a, .desktop-nav a, .lab-room-cats a, .showcase h3 a)::after {
     content: ""; position: absolute; inset: -15px -6px;
   }
+  /* the header on a tablet: the brand and the theme button were 25px and 40px tall between 861 and 1023px */
+  .brand { display: inline-flex; align-items: center; min-height: 44px; }
+  .theme-toggle { width: 44px; height: 44px; }
   .path-line a { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0 4px; }
   .role-details summary, .lab-cats a, .copy-code { min-height: 44px; }
   .copy-code { min-width: 60px; }

@@ -36,6 +36,11 @@
 .ledger-meta b { display: block; font-weight: 400; color: var(--color-peach); }
 .ledger-count { margin: 22px 0 0; font: 13px var(--font-mono); color: var(--color-muted); }
 
+/* rows with no date (Workbench projects): no date column; tags sit under the summary */
+.ledger.undated { margin-top: 18px; border-top: 1px dashed var(--color-faint); }
+.ledger.undated a { grid-template-columns: minmax(0, 1fr) 240px; }
+.ledger .tag-list { margin-top: 10px; }
+
 /* the end of an entry: newer on the left, older on the right (components/EntryNav.vue) */
 .entry-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 20px; }
 .entry-nav a { display: block; min-height: 44px; padding: 14px 0; color: inherit; text-decoration: none; }
@@ -49,6 +54,7 @@
   .filter-tabs { margin-inline: -20px; padding-inline: 20px; }
   .ledger a { grid-template-columns: minmax(0, 1fr); gap: 4px; padding: 18px 12px; }
   .ledger h3 { font-size: 23px; }
+  .ledger.undated a { grid-template-columns: minmax(0, 1fr); }
   .ledger-meta { display: flex; flex-wrap: wrap; gap: 0 14px; margin-top: 6px; text-align: left; }
   .entry-nav { grid-template-columns: 1fr; gap: 0; }
   .entry-nav a:last-child:not(:first-child), .entry-nav .older { text-align: left; }
@@ -85,3 +91,53 @@
 .disclosure-states { margin: 24px 0; }
 .disclosure-states dt { margin-top: 18px; font: 15px var(--font-mono); color: var(--color-accent); }
 .disclosure-states dd { margin: 4px 0 0; max-width: 62ch; }
+
+/* filter tabs that filter in place (Achievements' kinds) are buttons, drawn like the link tabs */
+.filter-tabs button {
+  display: inline-flex; align-items: center; flex: none; min-height: 48px; min-width: 44px; margin-bottom: -2px; padding: 0;
+  font: 13px var(--font-mono); color: var(--color-muted); background: none; border: 0; border-bottom: 2px solid transparent; white-space: nowrap;
+}
+.filter-tabs button:hover { color: var(--color-ink-strong); }
+.filter-tabs button[aria-pressed="true"] { color: var(--color-accent); border-color: var(--color-accent); }
+.filter-tabs + .notebook-search, .notebook-search + .filter-tabs { margin-top: 18px; }
+
+/* credentials: a ledger of cards that open in place (islands/AchievementCollection.vue) */
+.credentials { list-style: none; margin: 18px 0 0; padding: 0; border-top: 1px dashed var(--color-faint); }
+.credentials li { border-bottom: 1px dashed var(--color-faint); }
+.credentials summary {
+  display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 4px 28px; align-items: baseline;
+  margin: 0 -12px; padding: 20px 12px 20px 36px; position: relative; cursor: pointer; list-style: none; min-height: 44px;
+}
+.credentials summary::-webkit-details-marker { display: none; }
+.credentials summary::before { content: "+"; position: absolute; left: 12px; top: 22px; font: 16px var(--font-mono); color: var(--color-accent); }
+.credentials details[open] summary::before { content: "−"; }
+.credentials summary:hover { background: var(--color-bg-2); }
+/* an underline, not mint text: mint on the raised surface is under 4.5:1 at this size in the day palette */
+.credentials summary:hover h3 { text-decoration: underline 2px var(--color-accent); text-underline-offset: 4px; }
+.credentials summary:focus-visible { outline-offset: -2px; }
+.credentials h3 { font-size: 23px; overflow-wrap: anywhere; }
+.credential-meta { font: 12px/1.7 var(--font-mono); color: var(--color-peach); text-align: right; }
+.credentials dl { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px 28px; margin: 0 0 12px; padding: 0 0 0 24px; }
+.credentials dt { font: 12px var(--font-mono); color: var(--color-muted); }
+.credentials dd { margin: 2px 0 0; }
+.credentials details > a { display: inline-flex; align-items: center; min-height: 44px; margin: 0 0 12px 24px; }
+@media (max-width: 760px) {
+  .credentials summary { grid-template-columns: minmax(0, 1fr); padding: 18px 12px 18px 36px; }
+  .credentials h3 { font-size: 21px; }
+  .credential-meta { text-align: left; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .credentials details[open] dl, .credentials details[open] > a { animation: arrive .2s ease both; }
+}
+
+/* reading aid: a "copy link" button beside each section heading (behaviors/article.ts) */
+.heading-row { display: flex; align-items: baseline; gap: 6px; }
+.heading-row > :is(h2, h3) { min-width: 0; }
+.heading-link {
+  flex: none; min-width: 44px; min-height: 44px; padding: 0 6px; font: 15px var(--font-mono); color: var(--color-muted);
+  background: none; border: 0; opacity: .6; white-space: nowrap;
+}
+.heading-row:hover .heading-link, .heading-link:focus-visible { opacity: 1; color: var(--color-accent); }
+
+/* the pixel 404 (pages/NotFound.vue): the status code, drawn big in the chrome face */
+.lost-code { margin: 0 0 4px; font: clamp(56px, 12vw, 112px)/1 var(--font-mono); color: var(--color-accent); letter-spacing: .04em; text-shadow: 4px 4px 0 var(--color-faint); }
