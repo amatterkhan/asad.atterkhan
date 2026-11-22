@@ -14,6 +14,11 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      # TypeScript 7 is the Go-native compiler and drops the JavaScript API (typescript/lib/tsc) that
+      # vue-tsc loads, so `npm run typecheck` cannot start. Lift this once vue-tsc supports TS 7.
+      - dependency-name: typescript
+        versions: ['>=7']
     groups:
       minor-and-patch:
         update-types: [minor, patch]
