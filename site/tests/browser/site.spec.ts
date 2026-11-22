@@ -535,6 +535,9 @@ test("Home shows the latest Lab entries as ledger rows, then the pinned credenti
   await expect(creds.locator(".featured-credentials a").first()).toHaveAttribute("href", /^https:\/\//);
   // the Workbench list carries no decorative numbering
   await expect(page.locator(".showcase .num")).toHaveCount(0);
+  // each Workbench item uses the full width of its list (it once collapsed into a 64px number column)
+  const list = await page.locator(".showcase").boundingBox();
+  for (const item of await page.locator(".showcase li > div").all()) expect((await item.boundingBox())!.width).toBeGreaterThan(list!.width * 0.9);
   // the ledger row is the link and is tall enough to tap
   const row = await lab.locator(".ledger a").first().boundingBox();
   expect(row!.height).toBeGreaterThanOrEqual(44);
