@@ -20,7 +20,6 @@ const year = new Date().getFullYear();
     <footer class="site-footer">
       <p class="footer-sign"><em>{{ site.description }}</em></p>
       <p>© {{ year }} Asad Atterkhan</p>
-      <p class="footer-keys"><kbd>/</kbd> jump anywhere · <kbd>?</kbd> shortcuts</p>
     </footer>
   </div>
   <Palette />

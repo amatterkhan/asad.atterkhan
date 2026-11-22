@@ -31,9 +31,6 @@ kbd {
 .shortcuts dd { margin: 0; }
 .shortcuts form button { min-height: 44px; padding: 8px 18px; border: 2px solid var(--color-faint); color: var(--color-ink); }
 .shortcuts form button:hover { border-color: var(--color-accent); }
-/* the hint in the footer is for keyboards; a touch screen has no "/" key to press */
-.footer-keys { font: 12px var(--font-mono); color: var(--color-muted); }
-@media (pointer: coarse), (max-width: 760px) { .footer-keys { display: none; } }
 @media (prefers-reduced-motion: no-preference) {
   .palette[open], .shortcuts[open] { animation: arrive .18s ease both; }
 }
