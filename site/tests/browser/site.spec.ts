@@ -337,18 +337,18 @@ test("search filters and clears collections", async ({ page }) => {
   await page.goto("/workbench");
   const input = page.getByRole("searchbox", { name: "Find a project" });
   await input.fill("  ESP32 robotics  ");
-  await expect(page.locator(".project-entry")).toHaveCount(1);
+  await expect(page.locator(".ledger li")).toHaveCount(1);
   await input.fill("no-such-project-98345");
   await expect(
     page.getByRole("heading", { name: "No matching projects." }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Clear search", exact: true }).click();
-  await expect(page.locator(".project-entry")).toHaveCount(4);
+  await expect(page.locator(".ledger li")).toHaveCount(4);
   await page.goto("/achievements");
   await page
     .getByRole("searchbox", { name: "Find an achievement" })
     .fill("CompTIA");
-  await expect(page.locator(".achievement-collection > li")).toHaveCount(1);
+  await expect(page.locator(".credentials > li")).toHaveCount(1);
   await page.goto("/lab");
   const notes = page.getByRole("searchbox", { name: "Find a note" });
   await notes.fill("no-such-note-98345");
@@ -477,12 +477,16 @@ const smallTargets = (page: import("@playwright/test").Page) =>
     return small;
   });
 
-for (const path of ["/lab", "/lab/lab-000", "/lab/section/writeups", "/workbench", "/workbench/qrover", "/experience", "/achievements", "/about", "/missing-page"])
+for (const path of ["/", "/lab", "/lab/lab-000", "/lab/section/writeups", "/workbench", "/workbench/qrover", "/experience", "/achievements", "/about", "/missing-page"])
   test(`touch targets are at least 44px ${path}`, async ({ page }, info) => {
     test.skip(!info.project.name.startsWith("mobile"), "touch widths only");
-    await page.goto(path);
-    await page.evaluate(() => document.fonts.ready);
-    expect(await smallTargets(page)).toEqual([]);
+    // a phone, then tablet widths: portrait iPad, and the band between the phone layout and the desktop (861 to 1023px)
+    for (const width of [390, 768, 900, 1023]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(path);
+      await page.evaluate(() => document.fonts.ready);
+      expect(await smallTargets(page), `${width}px`).toEqual([]);
+    }
   });
 
 test("the component page renders every piece, is accessible, and is not part of the built site", async ({ page, request }, info) => {
@@ -492,8 +496,10 @@ test("the component page renders every piece, is accessible, and is not part of 
   await page.evaluate(() => document.fonts.ready);
   await expect(page.getByRole("heading", { level: 1, name: "Components" })).toBeVisible();
   await expect(page.locator("main")).toHaveCSS("opacity", "1");
-  await expect(page.locator(".ledger a")).toHaveCount(4);
+  await expect(page.locator(".ledger:not(.undated) a")).toHaveCount(4);
   await expect(page.locator(".ledger-year")).toHaveText(["2026", "2025"]);
+  await expect(page.locator(".ledger.undated a")).toHaveCount(2);
+  await expect(page.locator(".credentials summary")).toHaveCount(1);
   await expect(page.locator(".filter-tabs a[aria-current]")).toHaveText(/All/);
   await expect(page.locator(".path-line a")).toHaveCount(4);
   await expect(page.locator(".entry-nav a")).toHaveCount(2);
@@ -532,4 +538,101 @@ test("Home shows the latest Lab entries as ledger rows, then the pinned credenti
   // the ledger row is the link and is tall enough to tap
   const row = await lab.locator(".ledger a").first().boundingBox();
   expect(row!.height).toBeGreaterThanOrEqual(44);
+});
+
+test("Experience, About, Achievements and Workbench say where they are with a path line, not a label", async ({ page }) => {
+  for (const [path, label] of [["/experience", "experience"], ["/about", "about"], ["/achievements", "achievements"], ["/workbench", "workbench"]]) {
+    await page.goto(path);
+    await expect(page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: label, exact: true })).toHaveAttribute("href", path);
+    await expect(page.locator("main .eyebrow")).toHaveCount(0);
+  }
+  await page.goto("/workbench/qrover");
+  await expect(page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link")).toHaveText(["workbench", "qrover"]);
+});
+
+test("Workbench projects are ledger rows with no numbering, the whole row a link", async ({ page }) => {
+  await page.goto("/workbench");
+  const row = page.locator(".ledger.undated a").first();
+  await expect(row).toHaveAttribute("href", /^\/workbench\/[a-z0-9-]+$/);
+  await expect(row.locator("time")).toHaveCount(0);
+  await expect(page.locator(".num, .project-mark")).toHaveCount(0);
+});
+
+test("a certification card opens in place and links to its verification", async ({ page }) => {
+  await page.goto("/achievements");
+  await expect(page.locator("main")).toHaveCSS("opacity", "1");
+  const card = page.locator(".credentials details").first();
+  const verify = card.getByRole("link", { name: /^Verify with/ });
+  await expect(verify).toBeHidden();
+  await card.locator("summary").focus();
+  await page.keyboard.press("Enter");
+  await expect(card).toHaveAttribute("open", "");
+  await expect(verify).toHaveAttribute("href", /^https:\/\//);
+  await expect(verify).toHaveAttribute("rel", "noopener noreferrer");
+  expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze()).violations).toEqual([]);
+});
+
+test("the command palette opens with / and Ctrl+K, finds pages and Lab entries, and goes there with Enter", async ({ page }) => {
+  await page.goto("/about");
+  await expect(page.locator("main")).toHaveCSS("opacity", "1");
+  const palette = page.getByRole("dialog", { name: "Jump to a page or entry" });
+  await page.keyboard.press("/");
+  await expect(palette).toBeVisible();
+  const input = palette.getByRole("combobox");
+  await expect(input).toBeFocused();
+  expect((await new AxeBuilder({ page }).include("dialog[data-palette]").withTags(["wcag2a", "wcag2aa"]).analyze()).violations).toEqual([]);
+  await page.keyboard.press("Escape");
+  await expect(palette).toBeHidden();
+  await page.keyboard.press("Control+k");
+  await expect(palette).toBeVisible();
+  // Lab entries arrive from /search.json
+  await input.fill("lab 000");
+  await expect(palette.getByRole("option", { name: /Lab 000/ })).toBeVisible();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/lab\/lab-000$/);
+  // pages, with the arrow keys
+  await page.keyboard.press("/");
+  await page.getByRole("combobox").fill("work");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("ArrowUp");
+  await expect(page.getByRole("option", { selected: true })).toContainText("Workbench");
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/workbench$/);
+});
+
+test("typing / in a search box types a slash; ? shows the shortcut list", async ({ page }) => {
+  await page.goto("/workbench");
+  await expect(page.locator("main")).toHaveCSS("opacity", "1");
+  const search = page.getByRole("searchbox", { name: "Find a project" });
+  await search.focus();
+  await page.keyboard.type("a/b");
+  await expect(search).toHaveValue("a/b");
+  await expect(page.getByRole("dialog", { name: "Jump to a page or entry" })).toBeHidden();
+  await search.blur();
+  await page.keyboard.press("Shift+?");
+  const list = page.getByRole("dialog", { name: "Keyboard shortcuts" });
+  await expect(list).toBeVisible();
+  await list.getByRole("button", { name: "Close" }).click();
+  await expect(list).toBeHidden();
+});
+
+test("each section heading in an entry has a copy-link button beside it", async ({ page, context }, info) => {
+  test.skip(!info.project.name.startsWith("desktop"), "clipboard permission is desktop Chrome only");
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  // no published entry has section headings yet, so this uses the reading fixture on the component page
+  await page.goto("http://127.0.0.1:4193/styleguide");
+  const heading = page.locator("[data-article] h2[id]").first();
+  const id = await heading.getAttribute("id");
+  const name = (await heading.textContent())!.trim();
+  // the heading keeps its own name; the button sits beside it
+  await expect(page.getByRole("heading", { level: 2, name, exact: true })).toBeVisible();
+  await page.getByRole("button", { name: `Copy link to “${name}”` }).click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(`http://127.0.0.1:4193/styleguide#${encodeURIComponent(id!)}`);
+});
+
+test("the 404 is a pixel scene and still points home", async ({ page }) => {
+  const res = await page.goto("/missing-page");
+  expect(res!.status()).toBe(404);
+  await expect(page.locator(".vignette .sprite.asad-look")).toHaveCount(1);
+  await expect(page.getByRole("link", { name: /Back home/ })).toHaveAttribute("href", "/");
 });
