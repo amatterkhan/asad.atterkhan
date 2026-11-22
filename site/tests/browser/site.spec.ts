@@ -661,7 +661,7 @@ test("the 404 is a pixel scene and still points home", async ({ page }) => {
 });
 
 // Keyboard-only pass: the first Tab reaches the skip link, the link moves focus into the page, and
-// every stop after it is on screen with a visible focus indicator.
+// every stop after it has a visible focus ring and is not hidden or covered by anything else.
 for (const path of routes)
   test(`keyboard only ${path}`, async ({ page }) => {
     await page.goto(path);
@@ -673,7 +673,7 @@ for (const path of routes)
     await page.keyboard.press("Enter");
     expect(await page.evaluate(() => location.hash)).toBe("#main");
     const stops: string[] = [];
-    const noRing: string[] = [];
+    const problems: string[] = [];
     for (let i = 0; i < 30; i++) {
       await page.keyboard.press("Tab");
       const stop = await page.evaluate(() => {
@@ -681,16 +681,21 @@ for (const path of routes)
         if (!el || el === document.body) return null;
         const s = getComputedStyle(el);
         const ring = (s.outlineStyle !== "none" && parseFloat(s.outlineWidth) > 0) || s.boxShadow !== "none";
-        return { name: `${el.tagName} "${(el.getAttribute("aria-label") || el.textContent || "").trim().slice(0, 30)}"`, ring };
+        // Bring it to the middle of the screen ourselves (the browser's own focus scroll can be
+        // smooth and slow under load), then check that what is drawn there is the focused element.
+        el.scrollIntoView({ block: "center", inline: "center", behavior: "instant" });
+        const r = el.getBoundingClientRect();
+        const hit = r.width > 0 && r.height > 0 ? document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) : null;
+        const shown = !!hit && (el.contains(hit) || hit.contains(el));
+        return { name: `${el.tagName} "${(el.getAttribute("aria-label") || el.textContent || "").trim().slice(0, 30)}"`, ring, shown };
       });
       if (!stop) break;
       stops.push(stop.name);
-      if (!stop.ring) noRing.push(stop.name);
-      // scrolling to the focused element can be smooth, so wait for it to arrive
-      await expect(page.locator(":focus"), `${stop.name} is on screen`).toBeInViewport();
+      if (!stop.ring) problems.push(`${stop.name} has no focus ring`);
+      if (!stop.shown) problems.push(`${stop.name} is hidden or covered`);
     }
     expect(stops.length).toBeGreaterThan(0);
-    expect(noRing).toEqual([]);
+    expect(problems).toEqual([]);
   });
 
 // Reduce Motion pass. The pixel-art room, its vignettes and the sprites keep their small in-place
