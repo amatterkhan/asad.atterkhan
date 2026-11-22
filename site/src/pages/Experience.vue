@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PathLine from "../components/PathLine.vue";
 import PixelIcon from "../components/PixelIcon.vue";
 import RoomVignette from "../components/RoomVignette.vue";
 import { groupExperience } from "../lib/experience";
@@ -15,7 +16,7 @@ const { intro, resumeUrl, work, education, skills, featured } = defineProps<{
 const groups = groupExperience(work);
 </script>
 <template>
-  <p class="eyebrow">Work &amp; education</p>
+  <PathLine :segments="[{ label: 'experience', href: '/experience' }]" />
   <div class="section-head">
     <h1>Experience</h1>
     <a v-if="isHttpsUrl(resumeUrl)" class="print-button" :href="safeHref(resumeUrl)" target="_blank" rel="noopener noreferrer">Save résumé PDF</a>

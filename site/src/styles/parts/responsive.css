@@ -18,14 +18,11 @@
   .lede { font-size: 22px; }
   .block { margin-top: 64px; }
   .showcase li { grid-template-columns: 1fr; gap: 0; }
-  .entry { grid-template-columns: 1fr; gap: 6px; padding: 20px 0; }
   .lab-heading { flex-direction: column; align-items: flex-start; gap: 0; }
-  .lab-companion { align-self: flex-end; margin-top: -20px; }
   .prose { font-size: 18px; }
   .prose blockquote { font-size: 19px; }
   .flow-diagram li + li { margin-left: 22px !important; }
   .flow-diagram li + li::after { left: -19px; width: 12px; }
   .page-intro, .opening, .article-lead { font-size: 19px; }
-  .achievement-collection { grid-template-columns: 1fr; }
 }
 @media print { body { background: #fff; color: #000; } .site-header, .site-footer, .print-button { display: none; } a { color: #000; } h1, h2, h3, h4 { color: #000; } }
