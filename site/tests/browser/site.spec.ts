@@ -4,21 +4,38 @@ test.beforeEach(async ({ page }, info) => {
   const theme = info.project.name.endsWith("light") ? "light" : "dark";
   await page.addInitScript((t) => localStorage.setItem("theme", t), theme);
 });
-for (const path of [
+// Every prerendered route. The sitemap test below fails when a new public route is missing here.
+const routes = [
   "/",
   "/lab",
+  "/lab/lab-000",
   "/lab/section/writeups",
   "/lab/section/writeups/hackthebox",
+  "/lab/section/writeups/htb-certifications",
+  "/lab/section/writeups/tryhackme",
+  "/lab/section/writeups/ctf",
+  "/lab/section/tooling",
   "/lab/section/notes",
   "/disclosure",
   "/workbench",
+  "/workbench/personal-website",
+  "/workbench/qrover",
+  "/workbench/textile-sewing-services",
+  "/workbench/wispi",
   "/experience",
   "/achievements",
   "/about",
   "/calendar",
   "/admin",
-  "/workbench/qrover",
-])
+  "/missing-page",
+];
+test("every sitemap URL is in the accessibility, keyboard and Reduce Motion sweeps", async ({ request }) => {
+  const xml = await (await request.get("/sitemap.xml")).text();
+  const paths = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
+  expect(paths.length).toBeGreaterThan(10);
+  expect(paths.filter((p) => !routes.includes(p))).toEqual([]);
+});
+for (const path of routes)
   test(`layout, accessibility and hydration ${path}`, async ({ page }) => {
     const warnings: string[] = [];
     page.on("console", (msg) => {
@@ -639,3 +656,54 @@ test("the 404 is a pixel scene and still points home", async ({ page }) => {
   await expect(page.locator(".vignette .sprite.asad-look")).toHaveCount(1);
   await expect(page.getByRole("link", { name: /Back home/ })).toHaveAttribute("href", "/");
 });
+
+// Keyboard-only pass: the first Tab reaches the skip link, the link moves focus into the page, and
+// every stop after it is on screen with a visible focus indicator.
+for (const path of routes)
+  test(`keyboard only ${path}`, async ({ page }) => {
+    await page.goto(path);
+    await page.evaluate(() => document.fonts.ready);
+    await page.keyboard.press("Tab");
+    const skip = page.getByRole("link", { name: "Skip to content" });
+    await expect(skip).toBeFocused();
+    await expect(skip).toBeInViewport();
+    await page.keyboard.press("Enter");
+    expect(await page.evaluate(() => location.hash)).toBe("#main");
+    const stops: string[] = [];
+    const noRing: string[] = [];
+    for (let i = 0; i < 30; i++) {
+      await page.keyboard.press("Tab");
+      const stop = await page.evaluate(() => {
+        const el = document.activeElement as HTMLElement | null;
+        if (!el || el === document.body) return null;
+        const s = getComputedStyle(el);
+        const ring = (s.outlineStyle !== "none" && parseFloat(s.outlineWidth) > 0) || s.boxShadow !== "none";
+        return { name: `${el.tagName} "${(el.getAttribute("aria-label") || el.textContent || "").trim().slice(0, 30)}"`, ring };
+      });
+      if (!stop) break;
+      stops.push(stop.name);
+      if (!stop.ring) noRing.push(stop.name);
+      // scrolling to the focused element can be smooth, so wait for it to arrive
+      await expect(page.locator(":focus"), `${stop.name} is on screen`).toBeInViewport();
+    }
+    expect(stops.length).toBeGreaterThan(0);
+    expect(noRing).toEqual([]);
+  });
+
+// Reduce Motion pass. The pixel-art room, its vignettes and the sprites keep their small in-place
+// motion by the owner's choice (sprites.css); nothing else on the page may animate or transition.
+for (const path of routes)
+  test(`Reduce Motion stills everything but the pixel art ${path}`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto(path);
+    await page.evaluate(() => document.fonts.ready);
+    await expect(page.locator("main")).toHaveCSS("opacity", "1");
+    const moving = await page.evaluate(() =>
+      document.getAnimations()
+        .filter((a) => a.playState === "running")
+        .map((a) => (a as KeyframeEffect & Animation).effect as KeyframeEffect)
+        .filter((e) => !(e.target as Element | null)?.closest(".room, .vignette, .sprite"))
+        .map((e) => `${(e.target as Element | null)?.className}`),
+    );
+    expect(moving).toEqual([]);
+  });
