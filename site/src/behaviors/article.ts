@@ -1,5 +1,6 @@
 /** Progressive enhancements for article pages: code headers with copy, scrollable tables, a
- *  reading-progress bar and the current section highlighted in the table of contents. */
+ *  reading-progress bar, the current section highlighted in the table of contents, and a "copy
+ *  link" button beside each section heading. */
 export function initArticle() {
   const articles = document.querySelectorAll<HTMLElement>("[data-article]");
   if (!articles.length) return;
@@ -38,6 +39,32 @@ export function initArticle() {
     wrapper.setAttribute("aria-label", "Table, horizontally scrollable");
     table.parentNode?.insertBefore(wrapper, table);
     wrapper.append(table);
+  });
+
+  // Copy a link to a section. The button sits beside the heading, not inside it, so the
+  // heading's accessible name stays its own text.
+  document.querySelectorAll<HTMLElement>("[data-article] :is(h2, h3)[id]").forEach((h) => {
+    if (h.parentElement?.classList.contains("heading-row")) return;
+    const row = document.createElement("div");
+    row.className = "heading-row";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "heading-link";
+    button.textContent = "#";
+    button.setAttribute("aria-label", `Copy link to “${h.textContent?.trim()}”`);
+    button.addEventListener("click", async () => {
+      const url = `${location.origin}${location.pathname}#${encodeURIComponent(h.id)}`;
+      try {
+        await navigator.clipboard.writeText(url);
+        button.textContent = "Copied ✓";
+      } catch {
+        location.hash = h.id;
+        button.textContent = "Link in address bar";
+      }
+      setTimeout(() => (button.textContent = "#"), 1600);
+    });
+    h.replaceWith(row);
+    row.append(h, button);
   });
 
   const bar = document.querySelector<HTMLElement>(".read-progress");
