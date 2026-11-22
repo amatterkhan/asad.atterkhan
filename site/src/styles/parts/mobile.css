@@ -1,6 +1,6 @@
 /* ---------- mobile pass: tap targets, small text, the admin console on a phone ---------- */
 /* long unbroken strings (a URL in a note, a long word in a title) wrap instead of widening the page */
-h1, h2, h3, h4, .prose, .lab-card-desc, .entry p, .showcase p, .article-lead, .page-intro { overflow-wrap: break-word; }
+h1, h2, h3, h4, .prose, .lab-card-desc, .showcase p, .article-lead, .page-intro { overflow-wrap: break-word; }
 /* a heading and its button wrap instead of pushing the page wider on a 320px phone */
 .section-head { flex-wrap: wrap; }
 @media (max-width: 760px) {
@@ -15,7 +15,7 @@ h1, h2, h3, h4, .prose, .lab-card-desc, .entry p, .showcase p, .article-lead, .p
   .mobile-menu { padding: 14px 20px 22px; height: 100dvh; overflow-y: auto; }
   .mobile-menu-head { min-height: 44px; }
   /* 11px mono is too small to read on a phone */
-  .lab-room-count, .lab-card-shelf, .lab-card-meta, .current-label, .badge, .tags, .tag-list, .collection-count, .calendar-note { font-size: 12px; }
+  .lab-room-count, .lab-card-shelf, .lab-card-meta, .current-label, .badge, .tags, .tag-list, .calendar-note { font-size: 12px; }
   .lab-tabs small, .lab-cats small, .lab-map-title small { font-size: 12px; }
   main > a:not([class]) { display: inline-flex; align-items: center; min-height: 44px; }
 }

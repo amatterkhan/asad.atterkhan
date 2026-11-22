@@ -4,6 +4,7 @@ import { initSprites } from "./behaviors/sprites";
 import { initVisibility } from "./behaviors/visibility";
 import { initArticle } from "./behaviors/article";
 import { initNixie } from "./behaviors/nixie";
+import { initPalette } from "./behaviors/palette";
 import { initTheme, syncTheme } from "./behaviors/theme";
 
 // Pages are static HTML. Small behaviours (no framework) run everywhere; Vue loads only on pages
@@ -15,6 +16,7 @@ initTheme();
 initSprites();
 initArticle();
 initNixie();
+initPalette();
 
 const islands = import.meta.glob<{ default: import("vue").Component }>("./islands/*.vue");
 const marks = document.querySelectorAll<HTMLElement>("[data-island]");
