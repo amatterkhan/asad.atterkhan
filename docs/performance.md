@@ -11,14 +11,14 @@ budget is exceeded. Raise a number only in the commit that adds the weight, and 
 | Budget | Limit | 22 November 2026 |
 | --- | --- | --- |
 | Stylesheet, gzip | 22 KB | 18.2 KB |
-| `/` JavaScript, gzip | 48 KB | 41.1 KB |
-| `/lab` JavaScript, gzip | 42 KB | 36.3 KB |
+| `/` JavaScript, gzip | 48 KB | 41.5 KB |
+| `/lab` JavaScript, gzip | 42 KB | 36.6 KB |
 | `/about` JavaScript, gzip | 8 KB | 3.9 KB |
-| All JavaScript, raw | 330 KB | 286.9 KB |
+| All JavaScript, raw | 330 KB | 290.0 KB |
 
 ## Lighthouse
 
-Recorded 22 November 2026 (Stage 5) with Lighthouse 12.8.2 and headless Chromium against the
+Recorded 22 November 2026 (Stage 5, before the npm updates in #61, which added 0.4 KB gzip to `/`) with Lighthouse 12.8.2 and headless Chromium against the
 production build served locally (`npm run build && npm run preview`), two runs each, which agreed
 to within 0.1 s. Scores are performance / accessibility / best practices.
 
