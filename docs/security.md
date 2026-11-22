@@ -47,8 +47,9 @@ were written against the API documentation and have **not been run**: read each 
 | Firestore TTL on `_quotas` | Unverifiable | Unbounded growth of quota counters |
 | Identity Platform sign-up disabled | Unverifiable | Strangers creating accounts in the project |
 | Log alerts | Unverifiable | An attack or a failed rebuild going unnoticed |
-| CAA records | **Not done** (none published) | Another certificate authority issuing for the domain |
-| HSTS preload | **Not ready** (the apex `atterkhan.com` sends no HSTS) | First-visit downgrade |
+| CAA records | Done 2026-11-22 (`pki.goog`, `letsencrypt.org`; Cloudflare adds its own CAs to the published set) | Another certificate authority issuing for the domain |
+| HSTS preload | Header live on the apex; **submitted at hstspreload.org 2026-11-22**, awaiting inclusion | First-visit downgrade |
+| `amatterkhan.com` | Email-only since 2026-11-22: no A, AAAA or CNAME records, no GitHub Pages verification; Zoho MX, SPF, DKIM and DMARC kept | Domain takeover through a dangling Pages record |
 | DNSSEC | Done | DNS spoofing |
 | SPF and DMARC | Done (`~all`, `p=quarantine`) | Mail spoofing |
 | DKIM for `@asad.atterkhan.com` | Unverifiable (selector unknown) | Mail spoofing |
@@ -141,10 +142,10 @@ Cloud Run parses the log line.
   `0 issue "pki.goog"` and `0 issue "letsencrypt.org"`. A wrong CAA record blocks renewals, so
   check a week later that `echo | openssl s_client -connect asad.atterkhan.com:443 2>/dev/null | openssl x509 -noout -enddate`
   still moves forward. Verify with `dig +short CAA atterkhan.com`.
-- **HSTS preload** needs the apex to send
+- **HSTS preload** is submitted for `atterkhan.com` (2026-11-22). The apex sends
   `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload` (Cloudflare → SSL/TLS →
-  Edge Certificates → HSTS) and **every** subdomain of `atterkhan.com` to serve HTTPS. Only then
-  submit at hstspreload.org. It is hard to undo; skip it if any subdomain is not yours to guarantee.
+  Edge Certificates → HSTS), so **every** subdomain of `atterkhan.com` must serve HTTPS for good.
+  Never create an HTTP-only hostname under it. Removal from the list takes months to reach browsers.
 - **DKIM**: in Zoho Mail admin, confirm DKIM is enabled for `asad.atterkhan.com` and note the
   selector; `dig +short TXT <selector>._domainkey.asad.atterkhan.com` must return a key.
 - **DMARC**: once the reports show only your own mail, move both records from `p=quarantine` to
