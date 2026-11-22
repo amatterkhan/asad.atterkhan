@@ -27,3 +27,16 @@ describe("ledger", () => {
     expect(entries[0].title).toBe("A");
   });
 });
+
+describe("ledger without dates", () => {
+  it("puts undated entries last, in the order given, under no year", () => {
+    const years = groupByYear([
+      { href: "/z", title: "Z" },
+      { href: "/a", date: "2025-01-01", title: "A" },
+      { href: "/b", title: "B" },
+    ]);
+    expect(years.map((y) => y.year)).toEqual([2025, null]);
+    expect(years[1].entries.map((e) => e.title)).toEqual(["Z", "B"]);
+    expect(years[1].entries[0].day).toBeUndefined();
+  });
+});
