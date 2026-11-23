@@ -85,9 +85,11 @@ change visibility immediately.
 Configure one delivery mode on the API:
 
 - Unset `REBUILD_HOOK`: log `rebuild_requested` for local development.
-- `REBUILD_HOOK=github`: set `GITHUB_REPO=owner/repository` and secret `GITHUB_TOKEN`. The API
-  sends `repository_dispatch` with event type `content-published`. Grant the token permission
-  to dispatch events only to the intended repository.
+- `REBUILD_HOOK=github-workflow` (preferred): set `GITHUB_REPO=owner/repository` and secret
+  `GITHUB_TOKEN`. The API starts `site-deploy.yml` on `main` with `workflow_dispatch`, so the
+  token needs only **Actions: write** on this repository and cannot push commits (SEC-02).
+- `REBUILD_HOOK=github` (legacy): the same settings, but the API sends `repository_dispatch` with
+  event type `content-published`, which needs a token with Contents: write.
 - `REBUILD_HOOK=https://…`: set secret `REBUILD_HOOK_SECRET`. The API POSTs
   `{ "event": "content-published", "reason": "…" }` with Bearer authentication. Redirects are
   refused, the timeout is ten seconds, and HTTPS is required.

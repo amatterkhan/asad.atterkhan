@@ -14,6 +14,16 @@ import (
 
 var repoPattern = regexp.MustCompile(`^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`)
 
+// githubAPI is a variable so tests can point it at a local server.
+var githubAPI = "https://api.github.com"
+
+// rebuildWorkflow and rebuildRef are what REBUILD_HOOK=github-workflow starts. The deploy workflow
+// treats workflow_dispatch as a full site rebuild without the API (site-deploy.yml, "changes").
+const (
+	rebuildWorkflow = "site-deploy.yml"
+	rebuildRef      = "main"
+)
+
 // A failed hook is logged after the content commit. Returning a failure for an already committed
 // publish would encourage retrying a non-idempotent action. Operators can dispatch a rebuild manually.
 func (s *Server) rebuild(ctx context.Context, reason string) {
@@ -27,15 +37,22 @@ func (s *Server) rebuild(ctx context.Context, reason string) {
 	endpoint := hook
 	payload := map[string]any{"event": "content-published", "reason": reason}
 	authorization := ""
-	if hook == "github" {
+	if hook == "github" || hook == "github-workflow" {
 		repo := os.Getenv("GITHUB_REPO")
 		if !repoPattern.MatchString(repo) || os.Getenv("GITHUB_TOKEN") == "" {
 			slog.Error("rebuild_hook_failed", "reason", "missing GitHub configuration")
 			return
 		}
-		endpoint = "https://api.github.com/repos/" + repo + "/dispatches"
-		payload = map[string]any{"event_type": "content-published", "client_payload": map[string]any{"reason": reason}}
 		authorization = "Bearer " + os.Getenv("GITHUB_TOKEN")
+		if hook == "github" {
+			// repository_dispatch: the token needs Contents: write, which can also push commits (SEC-02).
+			endpoint = githubAPI + "/repos/" + repo + "/dispatches"
+			payload = map[string]any{"event_type": "content-published", "client_payload": map[string]any{"reason": reason}}
+		} else {
+			// workflow_dispatch: the token needs only Actions: write, and the run deploys main as it is.
+			endpoint = githubAPI + "/repos/" + repo + "/actions/workflows/" + rebuildWorkflow + "/dispatches"
+			payload = map[string]any{"ref": rebuildRef}
+		}
 	} else {
 		authorization = "Bearer " + os.Getenv("REBUILD_HOOK_SECRET")
 		u, err := url.Parse(endpoint)

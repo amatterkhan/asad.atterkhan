@@ -14,6 +14,7 @@
 | [security.md](security.md) | What tests enforce, owner actions with commands, the rebuild token |
 | [recovery.md](recovery.md) | What to do when an account is lost or compromised |
 | [maintenance.md](maintenance.md) | Recurring tasks and their dates |
+| [performance.md](performance.md) | Size budgets and recorded Lighthouse numbers |
 | [decisions/](decisions/) | ADRs: one file per decision |
 
 Pixel-art tooling is documented in [../art/README.md](../art/README.md).

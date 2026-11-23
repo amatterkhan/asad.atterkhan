@@ -10,5 +10,6 @@ const { intro, records } = defineProps<{ intro: string; records: Achievement[] }
   <h1>Achievements</h1>
   <p class="page-intro">{{ intro }}</p>
   <RoomVignette corner="awards" />
+  <h2 class="sr-only">All achievements</h2>
   <AchievementCollection :records="records" />
 </template>

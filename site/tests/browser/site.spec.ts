@@ -4,21 +4,38 @@ test.beforeEach(async ({ page }, info) => {
   const theme = info.project.name.endsWith("light") ? "light" : "dark";
   await page.addInitScript((t) => localStorage.setItem("theme", t), theme);
 });
-for (const path of [
+// Every prerendered route. The sitemap test below fails when a new public route is missing here.
+const routes = [
   "/",
   "/lab",
+  "/lab/lab-000",
   "/lab/section/writeups",
   "/lab/section/writeups/hackthebox",
+  "/lab/section/writeups/htb-certifications",
+  "/lab/section/writeups/tryhackme",
+  "/lab/section/writeups/ctf",
+  "/lab/section/tooling",
   "/lab/section/notes",
   "/disclosure",
   "/workbench",
+  "/workbench/personal-website",
+  "/workbench/qrover",
+  "/workbench/textile-sewing-services",
+  "/workbench/wispi",
   "/experience",
   "/achievements",
   "/about",
   "/calendar",
   "/admin",
-  "/workbench/qrover",
-])
+  "/missing-page",
+];
+test("every sitemap URL is in the accessibility, keyboard and Reduce Motion sweeps", async ({ request }) => {
+  const xml = await (await request.get("/sitemap.xml")).text();
+  const paths = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
+  expect(paths.length).toBeGreaterThan(10);
+  expect(paths.filter((p) => !routes.includes(p))).toEqual([]);
+});
+for (const path of routes)
   test(`layout, accessibility and hydration ${path}`, async ({ page }) => {
     const warnings: string[] = [];
     page.on("console", (msg) => {
@@ -41,6 +58,9 @@ for (const path of [
         .violations,
     ).toEqual([]);
     expect(warnings).toEqual([]);
+    // headings never skip a level (axe's heading-order is a best practice, not a WCAG tag, so check it here)
+    const levels = await page.locator("h1, h2, h3, h4, h5, h6").evaluateAll((hs) => hs.map((h) => Number(h.tagName[1])));
+    expect(levels.filter((l, i) => i > 0 && l > levels[i - 1] + 1), `heading levels ${levels.join(" ")}`).toEqual([]);
   });
 test("mobile navigation Escape and focus return", async ({
   page,
@@ -639,3 +659,61 @@ test("the 404 is a pixel scene and still points home", async ({ page }) => {
   await expect(page.locator(".vignette .sprite.asad-look")).toHaveCount(1);
   await expect(page.getByRole("link", { name: /Back home/ })).toHaveAttribute("href", "/");
 });
+
+// Keyboard-only pass: the first Tab reaches the skip link, the link moves focus into the page, and
+// every stop after it has a visible focus ring and is not hidden or covered by anything else.
+for (const path of routes)
+  test(`keyboard only ${path}`, async ({ page }) => {
+    await page.goto(path);
+    await page.evaluate(() => document.fonts.ready);
+    await page.keyboard.press("Tab");
+    const skip = page.getByRole("link", { name: "Skip to content" });
+    await expect(skip).toBeFocused();
+    await expect(skip).toBeInViewport();
+    await page.keyboard.press("Enter");
+    expect(await page.evaluate(() => location.hash)).toBe("#main");
+    const stops: string[] = [];
+    const problems: string[] = [];
+    for (let i = 0; i < 30; i++) {
+      await page.keyboard.press("Tab");
+      const stop = await page.evaluate(() => {
+        const el = document.activeElement as HTMLElement | null;
+        if (!el || el === document.body) return null;
+        const s = getComputedStyle(el);
+        const ring = (s.outlineStyle !== "none" && parseFloat(s.outlineWidth) > 0) || s.boxShadow !== "none";
+        // Bring it to the middle of the screen ourselves (the browser's own focus scroll can be
+        // smooth and slow under load), then check that what is drawn there is the focused element.
+        el.scrollIntoView({ block: "center", inline: "center", behavior: "instant" });
+        const r = el.getBoundingClientRect();
+        const hit = r.width > 0 && r.height > 0 ? document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) : null;
+        const shown = !!hit && (el.contains(hit) || hit.contains(el));
+        return { name: `${el.tagName} "${(el.getAttribute("aria-label") || el.textContent || "").trim().slice(0, 30)}"`, ring, shown };
+      });
+      if (!stop) break;
+      stops.push(stop.name);
+      if (!stop.ring) problems.push(`${stop.name} has no focus ring`);
+      if (!stop.shown) problems.push(`${stop.name} is hidden or covered`);
+    }
+    // A page whose main holds no control (the calendar without its API, in CI) has nothing to reach.
+    const controls = await page.locator("main").locator("a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex='-1'])").count();
+    if (controls > 0) expect(stops.length).toBeGreaterThan(0);
+    expect(problems).toEqual([]);
+  });
+
+// Reduce Motion pass. The pixel-art room, its vignettes and the sprites keep their small in-place
+// motion by the owner's choice (sprites.css); nothing else on the page may animate or transition.
+for (const path of routes)
+  test(`Reduce Motion stills everything but the pixel art ${path}`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto(path);
+    await page.evaluate(() => document.fonts.ready);
+    await expect(page.locator("main")).toHaveCSS("opacity", "1");
+    const moving = await page.evaluate(() =>
+      document.getAnimations()
+        .filter((a) => a.playState === "running")
+        .map((a) => (a as KeyframeEffect & Animation).effect as KeyframeEffect)
+        .filter((e) => !(e.target as Element | null)?.closest(".room, .vignette, .sprite"))
+        .map((e) => `${(e.target as Element | null)?.className}`),
+    );
+    expect(moving).toEqual([]);
+  });

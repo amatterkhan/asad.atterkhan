@@ -36,12 +36,16 @@ Work top to bottom. Each step is safe to do even if it turns out to be a false a
 
 ### The rebuild token (`asad-api-github-token`)
 
-Signs: commits or workflow runs you did not start; a `repository_dispatch` you did not cause.
+Signs: commits, cancelled runs or deploy runs you did not start; a `repository_dispatch` or
+`workflow_dispatch` you did not cause; a re-run of an old deploy run (the site goes back to an
+older version).
 
-1. Revoke it now: GitHub → Settings → Developer settings → Fine-grained tokens → delete.
-   Publishing from `/admin` stops triggering rebuilds; the site keeps serving.
-2. `git log origin/main` and the Actions run list: look for anything you did not do. Revert it by
-   pull request and redeploy.
+1. Revoke it now: GitHub → Settings → Developer settings → Personal access tokens → Fine-grained
+   tokens → delete. Publishing from `/admin` stops triggering rebuilds; the site keeps serving.
+2. `git log origin/main` and the Actions run list
+   (`gh run list --workflow site-deploy.yml --limit 30`): look for anything you did not do.
+   Revert it by pull request and redeploy. If an old run was re-run, run the deploy workflow
+   once (`gh workflow run site-deploy.yml`) to ship `main` again.
 3. Create a new token and store it (steps in [security.md](security.md), "Rebuild token"), then
    redeploy the API.
 

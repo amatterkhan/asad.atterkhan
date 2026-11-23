@@ -130,7 +130,7 @@ jobs:
             GITHUB_REPO=${{ github.repository }}
           secrets_update_strategy: overwrite
           # The dispatch token lives in Secret Manager, never in GitHub or the image.
-          secrets: ${{ vars.REBUILD_HOOK == 'github' && 'GITHUB_TOKEN=asad-api-github-token:latest' || '' }}
+          secrets: ${{ startsWith(vars.REBUILD_HOOK, 'github') && 'GITHUB_TOKEN=asad-api-github-token:latest' || '' }}
 
   export:
     needs: [changes, checks, api]

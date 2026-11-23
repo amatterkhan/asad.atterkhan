@@ -1,6 +1,7 @@
 # ADR 0002: process controls for a single owner
 
-**Date:** 10 November 2026 · **Status:** accepted
+**Date:** 10 November 2026 · **Status:** accepted; the deploy gate is superseded by
+[ADR 0008](0008-no-deploy-approval-gate.md) (the owner declined it)
 
 ## Context
 
