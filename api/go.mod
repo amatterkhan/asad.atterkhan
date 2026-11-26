@@ -10,7 +10,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/yuin/goldmark v1.8.7
 	golang.org/x/text v0.44.0
-	google.golang.org/api v0.312.0
+	google.golang.org/api v0.316.0
 	google.golang.org/grpc v1.85.0
 )
 
